@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        createdAt: 'desc'
+        id: 'desc'
       }
     })
 
@@ -40,8 +40,7 @@ export async function GET(request: NextRequest) {
         slug: follow.business.slug,
         profileImage: follow.business.profileImage,
         isVerified: follow.business.isVerified,
-        category: follow.business.category,
-        followedAt: follow.createdAt
+        category: follow.business.category
       }))
 
     return NextResponse.json({ businesses })
