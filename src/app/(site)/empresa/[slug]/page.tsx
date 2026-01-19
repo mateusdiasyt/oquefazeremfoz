@@ -616,14 +616,14 @@ export default function BusinessProfilePage() {
                           className={`flex items-center gap-1 ${post.isLiked ? 'text-blue-600' : 'hover:text-blue-600'} transition-colors`}
                         >
                           <ThumbsUp className="w-4 h-4" />
-                          <span>{post._count.postlike}</span>
+                          <span>{post._count?.postlike || 0}</span>
                         </button>
                         <button
                           onClick={() => handleCommentPost(post.id)}
                           className="flex items-center gap-1 hover:text-blue-600 transition-colors"
                         >
                           <MessageSquare className="w-4 h-4" />
-                          <span>{post._count.comment}</span>
+                          <span>{post._count?.comment || 0}</span>
                         </button>
                         <span className="text-sm">
                           {new Date(post.createdAt).toLocaleDateString('pt-BR')}
