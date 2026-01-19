@@ -90,10 +90,8 @@ export async function POST(request: NextRequest) {
     // Verificar se o usuário já avaliou esta empresa
     const existingReview = await prisma.businessreview.findFirst({
       where: {
-        businessId_userId: {
-          businessId,
-          userId: user.id
-        }
+        businessId,
+        userId: user.id
       }
     })
 
