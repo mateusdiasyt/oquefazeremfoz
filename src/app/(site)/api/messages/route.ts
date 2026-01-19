@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        messages: {
+        message: {
           orderBy: {
             createdAt: 'desc'
           },

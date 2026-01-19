@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
             business: true
           }
         },
-        messages: {
+        message: {
           orderBy: {
             createdAt: 'desc'
           },
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Adicionar conversas existentes
     for (const conv of existingConversations) {
       const otherParticipant = conv.user.find(p => p.id !== user.id)
-      const lastMessage = conv.messages[0]
+      const lastMessage = conv.message[0]
 
       allConversations.push({
         id: conv.id,
