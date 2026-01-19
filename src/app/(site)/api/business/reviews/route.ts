@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    const reviews = await prisma.businessReview.findMany({
+    const reviews = await prisma.businessreview.findMany({
       where: { businessId },
       include: {
         user: {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário já avaliou esta empresa
-    const existingReview = await prisma.businessReview.findUnique({
+    const existingReview = await prisma.businessreview.findFirst({
       where: {
         businessId_userId: {
           businessId,
@@ -130,14 +130,16 @@ export async function POST(request: NextRequest) {
       imageUrl = `/uploads/reviews/${fileName}`
     }
 
-    const review = await prisma.businessReview.create({
+    const review = await prisma.businessreview.create({
       data: {
+        id: `businessreview_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         businessId,
         userId: user.id,
         rating,
         comment: comment || null,
         imageUrl,
-        isVerified: false
+        isVerified: false,
+        updatedAt: new Date()
       },
       include: {
         user: {
@@ -188,7 +190,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar se a avaliação existe e pertence ao usuário
-    const existingReview = await prisma.businessReview.findUnique({
+    const existingReview = await prisma.businessreview.findFirst({
       where: { id: reviewId }
     })
 
@@ -239,12 +241,13 @@ export async function PUT(request: NextRequest) {
       imageUrl = `/uploads/reviews/${fileName}`
     }
 
-    const review = await prisma.businessReview.update({
+    const review = await prisma.businessreview.update({
       where: { id: reviewId },
       data: {
         rating,
         comment: comment || null,
-        imageUrl
+        imageUrl,
+        updatedAt: new Date()
       },
       include: {
         user: {
@@ -288,7 +291,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verificar se a avaliação existe e pertence ao usuário
-    const existingReview = await prisma.businessReview.findUnique({
+    const existingReview = await prisma.businessreview.findFirst({
       where: { id: reviewId }
     })
 
@@ -310,7 +313,7 @@ export async function DELETE(request: NextRequest) {
       }, { status: 403 })
     }
 
-    await prisma.businessReview.delete({
+    await prisma.businessreview.delete({
       where: { id: reviewId }
     })
 
@@ -330,7 +333,7 @@ export async function DELETE(request: NextRequest) {
 // Função auxiliar para atualizar a média de avaliações da empresa
 async function updateBusinessRating(businessId: string) {
   try {
-    const reviews = await prisma.businessReview.findMany({
+    const reviews = await prisma.businessreview.findMany({
       where: { businessId },
       select: { rating: true }
     })

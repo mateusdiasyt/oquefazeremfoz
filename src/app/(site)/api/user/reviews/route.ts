@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    const reviews = await prisma.businessReview.findMany({
+    const reviews = await prisma.businessreview.findMany({
       where: {
         userId: user.id
       },
