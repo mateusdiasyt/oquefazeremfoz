@@ -149,7 +149,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar se o cupom pertence à empresa
-    const existingCoupon = await prisma.coupon.findFirst({
+    const existingCoupon = await prisma.businesscoupon.findFirst({
       where: { 
         id,
         businessId: business.id
