@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         followerId: user.id
       },
       include: {
-        following: {
+        user_follow_followingIdTouser: {
           include: {
             business: true
           }
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
 
     // Adicionar empresas seguidas que não têm conversas ainda
     for (const follow of followedBusinesses) {
-      const business = follow.following.business
+      const business = follow.user_follow_followingIdTouser.business
       if (business) {
         // Verificar se já existe conversa com esta empresa
         const hasConversation = allConversations.some(conv => 
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
               isVerified: business.isVerified,
               category: business.category,
               followedAt: follow.createdAt.toISOString(),
-              userId: follow.following.id
+              userId: follow.user_follow_followingIdTouser.id
             },
             lastMessage: null,
             updatedAt: follow.createdAt.toISOString()
