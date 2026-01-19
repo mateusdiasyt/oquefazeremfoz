@@ -80,6 +80,10 @@ interface Post {
   likes: number
   createdAt: string
   isLiked: boolean
+  _count?: {
+    postlike?: number
+    comment?: number
+  }
 }
 
 interface Review {
@@ -554,9 +558,9 @@ export default function BusinessProfilePage() {
                 )}
               </div>
 
-              {business.post && business.post.length > 0 ? (
+              {posts && posts.length > 0 ? (
                 <div className="grid grid-cols-1 gap-6">
-                  {business.post.map((post) => (
+                  {posts.map((post) => (
                     <div key={post.id} className="bg-white rounded-xl shadow-lg p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div>
