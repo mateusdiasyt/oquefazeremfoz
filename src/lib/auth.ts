@@ -100,7 +100,7 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
-      profileImage: session.user.profileImage,
+      profileImage: session.user.business?.profileImage || null,
       roles: session.user.userrole.map(ur => ur.role),
       businessId: session.user.business?.id,
       createdAt: session.user.createdAt.toISOString()
