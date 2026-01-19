@@ -51,10 +51,15 @@ export async function POST(request: Request) {
     // Atualizar banco de dados
     const profileImageUrl = `/uploads/users/${fileName}`
     
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { profileImage: profileImageUrl }
-    })
+    // Atualizar profileImage da empresa do usuário
+    if (user.businessId) {
+      await prisma.business.update({
+        where: { id: user.businessId },
+        data: { profileImage: profileImageUrl }
+      })
+    } else {
+      return NextResponse.json({ message: 'Usuário não possui empresa' }, { status: 400 })
+    }
 
     return NextResponse.json({ 
       message: 'Foto de perfil atualizada com sucesso',
