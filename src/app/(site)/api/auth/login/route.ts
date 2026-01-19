@@ -119,9 +119,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Criar sessão no banco usando query raw para evitar problemas de cache
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
+    
     try {
       console.log('🔍 Tentando criar sessão no banco...')
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
       
       // Usar query raw para evitar problemas com cache do Prisma após alteração de schema
       await prisma.$executeRaw`
@@ -133,16 +134,16 @@ export async function POST(request: NextRequest) {
       console.log('✅ Sessão criada no banco com sucesso')
     } catch (error) {
       console.error('❌ Erro ao criar sessão no banco:', error)
-      // Se ainda der erro, tentar sem o token (armazenar apenas sessionId)
+      // Se ainda der erro, tentar novamente (pode ser problema temporário de cache)
       try {
-        console.log('🔄 Tentando criar sessão sem token...')
+        console.log('🔄 Tentando criar sessão novamente...')
         await prisma.$executeRaw`
           INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
           VALUES (${sessionId}, ${user.id}, ${token}, ${expiresAt}, NOW())
         `
-        console.log('✅ Sessão criada sem token')
+        console.log('✅ Sessão criada na segunda tentativa')
       } catch (retryError) {
-        console.error('❌ Erro ao criar sessão mesmo sem token:', retryError)
+        console.error('❌ Erro ao criar sessão mesmo na segunda tentativa:', retryError)
         throw retryError
       }
     }
