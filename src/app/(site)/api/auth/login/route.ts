@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 import { randomUUID } from 'crypto'
 
+// Fix: Clear Prisma connection cache after schema change
+
 const JWT_SECRET = process.env.JWT_SECRET
 
 if (!JWT_SECRET) {
