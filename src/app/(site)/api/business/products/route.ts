@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    const products = await prisma.product.findMany({
+    const products = await prisma.businessproduct.findMany({
       where: {
         businessId,
         isActive: true
@@ -101,15 +101,17 @@ export async function POST(request: NextRequest) {
       imageUrl = `/uploads/products/${fileName}`
     }
 
-    const product = await prisma.product.create({
+    const product = await prisma.businessproduct.create({
       data: {
+        id: `businessproduct_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         businessId,
         name,
         description: description || null,
         priceCents,
         productUrl: productUrl || null,
         imageUrl: imageUrl,
-        isActive: true
+        isActive: true,
+        updatedAt: new Date()
       }
     })
 
@@ -149,7 +151,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Buscar o produto e verificar se pertence à empresa do usuário
-    const existingProduct = await prisma.product.findUnique({
+    const existingProduct = await prisma.businessproduct.findUnique({
       where: { id },
       include: { business: true }
     })
@@ -204,14 +206,15 @@ export async function PUT(request: NextRequest) {
       imageUrl = `/uploads/products/${fileName}`
     }
 
-    const product = await prisma.product.update({
+    const product = await prisma.businessproduct.update({
       where: { id },
       data: {
         name,
         description: description || null,
         priceCents,
         productUrl: productUrl || null,
-        imageUrl: imageUrl
+        imageUrl: imageUrl,
+        updatedAt: new Date()
       }
     })
 
@@ -246,7 +249,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Buscar o produto e verificar se pertence à empresa do usuário
-    const existingProduct = await prisma.product.findUnique({
+    const existingProduct = await prisma.businessproduct.findUnique({
       where: { id: productId },
       include: { business: true }
     })
@@ -260,9 +263,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Soft delete - marcar como inativo
-    await prisma.product.update({
+    await prisma.businessproduct.update({
       where: { id: productId },
-      data: { isActive: false }
+      data: { 
+        isActive: false,
+        updatedAt: new Date()
+      }
     })
 
     return NextResponse.json({ 
