@@ -33,12 +33,10 @@ export async function POST(request: NextRequest) {
 
     if (action === 'follow') {
       // Verificar se já está seguindo
-      const existingFollow = await prisma.follow.findUnique({
+      const existingFollow = await prisma.follow.findFirst({
         where: {
-          followerId_followingId: {
-            followerId: user.id,
-            followingId: targetUserId
-          }
+          followerId: user.id,
+          followingId: targetUserId
         }
       })
 
@@ -49,6 +47,7 @@ export async function POST(request: NextRequest) {
       // Criar o follow
       await prisma.follow.create({
         data: {
+          id: `follow_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           followerId: user.id,
           followingId: targetUserId
         }
@@ -70,12 +69,10 @@ export async function POST(request: NextRequest) {
 
     } else if (action === 'unfollow') {
       // Verificar se está seguindo
-      const existingFollow = await prisma.follow.findUnique({
+      const existingFollow = await prisma.follow.findFirst({
         where: {
-          followerId_followingId: {
-            followerId: user.id,
-            followingId: targetUserId
-          }
+          followerId: user.id,
+          followingId: targetUserId
         }
       })
 
@@ -86,10 +83,7 @@ export async function POST(request: NextRequest) {
       // Remover o follow
       await prisma.follow.delete({
         where: {
-          followerId_followingId: {
-            followerId: user.id,
-            followingId: targetUserId
-          }
+          id: existingFollow.id
         }
       })
 
@@ -133,12 +127,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'ID do usuário é obrigatório' }, { status: 400 })
     }
 
-    const follow = await prisma.follow.findUnique({
+    const follow = await prisma.follow.findFirst({
       where: {
-        followerId_followingId: {
-          followerId: user.id,
-          followingId: targetUserId
-        }
+        followerId: user.id,
+        followingId: targetUserId
       }
     })
 

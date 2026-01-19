@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const followers = await prisma.follow.findMany({
       where: { followingId: targetUserId },
       include: {
-        follower: {
+        user_follow_followerIdTouser: {
           include: {
             business: {
               select: {
