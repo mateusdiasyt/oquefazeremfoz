@@ -13,7 +13,10 @@ export async function verifyPassword(password: string, hashedPassword: string): 
   return bcrypt.compare(password, hashedPassword)
 }
 
-export function generateToken(userId: string): string {
+export function generateToken(userId: string, sessionId?: string): string {
+  if (sessionId) {
+    return jwt.sign({ userId, sessionId }, JWT_SECRET, { expiresIn: '7d' })
+  }
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' })
 }
 
@@ -26,21 +29,31 @@ export function verifyToken(token: string): { userId: string } | null {
 }
 
 export async function createSession(userId: string): Promise<string> {
-  const token = generateToken(userId)
+  // Gerar ID único para a sessão
+  const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  
+  // Gerar token incluindo sessionId
+  const token = generateToken(userId, sessionId)
+  
   const expiresAt = new Date()
   expiresAt.setDate(expiresAt.getDate() + 7) // 7 dias
 
-  // Gerar ID único para a sessão
-  const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-  await prisma.session.create({
-    data: {
-      id: sessionId,
-      userId,
-      token,
-      expiresAt
-    }
-  })
+  // Usar query raw para evitar problemas com cache do Prisma após alteração de schema
+  try {
+    await prisma.$executeRaw`
+      INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
+      VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
+      ON CONFLICT (id) DO UPDATE
+      SET token = ${token}, "expiresAt" = ${expiresAt}, "updatedAt" = NOW()
+    `
+  } catch (error) {
+    // Se ainda der erro, tentar novamente sem ON CONFLICT
+    console.error('❌ Erro ao criar sessão, tentando novamente...', error)
+    await prisma.$executeRaw`
+      INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
+      VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
+    `
+  }
 
   return token
 }
