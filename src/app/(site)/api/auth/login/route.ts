@@ -96,25 +96,42 @@ export async function POST(request: NextRequest) {
     }
 
     // Processar roles
-    const roles = user.userrole.map(ur => ur.role)
+    const roles = user.userrole?.map(ur => ur.role) || []
+    console.log('🔍 DEBUG ROLES:', { roles, rolesCount: roles.length })
 
     // Gerar token JWT
     const sessionId = randomUUID()
-    const token = jwt.sign(
-      { userId: user.id, sessionId },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    )
+    console.log('🔍 DEBUG SESSION:', { sessionId })
+    
+    let token
+    try {
+      token = jwt.sign(
+        { userId: user.id, sessionId },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      )
+      console.log('✅ Token JWT gerado com sucesso')
+    } catch (error) {
+      console.error('❌ Erro ao gerar token JWT:', error)
+      throw error
+    }
 
     // Criar sessão no banco
-    await prisma.session.create({
-      data: {
-        id: sessionId,
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
-      }
-    })
+    try {
+      console.log('🔍 Tentando criar sessão no banco...')
+      await prisma.session.create({
+        data: {
+          id: sessionId,
+          userId: user.id,
+          token,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 dias
+        }
+      })
+      console.log('✅ Sessão criada no banco com sucesso')
+    } catch (error) {
+      console.error('❌ Erro ao criar sessão no banco:', error)
+      throw error
+    }
 
     // Configurar cookie
     const response = NextResponse.json({
@@ -140,16 +157,26 @@ export async function POST(request: NextRequest) {
     return response
 
   } catch (error) {
-    console.error('Erro no login:', error)
+    console.error('❌ Erro no login:', error)
+    console.error('❌ Stack:', error instanceof Error ? error.stack : 'Sem stack trace')
+    console.error('❌ Tipo do erro:', typeof error)
+    console.error('❌ Erro completo:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
     
     // Fornecer mais detalhes do erro em desenvolvimento
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
-    const errorDetails = process.env.NODE_ENV === 'development' 
-      ? errorMessage 
-      : 'Erro interno do servidor'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    const errorDetails = process.env.NODE_ENV === 'production'
+      ? 'Erro interno do servidor'
+      : errorMessage
     
     return NextResponse.json(
-      { error: errorDetails },
+      { 
+        error: errorDetails,
+        ...(process.env.NODE_ENV !== 'production' && { 
+          stack: errorStack,
+          message: errorMessage 
+        })
+      },
       { status: 500 }
     )
   }
