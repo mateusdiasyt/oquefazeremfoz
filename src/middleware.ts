@@ -44,7 +44,7 @@ async function verifyJWT(token: string, secret: string) {
 
     return decodedPayload
   } catch (error) {
-    throw new Error(`JWT verification failed: ${error.message}`)
+    throw new Error(`JWT verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
