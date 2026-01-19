@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // Verificar se o usuário já curtiu o post
-    const existingLike = await prisma.postLike.findFirst({
+    const existingLike = await prisma.postlike.findFirst({
       where: {
         userId: user.id,
         postId: postId
@@ -44,7 +44,7 @@ export async function POST(
     if (existingLike) {
       console.log('🗑️ Descurtindo post...')
       // Descurtir - remover o like
-      await prisma.postLike.delete({
+      await prisma.postlike.delete({
         where: {
           id: existingLike.id
         }
@@ -69,8 +69,9 @@ export async function POST(
     } else {
       console.log('➕ Curtindo post...')
       // Curtir - adicionar o like
-      await prisma.postLike.create({
+      await prisma.postlike.create({
         data: {
+          id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           userId: user.id,
           postId: postId
         }
@@ -115,7 +116,7 @@ export async function GET(
     const postId = params.id
 
     // Verificar se o usuário curtiu o post
-    const existingLike = await prisma.postLike.findFirst({
+    const existingLike = await prisma.postlike.findFirst({
       where: {
         userId: user.id,
         postId: postId
