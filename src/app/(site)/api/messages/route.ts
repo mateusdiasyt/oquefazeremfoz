@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
         followerId: user.id
       },
       include: {
-        following: {
+        user_follow_followingIdTouser: {
           include: {
             business: true
           }
@@ -187,7 +187,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const followedBusinessIds = followedBusinesses.map(f => f.following.business?.id).filter(Boolean)
+    const followedBusinessIds = followedBusinesses.map(f => f.user_follow_followingIdTouser.business?.id).filter(Boolean)
 
     const filteredConversations = conversations.filter(conv => {
       const otherParticipant = conv.user.find(p => p.id !== user.id)
