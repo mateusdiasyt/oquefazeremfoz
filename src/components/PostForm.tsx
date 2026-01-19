@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 
 interface Post {
   id: string
@@ -218,7 +219,7 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
           </button>
         </div>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
               type="text"
@@ -239,17 +240,6 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
               disabled={loading}
             />
           </div>
-
-        <form onSubmit={handleSubmit}>
-          <div>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="No que você está pensando?"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              rows={4}
-              disabled={loading}
-            />
           
           {showImageInput && (
             <div className="mt-4">
@@ -408,6 +398,7 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
                 {loading ? 'Salvando...' : uploading ? 'Enviando...' : editPost ? 'Salvar' : 'Publicar'}
               </button>
             </div>
+          </div>
         </form>
       </div>
     </div>
