@@ -5,6 +5,7 @@ import { X } from 'lucide-react'
 
 interface Post {
   id: string
+  title: string
   body: string
   imageUrl: string | null
   videoUrl: string | null
