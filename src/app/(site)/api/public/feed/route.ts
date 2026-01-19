@@ -1,6 +1,9 @@
 import { prisma } from '../../../../../lib/db'
 import { NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET() {
   const posts = await prisma.post.findMany({
     orderBy: { createdAt: 'desc' },
