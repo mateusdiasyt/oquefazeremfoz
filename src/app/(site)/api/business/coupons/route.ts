@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    const coupons = await prisma.coupon.findMany({
+    const coupons = await prisma.businesscoupon.findMany({
       where: { 
         businessId,
         isActive: true
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const threeDaysAgo = new Date()
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
-    const recentCoupons = await prisma.coupon.findMany({
+    const recentCoupons = await prisma.businesscoupon.findMany({
       where: { 
         businessId: business.id,
         createdAt: {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se já existe um cupom com o mesmo código
-    const existingCoupon = await prisma.coupon.findFirst({
+    const existingCoupon = await prisma.businesscoupon.findFirst({
       where: { 
         businessId: business.id,
         code: code,
@@ -95,8 +95,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Já existe um cupom com este código' }, { status: 400 })
     }
 
-    const coupon = await prisma.coupon.create({
+    const coupon = await prisma.businesscoupon.create({
       data: {
+        id: `businesscoupon_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         businessId: business.id,
         title,
         code,
@@ -104,7 +105,8 @@ export async function POST(request: NextRequest) {
         link: link || null,
         discount: discount || null,
         validUntil: validUntil ? new Date(validUntil) : null,
-        isActive: true
+        isActive: true,
+        updatedAt: new Date()
       }
     })
 
@@ -159,7 +161,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar se já existe outro cupom com o mesmo código
-    const duplicateCoupon = await prisma.coupon.findFirst({
+    const duplicateCoupon = await prisma.businesscoupon.findFirst({
       where: { 
         businessId: business.id,
         code: code,
@@ -172,7 +174,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: 'Já existe outro cupom com este código' }, { status: 400 })
     }
 
-    const coupon = await prisma.coupon.update({
+    const coupon = await prisma.businesscoupon.update({
       where: { id },
       data: {
         title,
@@ -180,7 +182,8 @@ export async function PUT(request: NextRequest) {
         description: description || null,
         link: link || null,
         discount: discount || null,
-        validUntil: validUntil ? new Date(validUntil) : null
+        validUntil: validUntil ? new Date(validUntil) : null,
+        updatedAt: new Date()
       }
     })
 
@@ -224,7 +227,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verificar se o cupom pertence à empresa
-    const existingCoupon = await prisma.coupon.findFirst({
+    const existingCoupon = await prisma.businesscoupon.findFirst({
       where: { 
         id,
         businessId: business.id
@@ -235,7 +238,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: 'Cupom não encontrado' }, { status: 404 })
     }
 
-    await prisma.coupon.delete({
+    await prisma.businesscoupon.delete({
       where: { id }
     })
 
