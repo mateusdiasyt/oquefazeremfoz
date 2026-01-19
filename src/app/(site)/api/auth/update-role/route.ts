@@ -18,12 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Remover roles existentes e adicionar o novo
-    await prisma.userRole.deleteMany({
+    await prisma.userrole.deleteMany({
       where: { userId: user.id }
     })
 
-    await prisma.userRole.create({
+    await prisma.userrole.create({
       data: {
+        id: `userrole_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: user.id,
         role: role as 'TOURIST' | 'COMPANY' | 'ADMIN'
       }
