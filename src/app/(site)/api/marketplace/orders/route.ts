@@ -13,11 +13,12 @@ export async function POST(req: Request) {
 
   const order = await prisma.order.create({
     data: {
+      id: `order_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       productId: p.id,
       qty,
       subtotalCts: subtotal,
       feeCts: fee,
-      totalCents: total,
+      totalCts: total,
       status: 'PAID', // placeholder: marcar como pago por enquanto
     },
   })
