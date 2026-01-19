@@ -32,6 +32,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Log de debug: verificar qual banco está sendo usado
+    const dbUrl = process.env.DATABASE_URL || ''
+    const isNeon = dbUrl.includes('neon.tech')
+    console.log('🔍 DEBUG LOGIN:', {
+      email,
+      database: isNeon ? 'Neon.tech' : dbUrl.includes('hostinger') ? 'Hostinger' : 'Desconhecido',
+      dbUrlLength: dbUrl.length
+    })
+
     // Buscar usuário no banco
     const user = await prisma.user.findUnique({
       where: { email },
@@ -53,7 +62,17 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('🔍 DEBUG USER:', {
+      found: !!user,
+      email: user?.email,
+      hasPassword: !!user?.password,
+      passwordLength: user?.password?.length || 0,
+      passwordHash: user?.password?.substring(0, 10) + '...',
+      rolesCount: user?.userrole?.length || 0
+    })
+
     if (!user) {
+      console.log('❌ Usuário não encontrado no banco de dados')
       return NextResponse.json(
         { error: 'Credenciais inválidas' },
         { status: 401 }
@@ -62,7 +81,14 @@ export async function POST(request: NextRequest) {
 
     // Verificar senha
     const isValidPassword = await bcrypt.compare(password, user.password)
+    console.log('🔍 DEBUG PASSWORD:', {
+      isValid: isValidPassword,
+      passwordProvided: password.substring(0, 3) + '...',
+      hashInDb: user.password.substring(0, 20) + '...'
+    })
+
     if (!isValidPassword) {
+      console.log('❌ Senha inválida')
       return NextResponse.json(
         { success: false, error: 'Credenciais inválidas' },
         { status: 401 }

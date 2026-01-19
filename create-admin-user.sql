@@ -2,7 +2,7 @@
 -- Execute este script no SQL Editor do Neon.tech
 -- 
 -- Credenciais:
--- Email: admin@oqfoz.com
+-- Email: admin@oqfoz.com.br
 -- Senha: admin123
 
 -- Hash bcrypt para a senha "admin123" (10 rounds)
@@ -12,7 +12,7 @@
 INSERT INTO "user" (id, email, password, name, "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid()::text,
-  'admin@oqfoz.com',
+  'admin@oqfoz.com.br',
   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', -- senha: admin123 (hash bcrypt)
   'Administrador',
   NOW(),
@@ -29,7 +29,7 @@ SELECT
   u.id,
   'ADMIN'::userrole_role
 FROM "user" u
-WHERE u.email = 'admin@oqfoz.com'
+WHERE u.email = 'admin@oqfoz.com.br'
   AND NOT EXISTS (
     SELECT 1 FROM userrole ur 
     WHERE ur."userId" = u.id AND ur.role = 'ADMIN'
@@ -43,5 +43,5 @@ SELECT
   array_agg(ur.role) as roles
 FROM "user" u
 LEFT JOIN userrole ur ON ur."userId" = u.id
-WHERE u.email = 'admin@oqfoz.com'
+WHERE u.email = 'admin@oqfoz.com.br'
 GROUP BY u.id, u.email, u.name;
