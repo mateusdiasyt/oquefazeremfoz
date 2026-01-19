@@ -13,7 +13,13 @@ export async function POST(req: Request) {
   if (!isAdmin()) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const body = await req.json()
   const parsed = planSchema.parse(body)
-  const plan = await prisma.plan.create({ data: parsed })
+  const plan = await prisma.plan.create({ 
+    data: {
+      ...parsed,
+      id: parsed.id || `plan_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      updatedAt: new Date()
+    }
+  })
   return NextResponse.json(plan)
 }
 
@@ -23,7 +29,13 @@ export async function PATCH(req: Request) {
   const parsed = planSchema.parse(body)
   if (!parsed.id) return NextResponse.json({ error: 'id required' }, { status: 400 })
   const { id, ...data } = parsed
-  const plan = await prisma.plan.update({ where: { id }, data })
+  const plan = await prisma.plan.update({ 
+    where: { id }, 
+    data: {
+      ...data,
+      updatedAt: new Date()
+    }
+  })
   return NextResponse.json(plan)
 }
 
