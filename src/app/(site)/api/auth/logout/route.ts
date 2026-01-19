@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { prisma } from '../../../../../lib/db'
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = process.env.JWT_SECRET
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const token = cookieStore.get('auth-token')?.value
 
     // Se há token, remover a sessão do banco
-    if (token) {
+    if (token && JWT_SECRET) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as { sessionId: string }
         

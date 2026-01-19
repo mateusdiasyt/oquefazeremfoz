@@ -1,0 +1,20 @@
+STRING DE CONEXÃO DO NEON.TECH
+================================
+
+Para usar no Vercel (variável DATABASE_URL):
+
+postgresql://neondb_owner:npg_Iw2C1KnNfemZ@ep-floral-mouse-ah1n2jju-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+
+================================
+
+⚠️ IMPORTANTE:
+- NÃO commite esta string no Git!
+- Use apenas no Vercel (variáveis de ambiente)
+- Mantenha segura
+
+================================
+
+PRÓXIMOS PASSOS:
+1. Executar database-postgresql.sql no SQL Editor do Neon
+2. Verificar se as tabelas foram criadas
+3. Usar esta string no Vercel quando fizer deploy

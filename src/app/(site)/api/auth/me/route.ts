@@ -3,10 +3,19 @@ import { prisma } from '../../../../../lib/db'
 import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = process.env.JWT_SECRET
 
 export async function GET(request: NextRequest) {
   try {
+    // Verificar se JWT_SECRET está configurado
+    if (!JWT_SECRET) {
+      console.error('❌ JWT_SECRET não está definido')
+      return NextResponse.json(
+        { error: 'Erro de configuração do servidor' },
+        { status: 500 }
+      )
+    }
+
     const cookieStore = cookies()
     const token = cookieStore.get('auth-token')?.value
 

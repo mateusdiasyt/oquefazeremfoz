@@ -1,0 +1,54 @@
+===========================================
+VARIÁVEIS DE AMBIENTE PARA VERCEL
+===========================================
+
+Copie e cole cada uma no Vercel:
+
+===========================================
+1. DATABASE_URL
+===========================================
+Name: DATABASE_URL
+Value: postgresql://neondb_owner:npg_Iw2C1KnNfemZ@ep-floral-mouse-ah1n2jju-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require
+Ambientes: ✅ Production, ✅ Preview, ✅ Development
+
+===========================================
+2. JWT_SECRET
+===========================================
+Name: JWT_SECRET
+Value: K8mN2pQ5rT9vW3xY7zA1bC4dE6fG8hJ0kL3mN5pQ7rT9vW1xY3zA5bC7dE9fG1hJ3kL5mN7pQ9rT
+Ambientes: ✅ Production, ✅ Preview, ✅ Development
+
+===========================================
+3. NEXT_PUBLIC_BASE_URL
+===========================================
+Name: NEXT_PUBLIC_BASE_URL
+Value: https://oquefazeremfoz.vercel.app
+⚠️ ATENÇÃO: Use o nome do seu projeto no Vercel!
+Ambientes: ✅ Production, ✅ Preview, ✅ Development
+
+===========================================
+4. OQFOZ_FEE_PCT
+===========================================
+Name: OQFOZ_FEE_PCT
+Value: 10
+Ambientes: ✅ Production, ✅ Preview, ✅ Development
+
+===========================================
+5. NODE_ENV (Opcional)
+===========================================
+Name: NODE_ENV
+Value: production
+Ambientes: ✅ Production apenas
+
+===========================================
+COMO ADICIONAR:
+===========================================
+1. Vercel → Seu Projeto → Settings
+2. Environment Variables
+3. Add New
+4. Cole Name e Value
+5. Marque os ambientes
+6. Save
+7. Repita para todas as 5 variáveis
+
+===========================================

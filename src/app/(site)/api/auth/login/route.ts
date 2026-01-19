@@ -3,11 +3,25 @@ import { prisma } from '../../../../../lib/db'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
+import { randomUUID } from 'crypto'
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = process.env.JWT_SECRET
+
+if (!JWT_SECRET) {
+  console.error('⚠️ JWT_SECRET não está definido nas variáveis de ambiente!')
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se JWT_SECRET está configurado
+    if (!JWT_SECRET) {
+      console.error('❌ JWT_SECRET não está definido')
+      return NextResponse.json(
+        { error: 'Erro de configuração do servidor' },
+        { status: 500 }
+      )
+    }
+
     const { email, password } = await request.json()
 
     // Validação básica
@@ -59,7 +73,7 @@ export async function POST(request: NextRequest) {
     const roles = user.userrole.map(ur => ur.role)
 
     // Gerar token JWT
-    const sessionId = crypto.randomUUID()
+    const sessionId = randomUUID()
     const token = jwt.sign(
       { userId: user.id, sessionId },
       JWT_SECRET,
@@ -101,8 +115,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro no login:', error)
+    
+    // Fornecer mais detalhes do erro em desenvolvimento
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const errorDetails = process.env.NODE_ENV === 'development' 
+      ? errorMessage 
+      : 'Erro interno do servidor'
+    
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: errorDetails },
       { status: 500 }
     )
   }

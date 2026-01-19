@@ -30,6 +30,9 @@ env.local
 # Vercel
 .vercel
 
+# Vercel
+.vercel
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
