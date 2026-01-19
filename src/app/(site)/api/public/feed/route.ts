@@ -6,7 +6,7 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
     include: { 
       business: true,
-      comments: {
+      comment: {
         take: 3,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -21,7 +21,7 @@ export async function GET() {
       },
       _count: {
         select: {
-          comments: true
+          comment: true
         }
       }
     },
