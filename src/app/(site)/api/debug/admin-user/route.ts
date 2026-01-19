@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         u."updatedAt"
       FROM "user" u
       INNER JOIN userrole ur ON ur."userId" = u.id
-      WHERE ur.role = 'ADMIN'::text OR ur.role::text = 'ADMIN'
+      WHERE ur.role::text = 'ADMIN'
       GROUP BY u.id, u.email, u.name, u.password, ur.role, u."createdAt", u."updatedAt"
     `
 
