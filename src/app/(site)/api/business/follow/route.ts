@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
       // Seguir - criar businesslike
       await prisma.businesslike.create({
         data: {
+          id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           userId: user.id,
           businessId: businessId
         }
