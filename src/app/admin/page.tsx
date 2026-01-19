@@ -18,7 +18,7 @@ export default function AdminDashboard() {
           <div className="mt-2 max-w-xl text-sm text-gray-500">
             <p><strong>Nome:</strong> {user?.name || 'N/A'}</p>
             <p><strong>Email:</strong> {user?.email}</p>
-            <p><strong>Role:</strong> {user?.role}</p>
+            <p><strong>Roles:</strong> {user?.roles?.join(', ') || 'N/A'}</p>
           </div>
         </div>
       </div>
