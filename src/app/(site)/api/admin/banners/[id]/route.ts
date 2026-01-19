@@ -25,7 +25,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         subtitle,
         imageUrl: imageUrl || null,
         isActive: isActive !== undefined ? isActive : true,
-        order: order || 0
+        order: order || 0,
+        updatedAt: new Date()
       }
     })
 

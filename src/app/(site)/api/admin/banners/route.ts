@@ -43,11 +43,13 @@ export async function POST(request: NextRequest) {
 
     const banner = await prisma.banner.create({
       data: {
+        id: `banner_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         title,
         subtitle,
         imageUrl: imageUrl || null,
         isActive: isActive !== undefined ? isActive : true,
-        order: order || 0
+        order: order || 0,
+        updatedAt: new Date()
       }
     })
 
