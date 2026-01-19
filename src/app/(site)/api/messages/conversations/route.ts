@@ -47,12 +47,12 @@ export async function GET(request: NextRequest) {
           },
           take: 1,
           include: {
-            sender: {
+            user_message_senderIdTouser: {
               include: {
                 business: true
               }
             },
-            receiver: {
+            user_message_receiverIdTouser: {
               include: {
                 business: true
               }
@@ -91,21 +91,21 @@ export async function GET(request: NextRequest) {
           id: lastMessage.id,
           content: lastMessage.content,
           sender: {
-            id: lastMessage.sender.id,
-            name: lastMessage.sender.name || lastMessage.sender.email,
-            business: lastMessage.sender.business ? {
-              id: lastMessage.sender.business.id,
-              name: lastMessage.sender.business.name,
-              profileImage: lastMessage.sender.business.profileImage
+            id: lastMessage.user_message_senderIdTouser.id,
+            name: lastMessage.user_message_senderIdTouser.name || lastMessage.user_message_senderIdTouser.email,
+            business: lastMessage.user_message_senderIdTouser.business ? {
+              id: lastMessage.user_message_senderIdTouser.business.id,
+              name: lastMessage.user_message_senderIdTouser.business.name,
+              profileImage: lastMessage.user_message_senderIdTouser.business.profileImage
             } : undefined
           },
           receiver: {
-            id: lastMessage.receiver?.id,
-            name: lastMessage.receiver?.name || lastMessage.receiver?.email,
-            business: lastMessage.receiver?.business ? {
-              id: lastMessage.receiver?.business.id,
-              name: lastMessage.receiver?.business.name,
-              profileImage: lastMessage.receiver?.business.profileImage
+            id: lastMessage.user_message_receiverIdTouser?.id,
+            name: lastMessage.user_message_receiverIdTouser?.name || lastMessage.user_message_receiverIdTouser?.email,
+            business: lastMessage.user_message_receiverIdTouser?.business ? {
+              id: lastMessage.user_message_receiverIdTouser.business.id,
+              name: lastMessage.user_message_receiverIdTouser.business.name,
+              profileImage: lastMessage.user_message_receiverIdTouser.business.profileImage
             } : undefined
           },
           createdAt: lastMessage.createdAt.toISOString(),

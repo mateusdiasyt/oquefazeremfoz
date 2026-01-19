@@ -73,13 +73,14 @@ export async function POST(request: NextRequest) {
     // Criar a mensagem
     const message = await prisma.message.create({
       data: {
+        id: `message_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         conversationId: conversation.id,
         senderId: user.id,
         receiverId: receiverId,
         content: content.trim()
       },
       include: {
-        sender: {
+        user_message_senderIdTouser: {
           include: {
             business: {
               select: {
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
             }
           }
         },
-        receiver: {
+        user_message_receiverIdTouser: {
           include: {
             business: {
               select: {
@@ -119,16 +120,16 @@ export async function POST(request: NextRequest) {
       isRead: message.isRead,
       createdAt: message.createdAt,
       sender: {
-        id: message.sender.id,
-        name: message.sender.business?.name || message.sender.name || 'Usuário',
-        profileImage: message.sender.business?.profileImage,
-        isVerified: message.sender.business?.isVerified || false
+        id: message.user_message_senderIdTouser.id,
+        name: message.user_message_senderIdTouser.business?.name || message.user_message_senderIdTouser.name || 'Usuário',
+        profileImage: message.user_message_senderIdTouser.business?.profileImage,
+        isVerified: message.user_message_senderIdTouser.business?.isVerified || false
       },
       receiver: {
-        id: message.receiver?.id,
-        name: message.receiver?.business?.name || message.receiver?.name || 'Usuário',
-        profileImage: message.receiver?.business?.profileImage,
-        isVerified: message.receiver?.business?.isVerified || false
+        id: message.user_message_receiverIdTouser?.id,
+        name: message.user_message_receiverIdTouser?.business?.name || message.user_message_receiverIdTouser?.name || 'Usuário',
+        profileImage: message.user_message_receiverIdTouser?.business?.profileImage,
+        isVerified: message.user_message_receiverIdTouser?.business?.isVerified || false
       }
     }
 

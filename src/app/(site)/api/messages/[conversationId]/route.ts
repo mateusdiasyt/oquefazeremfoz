@@ -56,12 +56,12 @@ export async function GET(
         conversationId
       },
       include: {
-        sender: {
+        user_message_senderIdTouser: {
           include: {
             business: true
           }
         },
-        receiver: {
+        user_message_receiverIdTouser: {
           include: {
             business: true
           }
@@ -89,21 +89,21 @@ export async function GET(
       id: message.id,
       content: message.content,
       sender: {
-        id: message.sender.id,
-        name: message.sender.name || message.sender.email,
-        business: message.sender.business ? {
-          id: message.sender.business.id,
-          name: message.sender.business.name,
-          profileImage: message.sender.business.profileImage
+        id: message.user_message_senderIdTouser.id,
+        name: message.user_message_senderIdTouser.name || message.user_message_senderIdTouser.email,
+        business: message.user_message_senderIdTouser.business ? {
+          id: message.user_message_senderIdTouser.business.id,
+          name: message.user_message_senderIdTouser.business.name,
+          profileImage: message.user_message_senderIdTouser.business.profileImage
         } : undefined
       },
       receiver: {
-        id: message.receiver?.id,
-        name: message.receiver?.name || message.receiver?.email,
-        business: message.receiver?.business ? {
-          id: message.receiver?.business.id,
-          name: message.receiver?.business.name,
-          profileImage: message.receiver?.business.profileImage
+        id: message.user_message_receiverIdTouser?.id,
+        name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
+        business: message.user_message_receiverIdTouser?.business ? {
+          id: message.user_message_receiverIdTouser.business.id,
+          name: message.user_message_receiverIdTouser.business.name,
+          profileImage: message.user_message_receiverIdTouser.business.profileImage
         } : undefined
       },
       createdAt: message.createdAt.toISOString(),
@@ -226,18 +226,19 @@ export async function POST(
     
     const message = await prisma.message.create({
       data: {
+        id: `message_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         conversationId: conversation.id,
         senderId: user.id,
         receiverId,
         content
       },
       include: {
-        sender: {
+        user_message_senderIdTouser: {
           include: {
             business: true
           }
         },
-        receiver: {
+        user_message_receiverIdTouser: {
           include: {
             business: true
           }
@@ -259,21 +260,21 @@ export async function POST(
       conversationId: conversation.id, // Adicionar ID da conversa
       content: message.content,
       sender: {
-        id: message.sender.id,
-        name: message.sender.name || message.sender.email,
-        business: message.sender.business ? {
-          id: message.sender.business.id,
-          name: message.sender.business.name,
-          profileImage: message.sender.business.profileImage
+        id: message.user_message_senderIdTouser.id,
+        name: message.user_message_senderIdTouser.name || message.user_message_senderIdTouser.email,
+        business: message.user_message_senderIdTouser.business ? {
+          id: message.user_message_senderIdTouser.business.id,
+          name: message.user_message_senderIdTouser.business.name,
+          profileImage: message.user_message_senderIdTouser.business.profileImage
         } : undefined
       },
       receiver: {
-        id: message.receiver?.id,
-        name: message.receiver?.name || message.receiver?.email,
-        business: message.receiver?.business ? {
-          id: message.receiver?.business.id,
-          name: message.receiver?.business.name,
-          profileImage: message.receiver?.business.profileImage
+        id: message.user_message_receiverIdTouser?.id,
+        name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
+        business: message.user_message_receiverIdTouser?.business ? {
+          id: message.user_message_receiverIdTouser.business.id,
+          name: message.user_message_receiverIdTouser.business.name,
+          profileImage: message.user_message_receiverIdTouser.business.profileImage
         } : undefined
       },
       createdAt: message.createdAt.toISOString(),

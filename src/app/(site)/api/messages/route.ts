@@ -70,13 +70,14 @@ export async function POST(request: NextRequest) {
     // Criar mensagem
     const message = await prisma.message.create({
       data: {
+        id: `message_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         content,
         senderId: user.id,
         receiverId: business.userId,
         conversationId: conversation.id
       },
       include: {
-        sender: {
+        user_message_senderIdTouser: {
           select: {
             id: true,
             name: true,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
             }
           }
         },
-        receiver: {
+        user_message_receiverIdTouser: {
           select: {
             id: true,
             name: true,
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
           },
           take: 1,
           include: {
-            sender: {
+            user_message_senderIdTouser: {
               select: {
                 id: true,
                 name: true,
