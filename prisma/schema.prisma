@@ -64,7 +64,7 @@ model businesscoupon {
   updatedAt   DateTime
   business    business  @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessCoupon_businessId_fkey")
 
-  @@index([businessId], map: "BusinessCoupon_businessId_fkey")
+  @@index([businessId], map: "BusinessCoupon_businessId_idx")
 }
 
 model businesslike {
@@ -75,7 +75,7 @@ model businesslike {
   user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "BusinessLike_userId_fkey")
 
   @@unique([businessId, userId], map: "BusinessLike_businessId_userId_key")
-  @@index([userId], map: "BusinessLike_userId_fkey")
+  @@index([userId], map: "BusinessLike_userId_idx")
 }
 
 model businessproduct {
@@ -92,7 +92,7 @@ model businessproduct {
   imageUrl    String?
   business    business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessProduct_businessId_fkey")
 
-  @@index([businessId], map: "BusinessProduct_businessId_fkey")
+  @@index([businessId], map: "BusinessProduct_businessId_idx")
 }
 
 model businessreview {
@@ -109,7 +109,7 @@ model businessreview {
   user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "BusinessReview_userId_fkey")
 
   @@unique([businessId, userId], map: "BusinessReview_businessId_userId_key")
-  @@index([userId], map: "BusinessReview_userId_fkey")
+  @@index([userId], map: "BusinessReview_userId_idx")
 }
 
 model comment {
@@ -121,8 +121,8 @@ model comment {
   post      post     @relation(fields: [postId], references: [id], map: "Comment_postId_fkey")
   user      user?    @relation(fields: [userId], references: [id], map: "Comment_userId_fkey")
 
-  @@index([postId], map: "Comment_postId_fkey")
-  @@index([userId], map: "Comment_userId_fkey")
+  @@index([postId], map: "Comment_postId_idx")
+  @@index([userId], map: "Comment_userId_idx")
 }
 
 model company {
@@ -171,7 +171,7 @@ model coupon {
   createdAt     DateTime  @default(now())
   company       company   @relation(fields: [companyId], references: [id], map: "Coupon_companyId_fkey")
 
-  @@index([companyId], map: "Coupon_companyId_fkey")
+  @@index([companyId], map: "Coupon_companyId_idx")
 }
 
 model follow {
@@ -183,7 +183,7 @@ model follow {
   user_follow_followingIdTouser user     @relation("follow_followingIdTouser", fields: [followingId], references: [id], onDelete: Cascade, map: "Follow_followingId_fkey")
 
   @@unique([followerId, followingId], map: "Follow_followerId_followingId_key")
-  @@index([followingId], map: "Follow_followingId_fkey")
+  @@index([followingId], map: "Follow_followingId_idx")
 }
 
 model message {
@@ -198,9 +198,9 @@ model message {
   user_message_receiverIdTouser user         @relation("message_receiverIdTouser", fields: [receiverId], references: [id], onDelete: Cascade, map: "Message_receiverId_fkey")
   user_message_senderIdTouser   user         @relation("message_senderIdTouser", fields: [senderId], references: [id], onDelete: Cascade, map: "Message_senderId_fkey")
 
-  @@index([conversationId], map: "Message_conversationId_fkey")
-  @@index([receiverId], map: "Message_receiverId_fkey")
-  @@index([senderId], map: "Message_senderId_fkey")
+  @@index([conversationId], map: "Message_conversationId_idx")
+  @@index([receiverId], map: "Message_receiverId_idx")
+  @@index([senderId], map: "Message_senderId_idx")
 }
 
 model order {
@@ -216,8 +216,8 @@ model order {
   product     product      @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
   user        user?        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
 
-  @@index([productId], map: "Order_productId_fkey")
-  @@index([userId], map: "Order_userId_fkey")
+  @@index([productId], map: "Order_productId_idx")
+  @@index([userId], map: "Order_userId_idx")
 }
 
 model plan {
@@ -246,7 +246,7 @@ model post {
   business   business   @relation(fields: [businessId], references: [id], map: "Post_businessId_fkey")
   postlike   postlike[]
 
-  @@index([businessId], map: "Post_businessId_fkey")
+  @@index([businessId], map: "Post_businessId_idx")
 }
 
 model postlike {
@@ -257,7 +257,7 @@ model postlike {
   user   user?   @relation(fields: [userId], references: [id], map: "PostLike_userId_fkey")
 
   @@unique([postId, userId], map: "PostLike_postId_userId_key")
-  @@index([userId], map: "PostLike_userId_fkey")
+  @@index([userId], map: "PostLike_userId_idx")
 }
 
 model product {
@@ -272,7 +272,7 @@ model product {
   order       order[]
   company     company  @relation(fields: [companyId], references: [id], map: "Product_companyId_fkey")
 
-  @@index([companyId], map: "Product_companyId_fkey")
+  @@index([companyId], map: "Product_companyId_idx")
 }
 
 model review {
@@ -286,8 +286,8 @@ model review {
   company     company  @relation(fields: [companyId], references: [id], map: "Review_companyId_fkey")
   user        user     @relation(fields: [userId], references: [id], map: "Review_userId_fkey")
 
-  @@index([companyId], map: "Review_companyId_fkey")
-  @@index([userId], map: "Review_userId_fkey")
+  @@index([companyId], map: "Review_companyId_idx")
+  @@index([userId], map: "Review_userId_idx")
 }
 
 model session {
@@ -298,7 +298,7 @@ model session {
   createdAt DateTime @default(now())
   user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
 
-  @@index([userId], map: "Session_userId_fkey")
+  @@index([userId], map: "Session_userId_idx")
 }
 
 model sponsoredpost {
@@ -312,7 +312,7 @@ model sponsoredpost {
   createdAt DateTime  @default(now())
   company   company   @relation(fields: [companyId], references: [id], map: "SponsoredPost_companyId_fkey")
 
-  @@index([companyId], map: "SponsoredPost_companyId_fkey")
+  @@index([companyId], map: "SponsoredPost_companyId_idx")
 }
 
 model story {
@@ -323,7 +323,7 @@ model story {
   createdAt DateTime @default(now())
   company   company  @relation(fields: [companyId], references: [id], map: "Story_companyId_fkey")
 
-  @@index([companyId], map: "Story_companyId_fkey")
+  @@index([companyId], map: "Story_companyId_idx")
 }
 
 model subscription {
@@ -337,8 +337,8 @@ model subscription {
   company   company             @relation(fields: [companyId], references: [id], map: "Subscription_companyId_fkey")
   plan      plan                @relation(fields: [planId], references: [id], map: "Subscription_planId_fkey")
 
-  @@index([companyId], map: "Subscription_companyId_fkey")
-  @@index([planId], map: "Subscription_planId_fkey")
+  @@index([companyId], map: "Subscription_companyId_idx")
+  @@index([planId], map: "Subscription_planId_idx")
 }
 
 model user {
