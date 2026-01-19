@@ -1,0 +1,341 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { CheckCircle } from 'lucide-react'
+import UrlPreview from './UrlPreview'
+import ShareModal from './ShareModal'
+import VerificationBadge from './VerificationBadge'
+import { extractUrlsFromText } from '../utils/urlDetector'
+
+interface Post {
+  id: string
+  title: string
+  body: string | null
+  imageUrl: string | null
+  videoUrl: string | null
+  likes: number
+  createdAt: string
+  business: {
+    id: string
+    name: string
+    isApproved: boolean
+    profileImage: string | null
+    isVerified: boolean
+    slug: string | null
+  }
+  comments: Array<{
+    id: string
+    body: string
+    createdAt: string
+    user: {
+      id: string
+      name: string | null
+    }
+  }>
+  postLikes: Array<{
+    userId: string
+  }>
+}
+
+interface PostCardProps {
+  post: Post
+  onLike?: () => void
+}
+
+export default function PostCard({ post, onLike }: PostCardProps) {
+  const router = useRouter()
+  const [isLiked, setIsLiked] = useState(false)
+  const [likesCount, setLikesCount] = useState(post.likes)
+  const [showComments, setShowComments] = useState(false)
+  const [newComment, setNewComment] = useState('')
+  const [comments, setComments] = useState(post.comments)
+  const [commentLoading, setCommentLoading] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+
+  useEffect(() => {
+    // Verificar se o usuário curtiu o post
+    checkIfLiked()
+  }, [])
+
+  const checkIfLiked = async () => {
+    try {
+      const response = await fetch(`/api/posts/${post.id}/like`)
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.liked)
+      }
+    } catch (error) {
+      console.error('Erro ao verificar like:', error)
+    }
+  }
+
+  const handleLike = async () => {
+    try {
+      const response = await fetch(`/api/posts/${post.id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setIsLiked(data.liked)
+        setLikesCount(data.likesCount)
+        
+        // Chamar callback se fornecido
+        if (onLike) {
+          onLike()
+        }
+      } else {
+        console.error('Erro ao curtir post:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Erro ao curtir post:', error)
+    }
+  }
+
+  const handleComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!newComment.trim()) return
+
+    setCommentLoading(true)
+
+    try {
+      const response = await fetch('/api/posts/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          postId: post.id,
+          content: newComment.trim()
+        }),
+      })
+
+      if (response.ok) {
+        const text = await response.text()
+        if (text) {
+          const data = JSON.parse(text)
+          setComments(prev => [data.comment, ...prev])
+          setNewComment('')
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao comentar:', error)
+    } finally {
+      setCommentLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  return (
+    <div className="card p-6 mb-6 animate-fade-in shadow-soft hover:shadow-medium transition-all duration-300">
+      {/* Header do post */}
+      <div className="flex items-center space-x-4 mb-6">
+        {/* Foto de perfil da empresa */}
+        <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-glow">
+          {post.business.profileImage ? (
+            <img
+              src={post.business.profileImage}
+              alt={post.business.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-primary flex items-center justify-center text-white font-display font-bold text-lg">
+              {post.business.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center space-x-3">
+            <a
+              href={post.business.slug ? `/empresa/${post.business.slug}` : `/empresa/${post.business.id}`}
+              className="font-semibold text-gray-800 text-lg hover:text-pink-600 transition-colors duration-300 cursor-pointer"
+            >
+              {post.business.name}
+            </a>
+            {post.business.isVerified && (
+              <VerificationBadge size="md" />
+            )}
+          </div>
+          <p className="text-sm text-gray-600 mt-1">{formatDate(post.createdAt)}</p>
+        </div>
+      </div>
+
+      {/* Conteúdo do post */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">{post.title}</h2>
+        {post.body && (
+          <>
+            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+              {extractUrlsFromText(post.body).cleanText}
+            </p>
+            {extractUrlsFromText(post.body).urls.map((url, index) => (
+              <UrlPreview key={index} url={url} />
+            ))}
+          </>
+        )}
+        {post.imageUrl && (
+          <div className="mt-4">
+            <div className="relative w-full rounded-2xl overflow-hidden shadow-medium" style={{ aspectRatio: '4/3' }}>
+              <img 
+                src={post.imageUrl} 
+                alt="Post image" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+        {post.videoUrl && (
+          <div className="mt-4">
+            <div className="relative w-full rounded-2xl overflow-hidden shadow-medium" style={{ aspectRatio: '4/3' }}>
+              <video 
+                src={post.videoUrl} 
+                controls
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                Seu navegador não suporta vídeos.
+              </video>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Ações do post */}
+      <div className="flex items-center space-x-8 border-t border-gray-200 pt-4">
+        <button
+          onClick={handleLike}
+          className={`flex items-center space-x-2 transition-all duration-300 hover:scale-105 ${
+            isLiked ? 'text-pink-500' : 'text-gray-600 hover:text-pink-500'
+          }`}
+        >
+          <svg className="w-6 h-6" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <span className="font-medium">{likesCount}</span>
+        </button>
+
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className="flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition-all duration-300 hover:scale-105"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <span className="font-medium">{comments.length}</span>
+        </button>
+
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="flex items-center space-x-2 text-gray-600 hover:text-green-500 transition-all duration-300 hover:scale-105"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+          </svg>
+          <span className="font-medium">Compartilhar</span>
+        </button>
+      </div>
+
+      {/* Comentários */}
+      {showComments && (
+        <div className="mt-6 border-t border-gray-100 pt-6 animate-slide-up">
+          {/* Formulário de comentário minimalista */}
+          <form onSubmit={handleComment} className="mb-6">
+            <div className="flex items-end space-x-3">
+              <div className="flex-1">
+                <div className="relative">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Adicione um comentário..."
+                    className="w-full px-4 py-3 pr-12 border-0 bg-gray-50 rounded-2xl resize-none focus:ring-2 focus:ring-pink-500 focus:bg-white transition-all duration-200 text-sm placeholder-gray-500"
+                    rows={2}
+                    disabled={commentLoading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newComment.trim() || commentLoading}
+                    className="absolute right-2 bottom-2 p-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    {commentLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {/* Lista de comentários minimalista */}
+          <div className="space-y-3">
+            {comments.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-sm">Seja o primeiro a comentar!</p>
+              </div>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className="flex space-x-3 group">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
+                      {comment.user.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="bg-gray-50 rounded-2xl px-4 py-3 group-hover:bg-gray-100 transition-colors duration-200">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900 text-sm">
+                          {comment.user.name || 'Usuário'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatDate(comment.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {comment.body}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Compartilhamento */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        post={{
+          id: post.id,
+          title: post.title,
+          business: {
+            name: post.business.name,
+            slug: post.business.slug || post.business.id
+          }
+        }}
+      />
+    </div>
+  )
+}

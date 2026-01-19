@@ -1,0 +1,392 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model banner {
+  id        String   @id
+  title     String
+  subtitle  String
+  imageUrl  String?
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model business {
+  id              String            @id
+  userId          String            @unique(map: "Business_userId_key")
+  name            String
+  description     String?
+  category        String
+  address         String
+  phone           String?
+  website         String?
+  instagram       String?
+  facebook        String?
+  whatsapp        String?
+  isApproved      Boolean           @default(false)
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  coverImage      String?
+  profileImage    String?
+  likesCount      Int               @default(0)
+  slug            String            @unique(map: "Business_slug_key") @default("")
+  isVerified      Boolean           @default(false)
+  followersCount  Int               @default(0)
+  followingCount  Int               @default(0)
+  user            user              @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Business_userId_fkey")
+  businesscoupon  businesscoupon[]
+  businesslike    businesslike[]
+  businessproduct businessproduct[]
+  businessreview  businessreview[]
+  post            post[]
+}
+
+model businesscoupon {
+  id          String    @id
+  businessId  String
+  title       String
+  code        String
+  description String?
+  link        String?
+  discount    String?
+  validUntil  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  business    business  @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessCoupon_businessId_fkey")
+
+  @@index([businessId], map: "BusinessCoupon_businessId_fkey")
+}
+
+model businesslike {
+  id         String   @id
+  businessId String
+  userId     String
+  business   business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessLike_businessId_fkey")
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "BusinessLike_userId_fkey")
+
+  @@unique([businessId, userId], map: "BusinessLike_businessId_userId_key")
+  @@index([userId], map: "BusinessLike_userId_fkey")
+}
+
+model businessproduct {
+  id          String   @id
+  businessId  String
+  name        String
+  description String?
+  priceCents  Int
+  currency    String   @default("BRL")
+  productUrl  String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  imageUrl    String?
+  business    business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessProduct_businessId_fkey")
+
+  @@index([businessId], map: "BusinessProduct_businessId_fkey")
+}
+
+model businessreview {
+  id         String   @id
+  businessId String
+  userId     String
+  rating     Int
+  comment    String?
+  imageUrl   String?
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  business   business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessReview_businessId_fkey")
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "BusinessReview_userId_fkey")
+
+  @@unique([businessId, userId], map: "BusinessReview_businessId_userId_key")
+  @@index([userId], map: "BusinessReview_userId_fkey")
+}
+
+model comment {
+  id        String   @id
+  postId    String
+  userId    String?
+  body      String
+  createdAt DateTime @default(now())
+  post      post     @relation(fields: [postId], references: [id], map: "Comment_postId_fkey")
+  user      user?    @relation(fields: [userId], references: [id], map: "Comment_userId_fkey")
+
+  @@index([postId], map: "Comment_postId_fkey")
+  @@index([userId], map: "Comment_userId_fkey")
+}
+
+model company {
+  id            String          @id
+  name          String
+  slug          String          @unique(map: "Company_slug_key")
+  description   String?
+  phone         String?
+  website       String?
+  whatsapp      String?
+  address       String?
+  lat           Float?
+  lng           Float?
+  verified      Boolean         @default(false)
+  ratingAvg     Float           @default(0)
+  ratingCount   Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  ownerId       String?
+  coupon        coupon[]
+  product       product[]
+  review        review[]
+  sponsoredpost sponsoredpost[]
+  story         story[]
+  subscription  subscription[]
+}
+
+model conversation {
+  id        String    @id
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  message   message[]
+  user      user[]    @relation("conversationparticipants")
+}
+
+model coupon {
+  id            String    @id
+  companyId     String
+  code          String    @unique(map: "Coupon_code_key")
+  description   String?
+  discountPct   Int?
+  discountCents Int?
+  startsAt      DateTime  @default(now())
+  endsAt        DateTime?
+  quantity      Int?
+  createdAt     DateTime  @default(now())
+  company       company   @relation(fields: [companyId], references: [id], map: "Coupon_companyId_fkey")
+
+  @@index([companyId], map: "Coupon_companyId_fkey")
+}
+
+model follow {
+  id                            String   @id
+  followerId                    String
+  followingId                   String
+  createdAt                     DateTime @default(now())
+  user_follow_followerIdTouser  user     @relation("follow_followerIdTouser", fields: [followerId], references: [id], onDelete: Cascade, map: "Follow_followerId_fkey")
+  user_follow_followingIdTouser user     @relation("follow_followingIdTouser", fields: [followingId], references: [id], onDelete: Cascade, map: "Follow_followingId_fkey")
+
+  @@unique([followerId, followingId], map: "Follow_followerId_followingId_key")
+  @@index([followingId], map: "Follow_followingId_fkey")
+}
+
+model message {
+  id                            String       @id
+  conversationId                String
+  senderId                      String
+  receiverId                    String
+  content                       String
+  isRead                        Boolean      @default(false)
+  createdAt                     DateTime     @default(now())
+  conversation                  conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade, map: "Message_conversationId_fkey")
+  user_message_receiverIdTouser user         @relation("message_receiverIdTouser", fields: [receiverId], references: [id], onDelete: Cascade, map: "Message_receiverId_fkey")
+  user_message_senderIdTouser   user         @relation("message_senderIdTouser", fields: [senderId], references: [id], onDelete: Cascade, map: "Message_senderId_fkey")
+
+  @@index([conversationId], map: "Message_conversationId_fkey")
+  @@index([receiverId], map: "Message_receiverId_fkey")
+  @@index([senderId], map: "Message_senderId_fkey")
+}
+
+model order {
+  id          String       @id
+  userId      String?
+  productId   String
+  qty         Int          @default(1)
+  subtotalCts Int
+  feeCts      Int
+  totalCts    Int
+  status      order_status @default(PAID)
+  createdAt   DateTime     @default(now())
+  product     product      @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
+  user        user?        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
+
+  @@index([productId], map: "Order_productId_fkey")
+  @@index([userId], map: "Order_userId_fkey")
+}
+
+model plan {
+  id           String         @id
+  name         String
+  priceCents   Int
+  currency     String         @default("BRL")
+  isVerified   Boolean        @default(false)
+  isActive     Boolean        @default(true)
+  features     String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  subscription subscription[]
+}
+
+model post {
+  id         String     @id
+  businessId String
+  title      String
+  body       String?
+  imageUrl   String?
+  videoUrl   String?
+  likes      Int        @default(0)
+  createdAt  DateTime   @default(now())
+  comment    comment[]
+  business   business   @relation(fields: [businessId], references: [id], map: "Post_businessId_fkey")
+  postlike   postlike[]
+
+  @@index([businessId], map: "Post_businessId_fkey")
+}
+
+model postlike {
+  id     String  @id
+  postId String
+  userId String?
+  post   post    @relation(fields: [postId], references: [id], map: "PostLike_postId_fkey")
+  user   user?   @relation(fields: [userId], references: [id], map: "PostLike_userId_fkey")
+
+  @@unique([postId, userId], map: "PostLike_postId_userId_key")
+  @@index([userId], map: "PostLike_userId_fkey")
+}
+
+model product {
+  id          String   @id
+  companyId   String
+  name        String
+  description String?
+  priceCents  Int
+  currency    String   @default("BRL")
+  stock       Int?     @default(999999)
+  createdAt   DateTime @default(now())
+  order       order[]
+  company     company  @relation(fields: [companyId], references: [id], map: "Product_companyId_fkey")
+
+  @@index([companyId], map: "Product_companyId_fkey")
+}
+
+model review {
+  id          String   @id
+  companyId   String
+  userId      String
+  rating      Int
+  comment     String?
+  verifiedBuy Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  company     company  @relation(fields: [companyId], references: [id], map: "Review_companyId_fkey")
+  user        user     @relation(fields: [userId], references: [id], map: "Review_userId_fkey")
+
+  @@index([companyId], map: "Review_companyId_fkey")
+  @@index([userId], map: "Review_userId_fkey")
+}
+
+model session {
+  id        String   @id
+  userId    String
+  token     String   @unique(map: "Session_token_key")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Session_userId_fkey")
+
+  @@index([userId], map: "Session_userId_fkey")
+}
+
+model sponsoredpost {
+  id        String    @id
+  companyId String
+  title     String
+  imageUrl  String?
+  budgetCts Int
+  startsAt  DateTime  @default(now())
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  company   company   @relation(fields: [companyId], references: [id], map: "SponsoredPost_companyId_fkey")
+
+  @@index([companyId], map: "SponsoredPost_companyId_fkey")
+}
+
+model story {
+  id        String   @id
+  companyId String
+  imageUrl  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  company   company  @relation(fields: [companyId], references: [id], map: "Story_companyId_fkey")
+
+  @@index([companyId], map: "Story_companyId_fkey")
+}
+
+model subscription {
+  id        String              @id
+  companyId String
+  planId    String
+  status    subscription_status @default(ACTIVE)
+  startedAt DateTime            @default(now())
+  endsAt    DateTime?
+  updatedAt DateTime
+  company   company             @relation(fields: [companyId], references: [id], map: "Subscription_companyId_fkey")
+  plan      plan                @relation(fields: [planId], references: [id], map: "Subscription_planId_fkey")
+
+  @@index([companyId], map: "Subscription_companyId_fkey")
+  @@index([planId], map: "Subscription_planId_fkey")
+}
+
+model user {
+  id                               String           @id
+  email                            String           @unique(map: "User_email_key")
+  password                         String
+  name                             String?
+  createdAt                        DateTime         @default(now())
+  updatedAt                        DateTime
+  business                         business?
+  businesslike                     businesslike[]
+  businessreview                   businessreview[]
+  comment                          comment[]
+  follow_follow_followerIdTouser   follow[]         @relation("follow_followerIdTouser")
+  follow_follow_followingIdTouser  follow[]         @relation("follow_followingIdTouser")
+  message_message_receiverIdTouser message[]        @relation("message_receiverIdTouser")
+  message_message_senderIdTouser   message[]        @relation("message_senderIdTouser")
+  order                            order[]
+  postlike                         postlike[]
+  review                           review[]
+  session                          session[]
+  userrole                         userrole[]
+  conversation                     conversation[]   @relation("conversationparticipants")
+}
+
+model userrole {
+  id     String        @id
+  userId String
+  role   userrole_role
+  user   user          @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserRole_userId_fkey")
+
+  @@unique([userId, role], map: "UserRole_userId_role_key")
+}
+
+enum userrole_role {
+  ADMIN
+  COMPANY
+  TOURIST
+}
+
+enum subscription_status {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum order_status {
+  PAID
+  REFUNDED
+  CANCELED
+}

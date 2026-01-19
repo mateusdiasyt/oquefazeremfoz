@@ -1,0 +1,248 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentUser, isCompany } from '../../../../../lib/auth'
+import { prisma } from '../../../../../lib/db'
+
+// GET - Buscar cupons da empresa
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const businessId = searchParams.get('businessId')
+
+    if (!businessId) {
+      return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
+    }
+
+    const coupons = await prisma.coupon.findMany({
+      where: { 
+        businessId,
+        isActive: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json({ coupons }, { status: 200 })
+
+  } catch (error) {
+    console.error('Erro ao buscar cupons:', error)
+    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+  }
+}
+
+// POST - Criar novo cupom
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
+    }
+
+    if (!isCompany(user.roles)) {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+    }
+
+    const business = await prisma.business.findUnique({
+      where: { userId: user.id }
+    })
+
+    if (!business) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    const { title, code, description, link, discount, validUntil } = await request.json()
+
+    if (!title || !code) {
+      return NextResponse.json({ message: 'Título e código são obrigatórios' }, { status: 400 })
+    }
+
+    // Verificar limite de cupons: apenas 1 a cada 3 dias
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+
+    const recentCoupons = await prisma.coupon.findMany({
+      where: { 
+        businessId: business.id,
+        createdAt: {
+          gte: threeDaysAgo
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    if (recentCoupons.length > 0) {
+      const lastCouponDate = recentCoupons[0].createdAt
+      const daysSinceLastCoupon = Math.floor((Date.now() - lastCouponDate.getTime()) / (1000 * 60 * 60 * 24))
+      
+      if (daysSinceLastCoupon < 3) {
+        const remainingDays = 3 - daysSinceLastCoupon
+        return NextResponse.json({ 
+          message: `Você só pode criar um cupom a cada 3 dias. Tente novamente em ${remainingDays} dia(s).`,
+          remainingDays 
+        }, { status: 429 })
+      }
+    }
+
+    // Verificar se já existe um cupom com o mesmo código
+    const existingCoupon = await prisma.coupon.findFirst({
+      where: { 
+        businessId: business.id,
+        code: code,
+        isActive: true
+      }
+    })
+
+    if (existingCoupon) {
+      return NextResponse.json({ message: 'Já existe um cupom com este código' }, { status: 400 })
+    }
+
+    const coupon = await prisma.coupon.create({
+      data: {
+        businessId: business.id,
+        title,
+        code,
+        description: description || null,
+        link: link || null,
+        discount: discount || null,
+        validUntil: validUntil ? new Date(validUntil) : null,
+        isActive: true
+      }
+    })
+
+    return NextResponse.json({ 
+      message: 'Cupom criado com sucesso!', 
+      coupon 
+    }, { status: 201 })
+
+  } catch (error) {
+    console.error('Erro ao criar cupom:', error)
+    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+  }
+}
+
+// PUT - Atualizar cupom
+export async function PUT(request: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
+    }
+
+    if (!isCompany(user.roles)) {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+    }
+
+    const business = await prisma.business.findUnique({
+      where: { userId: user.id }
+    })
+
+    if (!business) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    const { id, title, code, description, link, discount, validUntil } = await request.json()
+
+    if (!id || !title || !code) {
+      return NextResponse.json({ message: 'ID, título e código são obrigatórios' }, { status: 400 })
+    }
+
+    // Verificar se o cupom pertence à empresa
+    const existingCoupon = await prisma.coupon.findFirst({
+      where: { 
+        id,
+        businessId: business.id
+      }
+    })
+
+    if (!existingCoupon) {
+      return NextResponse.json({ message: 'Cupom não encontrado' }, { status: 404 })
+    }
+
+    // Verificar se já existe outro cupom com o mesmo código
+    const duplicateCoupon = await prisma.coupon.findFirst({
+      where: { 
+        businessId: business.id,
+        code: code,
+        isActive: true,
+        id: { not: id }
+      }
+    })
+
+    if (duplicateCoupon) {
+      return NextResponse.json({ message: 'Já existe outro cupom com este código' }, { status: 400 })
+    }
+
+    const coupon = await prisma.coupon.update({
+      where: { id },
+      data: {
+        title,
+        code,
+        description: description || null,
+        link: link || null,
+        discount: discount || null,
+        validUntil: validUntil ? new Date(validUntil) : null
+      }
+    })
+
+    return NextResponse.json({ 
+      message: 'Cupom atualizado com sucesso!', 
+      coupon 
+    }, { status: 200 })
+
+  } catch (error) {
+    console.error('Erro ao atualizar cupom:', error)
+    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+  }
+}
+
+// DELETE - Deletar cupom
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await getCurrentUser()
+
+    if (!user) {
+      return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
+    }
+
+    if (!isCompany(user.roles)) {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+    }
+
+    const business = await prisma.business.findUnique({
+      where: { userId: user.id }
+    })
+
+    if (!business) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID do cupom é obrigatório' }, { status: 400 })
+    }
+
+    // Verificar se o cupom pertence à empresa
+    const existingCoupon = await prisma.coupon.findFirst({
+      where: { 
+        id,
+        businessId: business.id
+      }
+    })
+
+    if (!existingCoupon) {
+      return NextResponse.json({ message: 'Cupom não encontrado' }, { status: 404 })
+    }
+
+    await prisma.coupon.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ message: 'Cupom deletado com sucesso!' }, { status: 200 })
+
+  } catch (error) {
+    console.error('Erro ao deletar cupom:', error)
+    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+  }
+}

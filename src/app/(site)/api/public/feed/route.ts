@@ -1,0 +1,31 @@
+import { prisma } from '../../../../../lib/db'
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  const posts = await prisma.post.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { 
+      business: true,
+      comments: {
+        take: 3,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      },
+      _count: {
+        select: {
+          comments: true
+        }
+      }
+    },
+    take: 20,
+  })
+  return NextResponse.json(posts)
+}
