@@ -35,19 +35,19 @@ export async function POST(request: NextRequest) {
       where: {
         AND: [
           {
-            participants: {
+            user: {
               some: { id: user.id }
             }
           },
           {
-            participants: {
+            user: {
               some: { id: receiverId }
             }
           }
         ]
       },
       include: {
-        participants: true
+        user: true
       }
     })
 
@@ -55,7 +55,9 @@ export async function POST(request: NextRequest) {
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: {
-          participants: {
+          id: `conversation_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          updatedAt: new Date(),
+          user: {
             connect: [
               { id: user.id },
               { id: receiverId }
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
           }
         },
         include: {
-          participants: true
+          user: true
         }
       })
     }

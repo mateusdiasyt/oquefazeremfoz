@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // Buscar ou criar conversa
     let conversation = await prisma.conversation.findFirst({
       where: {
-        participants: {
+        user: {
           every: {
             id: {
               in: [user.id, business.userId]
@@ -55,7 +55,9 @@ export async function POST(request: NextRequest) {
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: {
-          participants: {
+          id: `conversation_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          updatedAt: new Date(),
+          user: {
             connect: [
               { id: user.id },
               { id: business.userId }
@@ -122,14 +124,14 @@ export async function GET(request: NextRequest) {
     // Buscar conversas do usuário
     const conversations = await prisma.conversation.findMany({
       where: {
-        participants: {
+        user: {
           some: {
             id: user.id
           }
         }
       },
       include: {
-        participants: {
+        user: {
           include: {
             business: {
               select: {
@@ -187,7 +189,7 @@ export async function GET(request: NextRequest) {
     const followedBusinessIds = followedBusinesses.map(f => f.following.business?.id).filter(Boolean)
 
     const filteredConversations = conversations.filter(conv => {
-      const otherParticipant = conv.participants.find(p => p.id !== user.id)
+      const otherParticipant = conv.user.find(p => p.id !== user.id)
       return otherParticipant?.business && followedBusinessIds.includes(otherParticipant.business.id)
     })
 

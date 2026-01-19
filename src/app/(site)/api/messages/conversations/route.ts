@@ -29,14 +29,14 @@ export async function GET(request: NextRequest) {
     // Buscar conversas existentes do usuário
     const existingConversations = await prisma.conversation.findMany({
       where: {
-        participants: {
+        user: {
           some: {
             id: user.id
           }
         }
       },
       include: {
-        participants: {
+        user: {
           include: {
             business: true
           }
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     // Adicionar conversas existentes
     for (const conv of existingConversations) {
-      const otherParticipant = conv.participants.find(p => p.id !== user.id)
+      const otherParticipant = conv.user.find(p => p.id !== user.id)
       const lastMessage = conv.messages[0]
 
       allConversations.push({

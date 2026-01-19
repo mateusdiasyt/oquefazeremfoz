@@ -29,20 +29,20 @@ export async function GET(
     const conversation = await prisma.conversation.findFirst({
       where: {
         id: conversationId,
-        participants: {
+        user: {
           some: {
             id: user.id
           }
         }
       },
       include: {
-        participants: true
+        user: true
       }
     })
 
     console.log('💬 Conversa encontrada:', conversation ? 'Sim' : 'Não')
     if (conversation) {
-      console.log('👥 Participantes da conversa:', conversation.participants?.length || 0)
+      console.log('👥 Participantes da conversa:', conversation.user?.length || 0)
     }
 
     if (!conversation) {
@@ -168,7 +168,7 @@ export async function POST(
       // Verificar se já existe uma conversa entre estes usuários
       const existingConversation = await prisma.conversation.findFirst({
         where: {
-          participants: {
+          user: {
             every: {
               id: {
                 in: [user.id, business.user.id]
@@ -186,7 +186,9 @@ export async function POST(
         // Criar nova conversa
         conversation = await prisma.conversation.create({
           data: {
-            participants: {
+            id: `conversation_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            updatedAt: new Date(),
+            user: {
               connect: [
                 { id: user.id },
                 { id: business.user.id }
@@ -201,7 +203,7 @@ export async function POST(
       conversation = await prisma.conversation.findFirst({
         where: {
           id: conversationId,
-          participants: {
+          user: {
             some: {
               id: user.id
             }

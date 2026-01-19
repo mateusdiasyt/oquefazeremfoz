@@ -33,14 +33,14 @@ export async function POST(request: NextRequest) {
       where: {
         AND: [
           {
-            participants: {
+            user: {
               some: {
                 id: user.id
               }
             }
           },
           {
-            participants: {
+            user: {
               some: {
                 id: business.userId
               }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         ]
       },
       include: {
-        participants: {
+        user: {
           include: {
             business: true
           }
@@ -61,7 +61,9 @@ export async function POST(request: NextRequest) {
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: {
-          participants: {
+          id: `conversation_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          updatedAt: new Date(),
+          user: {
             connect: [
               { id: user.id },
               { id: business.userId }
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
           }
         },
         include: {
-          participants: {
+          user: {
             include: {
               business: true
             }
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Transformar dados para o formato esperado pelo componente
-    const otherParticipant = conversation.participants.find(p => p.id !== user.id)
+    const otherParticipant = conversation.user.find(p => p.id !== user.id)
     
     const formattedConversation = {
       id: conversation.id,
