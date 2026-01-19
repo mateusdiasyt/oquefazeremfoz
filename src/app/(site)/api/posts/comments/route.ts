@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
     console.log('➕ Criando comentário...')
     const comment = await prisma.comment.create({
       data: {
+        id: `comment_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         postId,
         userId: user.id,
         body: content.trim()
