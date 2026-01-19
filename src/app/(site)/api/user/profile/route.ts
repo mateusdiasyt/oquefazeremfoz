@@ -46,7 +46,6 @@ export async function PUT(request: Request) {
         id: true,
         name: true,
         email: true,
-        profileImage: true,
         createdAt: true
       }
     })
