@@ -4,29 +4,39 @@ import bcrypt from 'bcryptjs'
 
 export async function GET(request: NextRequest) {
   try {
-    // Buscar todos os usuários admin
-    const adminUsers = await prisma.user.findMany({
-      where: {
-        userrole: {
-          some: {
-            role: 'ADMIN'
-          }
-        }
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        password: true,
-        userrole: {
-          select: {
-            role: true
-          }
-        },
-        createdAt: true,
-        updatedAt: true
-      }
-    })
+    // Buscar todos os usuários admin usando queryRaw para evitar problemas com enum
+    const adminUsersRaw = await prisma.$queryRaw<Array<{
+      id: string
+      email: string
+      name: string | null
+      password: string
+      role: string
+      createdAt: Date
+      updatedAt: Date
+    }>>`
+      SELECT 
+        u.id,
+        u.email,
+        u.name,
+        u.password,
+        ur.role::text as role,
+        u."createdAt",
+        u."updatedAt"
+      FROM "user" u
+      INNER JOIN userrole ur ON ur."userId" = u.id
+      WHERE ur.role = 'ADMIN'::text OR ur.role::text = 'ADMIN'
+      GROUP BY u.id, u.email, u.name, u.password, ur.role, u."createdAt", u."updatedAt"
+    `
+
+    const adminUsers = adminUsersRaw.map(u => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      password: u.password,
+      userrole: [{ role: u.role }],
+      createdAt: u.createdAt,
+      updatedAt: u.updatedAt
+    }))
 
     // Buscar também por emails específicos
     const emailVariants = ['admin@oqfoz.com.br', 'admin@oqfoz.com']
