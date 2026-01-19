@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar empresas seguidas
-    const following = await prisma.businessLike.findMany({
+    const following = await prisma.businesslike.findMany({
       where: {
         userId: user.id
       },

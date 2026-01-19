@@ -39,7 +39,7 @@ export async function GET(
       const currentUser = await getCurrentUser()
       if (currentUser) {
         // Verificar like
-        const existingLike = await prisma.businessLike.findUnique({
+        const existingLike = await prisma.businesslike.findUnique({
           where: {
             businessId_userId: {
               businessId: business.id,
@@ -50,7 +50,7 @@ export async function GET(
         isLiked = !!existingLike
 
         // Verificar follow (usando BusinessLike)
-        const existingFollow = await prisma.businessLike.findFirst({
+        const existingFollow = await prisma.businesslike.findFirst({
           where: {
             userId: currentUser.id,
             businessId: business.id

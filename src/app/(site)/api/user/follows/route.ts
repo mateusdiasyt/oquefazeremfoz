@@ -11,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    const follows = await prisma.businessLike.findMany({
+    const follows = await prisma.businesslike.findMany({
       where: {
         userId: user.id
       },

@@ -26,23 +26,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário já curtiu esta empresa
-    const existingLike = await prisma.businessLike.findUnique({
+    const existingLike = await prisma.businesslike.findFirst({
       where: {
-        businessId_userId: {
-          businessId,
-          userId: user.id
-        }
+        businessId,
+        userId: user.id
       }
     })
 
     if (existingLike) {
       // Se já curtiu, remover a curtida
-      await prisma.businessLike.delete({
+      await prisma.businesslike.delete({
         where: {
-          businessId_userId: {
-            businessId,
-            userId: user.id
-          }
+          id: existingLike.id
         }
       })
 
@@ -63,8 +58,9 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Se não curtiu, adicionar curtida
-      await prisma.businessLike.create({
+      await prisma.businesslike.create({
         data: {
+          id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           businessId,
           userId: user.id
         }
@@ -109,12 +105,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Verificar se o usuário curtiu esta empresa
-    const existingLike = await prisma.businessLike.findUnique({
+    const existingLike = await prisma.businesslike.findFirst({
       where: {
-        businessId_userId: {
-          businessId,
-          userId: user.id
-        }
+        businessId,
+        userId: user.id
       }
     })
 

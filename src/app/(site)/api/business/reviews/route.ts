@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário está seguindo a empresa
-    const isFollowing = await prisma.businessLike.findFirst({
+    const isFollowing = await prisma.businesslike.findFirst({
       where: {
         userId: user.id,
         businessId: business.id

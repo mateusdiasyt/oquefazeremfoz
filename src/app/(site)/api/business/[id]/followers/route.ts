@@ -21,7 +21,7 @@ export async function GET(
     }
 
     // Buscar seguidores usando BusinessLike
-    const businessLikes = await prisma.businessLike.findMany({
+    const businessLikes = await prisma.businesslike.findMany({
       where: {
         businessId: businessId
       },
