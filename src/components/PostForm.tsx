@@ -200,6 +200,13 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Validação: título é obrigatório
+    if (!title.trim()) {
+      setError('Título é obrigatório')
+      return
+    }
+    
+    // Validação: conteúdo, imagem ou vídeo é obrigatório (exceto se estiver editando e já tiver algum)
     if (!content.trim() && !imageUrl.trim() && !videoUrl.trim()) {
       setError('Escreva algo ou adicione uma mídia para publicar')
       return
