@@ -700,17 +700,17 @@ export default function HomePage() {
                         onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
                         className="flex items-center space-x-3 flex-1 min-w-0 text-left"
                       >
-                        <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {business.profileImage ? (
-                            <img
-                              src={business.profileImage}
-                              alt={business.name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            business.name.charAt(0).toUpperCase()
-                          )}
-                        </div>
+                        {business.profileImage ? (
+                          <img
+                            src={business.profileImage}
+                            alt={business.name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-pink-500"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {business.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h5 className="font-semibold text-gray-800 truncate">{business.name}</h5>

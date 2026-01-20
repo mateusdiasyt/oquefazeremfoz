@@ -6,6 +6,27 @@ export async function GET(request: NextRequest) {
     // Buscar todas as empresas (removendo filtro isApproved temporariamente para que apareçam)
     // TODO: Implementar sistema de aprovação via admin se necessário
     const businesses = await prisma.business.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        category: true,
+        description: true,
+        address: true,
+        phone: true,
+        website: true,
+        instagram: true,
+        facebook: true,
+        whatsapp: true,
+        profileImage: true, // Garantir que profileImage está incluído
+        coverImage: true,
+        followersCount: true,
+        likesCount: true,
+        isVerified: true,
+        isApproved: true,
+        createdAt: true,
+        updatedAt: true
+      },
       orderBy: {
         createdAt: 'desc'
       },
