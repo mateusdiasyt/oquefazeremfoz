@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../../../lib/db'
 import { getCurrentUser, isCompany } from '../../../../../lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { put } from '@vercel/blob'
 
 // GET - Buscar produtos da empresa
 export async function GET(request: NextRequest) {
@@ -91,14 +90,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Preço deve ser maior que zero' }, { status: 400 })
     }
 
-    // Processar upload da imagem (opcional - desabilitado no Vercel serverless)
-    // NOTA: No Vercel, o sistema de arquivos é read-only, então não podemos salvar arquivos localmente
-    // TODO: Implementar upload para Vercel Blob Storage, Cloudinary ou similar
-    let imageUrl = null
+    // Processar upload da imagem usando Vercel Blob Storage
+    let imageUrl: string | null = null
     if (imageFile && imageFile.size > 0) {
-      console.log('🔍 Imagem enviada, mas upload desabilitado no Vercel serverless')
+      console.log('🔍 Processando upload de imagem via Vercel Blob Storage...')
       
-      // Validar tipo de arquivo (mesmo que não vamos salvar)
+      // Validar tipo de arquivo
       if (!imageFile.type.startsWith('image/')) {
         console.log('❌ Tipo de arquivo inválido:', imageFile.type)
         return NextResponse.json({ error: 'Apenas imagens são permitidas' }, { status: 400 })
@@ -111,11 +108,33 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
       }
 
-      // No Vercel serverless, não podemos salvar arquivos localmente
-      // Por enquanto, vamos criar o produto sem imagem
-      // A imagem pode ser adicionada depois via upload externo
-      console.log('⚠️ Upload de imagem desabilitado - produto será criado sem imagem')
-      imageUrl = null
+      try {
+        // Converter File para Buffer
+        const bytes = await imageFile.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+
+        // Gerar nome único para o arquivo
+        const timestamp = Date.now()
+        const fileExtension = imageFile.name.split('.').pop() || 'jpg'
+        const fileName = `products/${businessId}/${timestamp}.${fileExtension}`
+
+        // Fazer upload para Vercel Blob Storage
+        console.log('🔍 Fazendo upload para Vercel Blob Storage...')
+        const blob = await put(fileName, buffer, {
+          access: 'public',
+          contentType: imageFile.type
+        })
+
+        imageUrl = blob.url
+        console.log('✅ Imagem enviada com sucesso para Vercel Blob Storage:', imageUrl)
+      } catch (uploadError) {
+        console.error('❌ Erro ao fazer upload para Vercel Blob Storage:', uploadError)
+        
+        // Se o upload falhar, continuar sem imagem (não crítico)
+        // Isso pode acontecer se BLOB_READ_WRITE_TOKEN não estiver configurado
+        console.log('⚠️ Produto será criado sem imagem devido ao erro no upload')
+        imageUrl = null
+      }
     }
 
     console.log('🔍 Tentando criar produto no banco...')
