@@ -29,8 +29,8 @@ interface PostFormProps {
 export default function PostForm({ businessId, editPost, onClose, onPostCreated }: PostFormProps) {
   const [title, setTitle] = useState(editPost?.title || '')
   const [content, setContent] = useState(editPost?.body || '')
-  const [imageUrl, setImageUrl] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
+  const [imageUrl, setImageUrl] = useState(editPost?.imageUrl || '')
+  const [videoUrl, setVideoUrl] = useState(editPost?.videoUrl || '')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -38,8 +38,30 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
   const [showVideoInput, setShowVideoInput] = useState(false)
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null)
 
+  // Atualizar estados quando editPost mudar
   useEffect(() => {
     if (editPost) {
+      setTitle(editPost.title || '')
+      setContent(editPost.body || '')
+      setImageUrl(editPost.imageUrl || '')
+      setVideoUrl(editPost.videoUrl || '')
+      setMediaType(editPost.imageUrl ? 'image' : editPost.videoUrl ? 'video' : null)
+      setShowImageInput(!!editPost.imageUrl)
+      setShowVideoInput(!!editPost.videoUrl)
+    } else {
+      setTitle('')
+      setContent('')
+      setImageUrl('')
+      setVideoUrl('')
+      setMediaType(null)
+      setShowImageInput(false)
+      setShowVideoInput(false)
+    }
+  }, [editPost])
+
+  useEffect(() => {
+    if (editPost) {
+      setTitle(editPost.title || '')
       setContent(editPost.body || '')
       setImageUrl(editPost.imageUrl || '')
       setVideoUrl(editPost.videoUrl || '')
@@ -50,6 +72,15 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
         setMediaType('video')
         setShowVideoInput(true)
       }
+    } else {
+      // Resetar campos quando não está editando
+      setTitle('')
+      setContent('')
+      setImageUrl('')
+      setVideoUrl('')
+      setMediaType(null)
+      setShowImageInput(false)
+      setShowVideoInput(false)
     }
   }, [editPost])
 
