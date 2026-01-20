@@ -185,10 +185,11 @@ export default function BusinessProfilePage() {
       setNewDescription(businessData.description || '')
       
       // Set related data from the response
-      if (businessData.posts) setPosts(businessData.posts)
-      if (businessData.reviews) setReviews(businessData.reviews)
-      if (businessData.products) setProducts(businessData.products)
-      if (businessData.coupons) setCoupons(businessData.coupons)
+      // Mapear os dados corretamente
+      if (businessData.post) setPosts(businessData.post)
+      if (businessData.businessreview) setReviews(businessData.businessreview)
+      if (businessData.businessproduct) setProducts(businessData.businessproduct.filter((p: any) => p.isActive !== false))
+      if (businessData.businesscoupon) setCoupons(businessData.businesscoupon)
 
     } catch (error) {
       console.error('Erro ao carregar dados da empresa:', error)
@@ -916,6 +917,11 @@ export default function BusinessProfilePage() {
         <ProductForm
           businessId={business?.id || ''}
           onClose={() => {
+            setShowProductForm(false)
+            setEditingProduct(null)
+          }}
+          onProductCreated={() => {
+            fetchBusinessData()
             setShowProductForm(false)
             setEditingProduct(null)
           }}
