@@ -817,12 +817,19 @@ export default function BusinessProfilePage() {
                 {isOwner && (
                             <div className="flex gap-2">
                   <button
-                                onClick={() => setEditingPost(post)}
+                                onClick={() => {
+                                  setEditingPost(post)
+                                  setShowPostForm(true)
+                                }}
                                 className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                title="Editar post"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
-                              <button className="p-1 text-gray-400 hover:text-red-600 transition-colors">
+                              <button 
+                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                title="Excluir post"
+                              >
                                 <Trash2 className="w-4 h-4" />
                   </button>
               </div>
@@ -1054,6 +1061,13 @@ export default function BusinessProfilePage() {
       {showPostForm && (
         <PostForm
           businessId={business?.id || ''}
+          editPost={editingPost ? {
+            id: editingPost.id,
+            title: editingPost.title,
+            body: editingPost.body || '',
+            imageUrl: editingPost.imageUrl || '',
+            videoUrl: editingPost.videoUrl || ''
+          } : undefined}
           onClose={() => {
             setShowPostForm(false)
             setEditingPost(null)
