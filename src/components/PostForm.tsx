@@ -27,10 +27,10 @@ interface PostFormProps {
 }
 
 export default function PostForm({ businessId, editPost, onClose, onPostCreated }: PostFormProps) {
-  const [title, setTitle] = useState(editPost?.title || '')
-  const [content, setContent] = useState(editPost?.body || '')
-  const [imageUrl, setImageUrl] = useState(editPost?.imageUrl || '')
-  const [videoUrl, setVideoUrl] = useState(editPost?.videoUrl || '')
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -40,7 +40,14 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
 
   // Atualizar estados quando editPost mudar
   useEffect(() => {
+    console.log('🔍 PostForm - editPost mudou:', editPost)
     if (editPost) {
+      console.log('🔍 Preenchendo campos com dados do post:', {
+        title: editPost.title,
+        body: editPost.body,
+        imageUrl: editPost.imageUrl,
+        videoUrl: editPost.videoUrl
+      })
       setTitle(editPost.title || '')
       setContent(editPost.body || '')
       setImageUrl(editPost.imageUrl || '')
@@ -49,6 +56,7 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
       setShowImageInput(!!editPost.imageUrl)
       setShowVideoInput(!!editPost.videoUrl)
     } else {
+      console.log('🔍 Limpando campos - criando novo post')
       setTitle('')
       setContent('')
       setImageUrl('')

@@ -818,8 +818,10 @@ export default function BusinessProfilePage() {
                             <div className="flex gap-2">
                   <button
                                 onClick={() => {
+                                  console.log('🔍 Clicou em editar post:', post)
                                   setEditingPost(post)
                                   setShowPostForm(true)
+                                  console.log('🔍 Modal deve abrir agora')
                                 }}
                                 className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                                 title="Editar post"
@@ -1069,10 +1071,12 @@ export default function BusinessProfilePage() {
             videoUrl: editingPost.videoUrl || ''
           } : undefined}
           onClose={() => {
+            console.log('🔍 Fechando modal de post')
             setShowPostForm(false)
             setEditingPost(null)
           }}
           onPostCreated={() => {
+            console.log('🔍 Post criado/editado, recarregando dados...')
             fetchBusinessData()
             setShowPostForm(false)
             setEditingPost(null)
