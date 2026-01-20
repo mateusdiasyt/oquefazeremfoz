@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import { getCurrentUser } from '../../../../lib/auth'
+import { put } from '@vercel/blob'
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,41 +50,38 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
+    // Converter File para ArrayBuffer
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
 
     // Gerar nome único para o arquivo
     const timestamp = Date.now()
     const randomString = Math.random().toString(36).substring(2, 15)
-    const fileExtension = file.name.split('.').pop()
-    const fileName = `${timestamp}_${randomString}.${fileExtension}`
-
+    const fileExtension = file.name.split('.').pop() || (isImage ? 'jpg' : 'mp4')
+    
     // Determinar pasta de destino
     const uploadDir = isImage ? 'images' : 'videos'
-    const uploadPath = join(process.cwd(), 'public', 'uploads', uploadDir)
-    
-    // Criar pasta se não existir
-    try {
-      await mkdir(uploadPath, { recursive: true })
-    } catch (error) {
-      // Pasta já existe, continuar
-    }
+    const fileName = `posts/${user.businessId || 'temp'}/${uploadDir}/${timestamp}_${randomString}.${fileExtension}`
 
-    // Salvar arquivo
-    const filePath = join(uploadPath, fileName)
-    await writeFile(filePath, buffer)
+    // Fazer upload para Vercel Blob Storage
+    console.log('🔍 Fazendo upload de arquivo para Vercel Blob Storage...')
+    const blob = await put(fileName, bytes, {
+      access: 'public',
+      contentType: fileType
+    })
 
-    // Retornar URL do arquivo
-    const fileUrl = `/uploads/${uploadDir}/${fileName}`
+    console.log('✅ Arquivo enviado com sucesso:', blob.url)
 
     return NextResponse.json({ 
       message: 'Arquivo enviado com sucesso',
-      url: fileUrl,
+      url: blob.url,
       type: isImage ? 'image' : 'video'
     })
 
   } catch (error) {
     console.error('Erro no upload:', error)
-    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json({ 
+      message: 'Erro interno do servidor',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    }, { status: 500 })
   }
 }
