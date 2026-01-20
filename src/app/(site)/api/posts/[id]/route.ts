@@ -119,8 +119,7 @@ export async function PUT(
         title: title.trim(),
         body: body?.trim() || null,
         imageUrl: imageUrl || null,
-        videoUrl: videoUrl || null,
-        updatedAt: new Date()
+        videoUrl: videoUrl || null
       },
       include: {
         business: {
