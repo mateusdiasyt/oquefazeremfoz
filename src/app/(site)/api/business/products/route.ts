@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../../../../../lib/db'
 import { getCurrentUser, isCompany } from '../../../../../lib/auth'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
-
-const prisma = new PrismaClient()
 
 // GET - Buscar produtos da empresa
 export async function GET(request: NextRequest) {
@@ -108,8 +106,9 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         priceCents,
+        currency: 'BRL', // Campo obrigatório no schema
         productUrl: productUrl || null,
-        imageUrl: imageUrl,
+        imageUrl: imageUrl || null,
         isActive: true,
         updatedAt: new Date()
       }
@@ -121,7 +120,20 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar produto:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    
+    // Fornecer mais detalhes do erro para debug
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    const errorDetails = process.env.NODE_ENV === 'production'
+      ? 'Erro interno do servidor'
+      : errorMessage
+    
+    return NextResponse.json({ 
+      error: errorDetails,
+      ...(process.env.NODE_ENV !== 'production' && { 
+        stack: error instanceof Error ? error.stack : undefined,
+        message: errorMessage 
+      })
+    }, { status: 500 })
   }
 }
 
