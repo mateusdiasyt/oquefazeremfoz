@@ -875,8 +875,12 @@ export default function BusinessProfilePage() {
                   </h3>
                           {isOwner && (
                             <button
-                      onClick={() => setShowProductForm(true)}
+                      onClick={() => {
+                        setEditingProduct(null)
+                        setShowProductForm(true)
+                      }}
                       className="p-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                      title="Adicionar produto"
                             >
                       <Plus className="w-4 h-4" />
                             </button>
