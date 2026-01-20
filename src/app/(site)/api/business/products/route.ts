@@ -109,9 +109,8 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Converter File para Buffer
+        // Converter File para ArrayBuffer
         const bytes = await imageFile.arrayBuffer()
-        const buffer = Buffer.from(bytes)
 
         // Gerar nome único para o arquivo
         const timestamp = Date.now()
@@ -119,8 +118,9 @@ export async function POST(request: NextRequest) {
         const fileName = `products/${businessId}/${timestamp}.${fileExtension}`
 
         // Fazer upload para Vercel Blob Storage
+        // O put aceita ArrayBuffer, Uint8Array, ou Blob
         console.log('🔍 Fazendo upload para Vercel Blob Storage...')
-        const blob = await put(fileName, buffer, {
+        const blob = await put(fileName, bytes, {
           access: 'public',
           contentType: imageFile.type
         })
