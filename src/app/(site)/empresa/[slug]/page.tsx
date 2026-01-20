@@ -887,7 +887,7 @@ export default function BusinessProfilePage() {
                     <p className="text-gray-500 text-sm">Nenhum produto cadastrado.</p>
                   ) : (
                     products.slice(0, 3).map((product) => (
-                      <div key={product.id} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg">
+                      <div key={product.id} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group">
                         {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded" />
                         ) : (
@@ -898,8 +898,20 @@ export default function BusinessProfilePage() {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-gray-900 truncate">{product.name}</h4>
                           <p className="text-sm text-green-600 font-semibold">R$ {(product.priceCents / 100).toFixed(2)}</p>
+                        </div>
+                        {isOwner && (
+                          <button
+                            onClick={() => {
+                              setEditingProduct(product)
+                              setShowProductForm(true)
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Editar produto"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
-                    </div>
                     ))
               )}
             </div>
