@@ -34,35 +34,60 @@ export async function GET(request: NextRequest) {
 // POST - Criar novo produto
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 POST /api/business/products: Iniciando...')
+    
     const user = await getCurrentUser()
+    console.log('🔍 Usuário obtido:', { 
+      found: !!user, 
+      id: user?.id, 
+      email: user?.email, 
+      businessId: user?.businessId,
+      roles: user?.roles 
+    })
     
     if (!user) {
+      console.log('❌ Usuário não encontrado')
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     if (!isCompany(user.roles)) {
+      console.log('❌ Usuário não é empresa:', user.roles)
       return NextResponse.json({ error: 'Apenas empresas podem cadastrar produtos' }, { status: 403 })
     }
 
     const formData = await request.formData()
     const name = formData.get('name') as string
     const description = formData.get('description') as string
-    const priceCents = parseInt(formData.get('priceCents') as string)
+    const priceCentsStr = formData.get('priceCents') as string
+    const priceCents = parseInt(priceCentsStr)
     const productUrl = formData.get('productUrl') as string
     const businessId = formData.get('businessId') as string
-    const imageFile = formData.get('image') as File
+    const imageFile = formData.get('image') as File | null
+
+    console.log('🔍 Dados recebidos:', {
+      name,
+      description: description?.substring(0, 50),
+      priceCents,
+      priceCentsStr,
+      productUrl,
+      businessId,
+      imageFile: imageFile ? { name: imageFile.name, size: imageFile.size } : null
+    })
 
     // Validar se a empresa pertence ao usuário
     if (user.businessId !== businessId) {
+      console.log('❌ businessId não corresponde:', { userBusinessId: user.businessId, requestBusinessId: businessId })
       return NextResponse.json({ error: 'Você não tem permissão para cadastrar produtos nesta empresa' }, { status: 403 })
     }
 
     // Validações
-    if (!name || !priceCents) {
+    if (!name || !priceCents || isNaN(priceCents)) {
+      console.log('❌ Validação falhou:', { name: !!name, priceCents, isNaN: isNaN(priceCents) })
       return NextResponse.json({ error: 'Nome e preço são obrigatórios' }, { status: 400 })
     }
 
     if (priceCents <= 0) {
+      console.log('❌ Preço inválido:', priceCents)
       return NextResponse.json({ error: 'Preço deve ser maior que zero' }, { status: 400 })
     }
 
@@ -99,27 +124,38 @@ export async function POST(request: NextRequest) {
       imageUrl = `/uploads/products/${fileName}`
     }
 
-    const product = await prisma.businessproduct.create({
-      data: {
-        id: `businessproduct_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        businessId,
-        name,
-        description: description || null,
-        priceCents,
-        currency: 'BRL', // Campo obrigatório no schema
-        productUrl: productUrl || null,
-        imageUrl: imageUrl || null,
-        isActive: true,
-        updatedAt: new Date()
-      }
-    })
+    console.log('🔍 Tentando criar produto no banco...')
+    const productId = `businessproduct_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    
+    try {
+      const product = await prisma.businessproduct.create({
+        data: {
+          id: productId,
+          businessId,
+          name,
+          description: description || null,
+          priceCents,
+          currency: 'BRL', // Campo obrigatório no schema
+          productUrl: productUrl || null,
+          imageUrl: imageUrl || null,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      })
 
-    return NextResponse.json({ 
-      message: 'Produto cadastrado com sucesso!',
-      product 
-    }, { status: 201 })
+      console.log('✅ Produto criado com sucesso:', product.id)
+      return NextResponse.json({ 
+        message: 'Produto cadastrado com sucesso!',
+        product 
+      }, { status: 201 })
+    } catch (createError) {
+      console.error('❌ Erro ao criar produto no Prisma:', createError)
+      throw createError
+    }
   } catch (error) {
-    console.error('Erro ao criar produto:', error)
+    console.error('❌ Erro completo ao criar produto:', error)
+    console.error('❌ Tipo do erro:', typeof error)
+    console.error('❌ Stack:', error instanceof Error ? error.stack : 'Sem stack trace')
     
     // Fornecer mais detalhes do erro para debug
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
@@ -131,7 +167,9 @@ export async function POST(request: NextRequest) {
       error: errorDetails,
       ...(process.env.NODE_ENV !== 'production' && { 
         stack: error instanceof Error ? error.stack : undefined,
-        message: errorMessage 
+        message: errorMessage,
+        errorType: typeof error,
+        errorString: String(error)
       })
     }, { status: 500 })
   }
