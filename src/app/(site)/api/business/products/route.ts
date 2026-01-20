@@ -236,7 +236,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Preço deve ser maior que zero' }, { status: 400 })
     }
 
-    // Processar upload da imagem (se fornecida)
+    // Processar upload da imagem usando Vercel Blob Storage (se fornecida)
     let imageUrl = existingProduct.imageUrl
     if (imageFile && imageFile.size > 0) {
       // Validar tipo de arquivo
@@ -250,23 +250,29 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
       }
 
-      // Criar diretório se não existir
-      const uploadDir = join(process.cwd(), 'public', 'uploads', 'products')
-      await mkdir(uploadDir, { recursive: true })
+      try {
+        // Converter File para ArrayBuffer
+        const bytes = await imageFile.arrayBuffer()
 
-      // Gerar nome único para o arquivo
-      const timestamp = Date.now()
-      const fileExtension = imageFile.name.split('.').pop()
-      const fileName = `product-${timestamp}.${fileExtension}`
-      const filePath = join(uploadDir, fileName)
+        // Gerar nome único para o arquivo
+        const timestamp = Date.now()
+        const fileExtension = imageFile.name.split('.').pop() || 'jpg'
+        const fileName = `products/${existingProduct.businessId}/${timestamp}.${fileExtension}`
 
-      // Converter para buffer e salvar
-      const bytes = await imageFile.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      await writeFile(filePath, buffer)
+        // Fazer upload para Vercel Blob Storage
+        console.log('🔍 Fazendo upload para Vercel Blob Storage (PUT)...')
+        const blob = await put(fileName, bytes, {
+          access: 'public',
+          contentType: imageFile.type
+        })
 
-      // Caminho relativo para salvar no banco
-      imageUrl = `/uploads/products/${fileName}`
+        imageUrl = blob.url
+        console.log('✅ Imagem enviada com sucesso para Vercel Blob Storage:', imageUrl)
+      } catch (uploadError) {
+        console.error('❌ Erro ao fazer upload para Vercel Blob Storage:', uploadError)
+        // Se o upload falhar, manter a imagem existente
+        console.log('⚠️ Upload falhou, mantendo imagem existente')
+      }
     }
 
     const product = await prisma.businessproduct.update({
