@@ -91,81 +91,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Preço deve ser maior que zero' }, { status: 400 })
     }
 
-    // Processar upload da imagem (opcional - pode falhar no Vercel serverless)
+    // Processar upload da imagem (opcional - desabilitado no Vercel serverless)
+    // NOTA: No Vercel, o sistema de arquivos é read-only, então não podemos salvar arquivos localmente
+    // TODO: Implementar upload para Vercel Blob Storage, Cloudinary ou similar
     let imageUrl = null
     if (imageFile && imageFile.size > 0) {
-      try {
-        console.log('🔍 Tentando fazer upload da imagem...')
-        
-        // Validar tipo de arquivo
-        if (!imageFile.type.startsWith('image/')) {
-          console.log('❌ Tipo de arquivo inválido:', imageFile.type)
-          return NextResponse.json({ error: 'Apenas imagens são permitidas' }, { status: 400 })
-        }
-
-        // Validar tamanho (5MB)
-        const maxSize = 5 * 1024 * 1024
-        if (imageFile.size > maxSize) {
-          console.log('❌ Arquivo muito grande:', imageFile.size)
-          return NextResponse.json({ error: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
-        }
-
-        // Tentar fazer upload
-        // NOTA: No Vercel serverless, o sistema de arquivos é read-only
-        // Por enquanto, vamos tentar e se falhar, continuar sem imagem
-        // TODO: Implementar upload para Vercel Blob Storage ou similar
-        
-        const uploadDir = join(process.cwd(), 'public', 'uploads', 'products')
-        try {
-          await mkdir(uploadDir, { recursive: true })
-        } catch (mkdirError) {
-          console.log('⚠️ Não foi possível criar diretório (normal no Vercel):', mkdirError)
-          // Continuar sem imagem no Vercel
-          imageUrl = null
-        }
-
-        if (imageUrl === null) {
-          // Tentar salvar usando /tmp (única pasta writable no Vercel)
-          const tmpDir = join(process.cwd(), 'tmp', 'uploads', 'products')
-          try {
-            await mkdir(tmpDir, { recursive: true })
-            
-            const timestamp = Date.now()
-            const fileExtension = imageFile.name.split('.').pop()
-            const fileName = `product-${timestamp}.${fileExtension}`
-            const filePath = join(tmpDir, fileName)
-
-            const bytes = await imageFile.arrayBuffer()
-            const buffer = Buffer.from(bytes)
-            await writeFile(filePath, buffer)
-
-            // No Vercel, arquivos em /tmp não são acessíveis publicamente
-            // Por enquanto, vamos salvar sem imagem
-            console.log('⚠️ Arquivo salvo em /tmp (não acessível publicamente)')
-            imageUrl = null
-          } catch (tmpError) {
-            console.log('⚠️ Erro ao salvar em /tmp (normal no Vercel):', tmpError)
-            imageUrl = null
-          }
-        } else {
-          // Caminho relativo para salvar no banco (se funcionou)
-          const timestamp = Date.now()
-          const fileExtension = imageFile.name.split('.').pop()
-          const fileName = `product-${timestamp}.${fileExtension}`
-          const filePath = join(uploadDir, fileName)
-
-          const bytes = await imageFile.arrayBuffer()
-          const buffer = Buffer.from(bytes)
-          await writeFile(filePath, buffer)
-
-          imageUrl = `/uploads/products/${fileName}`
-          console.log('✅ Imagem salva com sucesso:', imageUrl)
-        }
-      } catch (uploadError) {
-        console.error('⚠️ Erro ao fazer upload da imagem (continuando sem imagem):', uploadError)
-        // Continuar sem imagem - não é crítico
-        imageUrl = null
+      console.log('🔍 Imagem enviada, mas upload desabilitado no Vercel serverless')
+      
+      // Validar tipo de arquivo (mesmo que não vamos salvar)
+      if (!imageFile.type.startsWith('image/')) {
+        console.log('❌ Tipo de arquivo inválido:', imageFile.type)
+        return NextResponse.json({ error: 'Apenas imagens são permitidas' }, { status: 400 })
       }
+
+      // Validar tamanho (5MB)
+      const maxSize = 5 * 1024 * 1024
+      if (imageFile.size > maxSize) {
+        console.log('❌ Arquivo muito grande:', imageFile.size)
+        return NextResponse.json({ error: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
+      }
+
+      // No Vercel serverless, não podemos salvar arquivos localmente
+      // Por enquanto, vamos criar o produto sem imagem
+      // A imagem pode ser adicionada depois via upload externo
+      console.log('⚠️ Upload de imagem desabilitado - produto será criado sem imagem')
+      imageUrl = null
     }
 
     console.log('🔍 Tentando criar produto no banco...')
