@@ -1005,6 +1005,14 @@ export default function BusinessProfilePage() {
       {showProductForm && (
         <ProductForm
           businessId={business?.id || ''}
+          editProduct={editingProduct ? {
+            id: editingProduct.id,
+            name: editingProduct.name,
+            description: (editingProduct as any).description || '',
+            priceCents: editingProduct.priceCents,
+            productUrl: (editingProduct as any).productUrl || '',
+            imageUrl: editingProduct.imageUrl || ''
+          } : undefined}
           onClose={() => {
             setShowProductForm(false)
             setEditingProduct(null)
