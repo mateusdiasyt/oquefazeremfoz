@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
-import fs from 'fs'
-import path from 'path'
+import { put } from '@vercel/blob'
 
 // POST - Upload da capa do perfil
 export async function POST(request: NextRequest) {
@@ -44,34 +43,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
     }
 
-    // Criar diretório se não existir
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'covers')
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true })
-    }
+    // Converter File para ArrayBuffer
+    const bytes = await file.arrayBuffer()
 
     // Gerar nome único para o arquivo
-    const fileExtension = path.extname(file.name)
-    const fileName = `${business.id}-${Date.now()}${fileExtension}`
-    const filePath = path.join(uploadDir, fileName)
+    const timestamp = Date.now()
+    const fileExtension = file.name.split('.').pop() || 'jpg'
+    const fileName = `businesses/${business.id}/cover-${timestamp}.${fileExtension}`
 
-    // Converter File para Buffer e salvar
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    fs.writeFileSync(filePath, buffer)
+    // Fazer upload para Vercel Blob Storage
+    console.log('🔍 Fazendo upload de capa para Vercel Blob Storage...')
+    const blob = await put(fileName, bytes, {
+      access: 'public',
+      contentType: file.type
+    })
 
-    // URL da imagem
-    const imageUrl = `/uploads/covers/${fileName}`
+    console.log('✅ Capa enviada com sucesso:', blob.url)
 
     // Atualizar a empresa com a nova capa
     await prisma.business.update({
       where: { id: business.id },
-      data: { coverImage: imageUrl }
+      data: { coverImage: blob.url }
     })
 
     return NextResponse.json({
       message: 'Capa atualizada com sucesso',
-      coverImage: imageUrl
+      coverImage: blob.url
     }, { status: 200 })
 
   } catch (error) {

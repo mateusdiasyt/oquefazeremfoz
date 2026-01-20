@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser, isCompany } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { put } from '@vercel/blob'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,33 +43,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
     }
 
-    // Criar diretório se não existir
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'profile-photos')
-    await mkdir(uploadDir, { recursive: true })
+    // Converter para ArrayBuffer
+    const bytes = await file.arrayBuffer()
 
     // Gerar nome único para o arquivo
     const timestamp = Date.now()
-    const fileExtension = file.name.split('.').pop()
-    const fileName = `${business.id}-${timestamp}.${fileExtension}`
-    const filePath = join(uploadDir, fileName)
+    const fileExtension = file.name.split('.').pop() || 'jpg'
+    const fileName = `businesses/${business.id}/profile-${timestamp}.${fileExtension}`
 
-    // Converter para buffer e salvar
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+    // Fazer upload para Vercel Blob Storage
+    console.log('🔍 Fazendo upload de foto de perfil para Vercel Blob Storage...')
+    const blob = await put(fileName, bytes, {
+      access: 'public',
+      contentType: file.type
+    })
 
-    // Caminho relativo para salvar no banco
-    const relativePath = `/uploads/profile-photos/${fileName}`
+    console.log('✅ Foto de perfil enviada com sucesso:', blob.url)
 
     // Atualizar no banco de dados
-    const updatedBusiness = await prisma.business.update({
+    await prisma.business.update({
       where: { id: business.id },
-      data: { profileImage: relativePath }
+      data: { profileImage: blob.url }
     })
 
     return NextResponse.json({ 
       message: 'Foto de perfil atualizada com sucesso',
-      profileImage: relativePath 
+      profileImage: blob.url 
     }, { status: 200 })
 
   } catch (error) {

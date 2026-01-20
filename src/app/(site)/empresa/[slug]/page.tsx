@@ -385,7 +385,7 @@ export default function BusinessProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50">
       {/* Cover Section */}
-      <div className="relative h-80 md:h-96 overflow-hidden">
+      <div className="relative h-80 md:h-96 overflow-hidden group">
         {business.coverImage ? (
           <img
             src={business.coverImage}
@@ -397,6 +397,44 @@ export default function BusinessProfilePage() {
             <Camera className="text-white/50 w-16 h-16" />
           </div>
         )}
+        {isOwner && (
+          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                
+                const formData = new FormData()
+                formData.append('cover', file)
+                
+                try {
+                  const response = await fetch('/api/business/cover', {
+                    method: 'POST',
+                    body: formData
+                  })
+                  
+                  if (response.ok) {
+                    const data = await response.json()
+                    setBusiness(prev => prev ? { ...prev, coverImage: data.coverImage } : null)
+                    showNotification('Capa atualizada com sucesso!', 'success')
+                  } else {
+                    const error = await response.json()
+                    showNotification(error.message || 'Erro ao atualizar capa', 'error')
+                  }
+                } catch (error) {
+                  showNotification('Erro ao atualizar capa', 'error')
+                }
+              }}
+            />
+            <div className="text-white text-center">
+              <Camera className="w-8 h-8 mx-auto mb-2" />
+              <span className="text-sm font-medium">Alterar Capa</span>
+            </div>
+          </label>
+        )}
       </div>
 
       {/* Profile Section */}
@@ -405,7 +443,7 @@ export default function BusinessProfilePage() {
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Profile Image */}
-              <div className="relative">
+              <div className="relative group">
                 {business.profileImage ? (
                   <img
                     src={business.profileImage}
@@ -418,6 +456,41 @@ export default function BusinessProfilePage() {
                       {business.name?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
+                )}
+                {isOwner && (
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        
+                        const formData = new FormData()
+                        formData.append('profilePhoto', file)
+                        
+                        try {
+                          const response = await fetch('/api/business/profile-photo', {
+                            method: 'POST',
+                            body: formData
+                          })
+                          
+                          if (response.ok) {
+                            const data = await response.json()
+                            setBusiness(prev => prev ? { ...prev, profileImage: data.profileImage } : null)
+                            showNotification('Foto de perfil atualizada com sucesso!', 'success')
+                          } else {
+                            const error = await response.json()
+                            showNotification(error.message || 'Erro ao atualizar foto', 'error')
+                          }
+                        } catch (error) {
+                          showNotification('Erro ao atualizar foto de perfil', 'error')
+                        }
+                      }}
+                    />
+                    <Camera className="w-6 h-6 text-white" />
+                  </label>
                 )}
               </div>
 
