@@ -85,7 +85,7 @@ export async function PUT(
     }
 
     const postId = params.id
-    const { content, imageUrl, videoUrl } = await request.json()
+    const { title, body, imageUrl, videoUrl } = await request.json()
 
     // Buscar o post
     const post = await prisma.post.findUnique({
@@ -107,13 +107,20 @@ export async function PUT(
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
+    // Validações
+    if (!title || title.trim() === '') {
+      return NextResponse.json({ message: 'Título é obrigatório' }, { status: 400 })
+    }
+
     // Atualizar o post
     const updatedPost = await prisma.post.update({
       where: { id: postId },
       data: {
-        body: content || post.body,
-        imageUrl: imageUrl || post.imageUrl,
-        videoUrl: videoUrl || post.videoUrl
+        title: title.trim(),
+        body: body?.trim() || null,
+        imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
+        updatedAt: new Date()
       },
       include: {
         business: {
