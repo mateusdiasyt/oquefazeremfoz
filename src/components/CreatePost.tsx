@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../contexts/AuthContext'
+import UrlPreview from './UrlPreview'
+import { extractUrlsFromText } from '../utils/urlDetector'
 
 interface CreatePostProps {
   onPostCreated?: () => void
@@ -294,6 +296,15 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               disabled={loading}
               style={{ letterSpacing: '-0.01em' }}
             />
+            
+            {/* Preview de links detectados */}
+            {content && extractUrlsFromText(content).urls.length > 0 && !imageUrl && !videoUrl && (
+              <div className="mt-4">
+                {extractUrlsFromText(content).urls.map((url, index) => (
+                  <UrlPreview key={index} url={url} />
+                ))}
+              </div>
+            )}
             
             {showImageInput && (
               <div className="mt-4 animate-slide-up">
