@@ -128,6 +128,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         // Adicionar o novo comentário no início da lista
         if (data.comment) {
           setComments(prev => [data.comment, ...prev])
+          setCommentsCount(prev => prev + 1)
           setNewComment('')
         } else {
           // Se não veio no formato esperado, recarregar os comentários
