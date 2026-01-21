@@ -181,8 +181,8 @@ export default function BusinessProfilePage() {
           if (followResponse.ok) {
             const followData = await followResponse.json()
             isFollowing = followData.isFollowing
-      }
-    } catch (error) {
+          }
+        } catch (error) {
           console.log('Erro ao verificar status de follow:', error)
         }
       }
