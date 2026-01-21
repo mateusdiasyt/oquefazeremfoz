@@ -486,7 +486,7 @@ export default function BusinessProfilePage() {
       </div>
 
       {/* Profile Section */}
-      <div className="relative -mt-20 px-4 sm:px-6 lg:px-8">
+      <div className="relative -mt-20 px-4 sm:px-6 lg:px-8 pb-20">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
