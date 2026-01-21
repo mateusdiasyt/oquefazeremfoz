@@ -224,12 +224,8 @@ export default function MapaTuristico() {
                 ${empresa.isVerified ? '<div style="width: 16px; height: 16px; background: #3B82F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">✓</div>' : ''}
               </div>
               <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">${empresa.category}</p>
-              <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 8px; font-size: 12px; color: #6b7280;">
+              <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 12px; font-size: 12px; color: #6b7280;">
                 <span>👥 ${empresa.followersCount} seguidores</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 12px; font-size: 12px;">
-                ${'⭐'.repeat(Math.floor(empresa.averageRating))}
-                <span style="color: #6b7280;">(${empresa.reviewsCount})</span>
               </div>
               <button 
                 onclick="window.location.href='/empresa/${empresa.slug || empresa.id}'" 
@@ -292,17 +288,30 @@ export default function MapaTuristico() {
     router.push(`/empresa/${empresa.slug || empresa.id}`)
   }
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < Math.floor(rating) 
-            ? 'text-yellow-400 fill-current' 
-            : 'text-gray-300'
-        }`}
-      />
-    ))
+  const handleLocalizeEmpresa = async (empresa: Empresa) => {
+    if (!map || !window.L) return
+
+    try {
+      const coordinates = await geocodeAddressNominatim(empresa.address)
+      if (coordinates) {
+        // Mover o mapa para a empresa
+        map.setView(coordinates, 15)
+        
+        // Encontrar e abrir o popup do marker correspondente
+        markers.forEach((marker: any) => {
+          const markerLatLng = marker.getLatLng()
+          if (
+            Math.abs(markerLatLng.lat - coordinates[0]) < 0.0001 &&
+            Math.abs(markerLatLng.lng - coordinates[1]) < 0.0001
+          ) {
+            marker.openPopup()
+            setSelectedEmpresa(empresa)
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao localizar empresa:', error)
+    }
   }
 
   if (loading) {
@@ -383,22 +392,17 @@ export default function MapaTuristico() {
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">
-                      <div className="relative">
-                        {empresa.profileImage ? (
-                          <img
-                            src={empresa.profileImage}
-                            alt={empresa.name}
-                            className="w-12 h-12 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
-                            {empresa.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="absolute -top-1 -right-1">
-                          <VerificationBadge size="sm" />
+                      {empresa.profileImage ? (
+                        <img
+                          src={empresa.profileImage}
+                          alt={empresa.name}
+                          className="w-12 h-12 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                          {empresa.name.charAt(0).toUpperCase()}
                         </div>
-                      </div>
+                      )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -406,6 +410,7 @@ export default function MapaTuristico() {
                         <h3 className="font-semibold text-gray-900 truncate group-hover:text-pink-600 transition-colors">
                           {empresa.name}
                         </h3>
+                        {empresa.isVerified && <VerificationBadge size="sm" />}
                         <span className="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
                           #{index + 1}
                         </span>
@@ -413,16 +418,23 @@ export default function MapaTuristico() {
                       
                       <p className="text-sm text-gray-600 mb-2">{empresa.category}</p>
                       
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">
                         <div className="flex items-center gap-1">
                           <Users className="w-3 h-3" />
                           <span>{empresa.followersCount}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          {renderStars(empresa.averageRating)}
-                          <span>({empresa.reviewsCount})</span>
-                        </div>
                       </div>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleLocalizeEmpresa(empresa)
+                        }}
+                        className="mt-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                      >
+                        <MapPin className="w-3 h-3" />
+                        Localizar
+                      </button>
                     </div>
                   </div>
                 </div>
