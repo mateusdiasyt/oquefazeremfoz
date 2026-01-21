@@ -27,15 +27,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
-    // Verificar se o usuário está seguindo a empresa
-    const follow = await prisma.follow.findFirst({
+    // Verificar se o usuário está seguindo a empresa (usando businesslike)
+    const businessLike = await prisma.businesslike.findFirst({
       where: {
-        followerId: user.id,
-        followingId: business.userId
+        userId: user.id,
+        businessId: businessId
       }
     })
 
-    if (!follow) {
+    if (!businessLike) {
       return NextResponse.json({ message: 'Você precisa seguir a empresa para enviar mensagens' }, { status: 403 })
     }
 

@@ -10,21 +10,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    // Buscar empresas que o usuário está seguindo
-    const followedBusinesses = await prisma.follow.findMany({
+    // Buscar empresas que o usuário está seguindo (usando businesslike)
+    const businessLikes = await prisma.businesslike.findMany({
       where: {
-        followerId: user.id
+        userId: user.id
       },
       include: {
-        user_follow_followingIdTouser: {
+        business: {
           include: {
-            business: true
+            user: true
           }
         }
       }
     })
 
-    console.log('🏢 Empresas seguidas:', followedBusinesses.length)
+    console.log('🏢 Empresas seguidas:', businessLikes.length)
 
     // Buscar conversas existentes do usuário
     const existingConversations = await prisma.conversation.findMany({
@@ -116,9 +116,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Adicionar empresas seguidas que não têm conversas ainda
-    for (const follow of followedBusinesses) {
-      const business = follow.user_follow_followingIdTouser.business
-      if (business) {
+    for (const businessLike of businessLikes) {
+      const business = businessLike.business
+      if (business && business.user) {
         // Verificar se já existe conversa com esta empresa
         const hasConversation = allConversations.some(conv => 
           conv.business && conv.business.id === business.id
@@ -134,11 +134,11 @@ export async function GET(request: NextRequest) {
               profileImage: business.profileImage,
               isVerified: business.isVerified,
               category: business.category,
-              followedAt: follow.createdAt.toISOString(),
-              userId: follow.user_follow_followingIdTouser.id
+              followedAt: businessLike.id, // Usando o ID do businesslike como referência temporal
+              userId: business.user.id
             },
             lastMessage: null,
-            updatedAt: follow.createdAt.toISOString()
+            updatedAt: business.createdAt.toISOString()
           })
         }
       }
