@@ -524,7 +524,7 @@ export default function HomePage() {
       </section>
 
       {/* Main Content */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Feed */}
           <div className="lg:col-span-2 flex flex-col gap-6">
