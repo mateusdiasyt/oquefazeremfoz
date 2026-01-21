@@ -100,7 +100,7 @@ export default function Footer() {
                         href={banner.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full h-full"
+                        className="block w-full h-full relative cursor-pointer group"
                       >
                         {banner.imageUrl ? (
                           <img
@@ -111,6 +111,8 @@ export default function Footer() {
                         ) : (
                           <div className="w-full h-full bg-gradient-to-r from-pink-600 to-blue-600" />
                         )}
+                        {/* Overlay mais claro e com pointer-events-none para permitir cliques */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                       </a>
                     ) : (
                       <>
@@ -123,17 +125,19 @@ export default function Footer() {
                         ) : (
                           <div className="w-full h-full bg-gradient-to-r from-pink-600 to-blue-600" />
                         )}
+                        {/* Overlay mais claro quando não há link */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                       </>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                     
-                    {/* Botão Patrocine aqui */}
-                    <div className="absolute top-4 right-4 z-10">
+                    {/* Botão Patrocine aqui - sempre acima do overlay */}
+                    <div className="absolute top-4 right-4 z-20 pointer-events-auto">
                       <a
                         href="https://wa.me/5545999287669?text=Olá! Tenho interesse em patrocinar no banner da página inicial."
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-black/40 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full hover:bg-black/60 transition-all duration-300 border border-white/20 hover:border-white/40 opacity-75 hover:opacity-100"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Patrocine aqui
                       </a>
