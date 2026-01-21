@@ -205,26 +205,6 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     }
   }
 
-  const fetchUserBusiness = async () => {
-    if (!user?.businessId) return
-    
-    try {
-      const response = await fetch(`/api/business/profile`)
-      if (response.ok) {
-        const data = await response.json()
-        if (data.business) {
-          setUserBusiness({
-            id: data.business.id,
-            name: data.business.name,
-            profileImage: data.business.profileImage
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao buscar empresa do usuário:', error)
-    }
-  }
-
   const fetchComments = async () => {
     try {
       console.log('🔍 [POSTCARD] Buscando comentários para post:', post.id)
