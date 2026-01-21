@@ -448,6 +448,10 @@ export default function BusinessProfilePage() {
       if (response.ok) {
         const data = await response.json()
         setBusiness(prev => prev ? { ...prev, ...data.business } : null)
+        // Atualizar o campo de edição com o valor salvo para que apareça quando reabrir
+        if (data.business?.presentationVideo) {
+          setEditPresentationVideo(data.business.presentationVideo)
+        }
         setEditingInfo(false)
         showNotification('Informações atualizadas com sucesso!', 'success')
         // Recarregar dados da empresa
