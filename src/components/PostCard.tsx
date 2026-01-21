@@ -823,7 +823,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                               </div>
                             </div>
                           )
-                        })}
+                        })
                         })()}
                       </div>
                     )}
