@@ -93,6 +93,28 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
           user: {
             include: {
               business: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  profileImage: true,
+                  coverImage: true,
+                  description: true,
+                  category: true,
+                  address: true,
+                  phone: true,
+                  website: true,
+                  instagram: true,
+                  facebook: true,
+                  whatsapp: true,
+                  isApproved: true,
+                  isVerified: true,
+                  likesCount: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  userId: true
+                  // presentationVideo não incluído até migração ser executada
+                },
                 orderBy: { createdAt: 'desc' }
               },
               userrole: true
@@ -109,6 +131,28 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
           where: { id: payload.userId },
           include: {
             business: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                profileImage: true,
+                coverImage: true,
+                description: true,
+                category: true,
+                address: true,
+                phone: true,
+                website: true,
+                instagram: true,
+                facebook: true,
+                whatsapp: true,
+                isApproved: true,
+                isVerified: true,
+                likesCount: true,
+                createdAt: true,
+                updatedAt: true,
+                userId: true
+                // presentationVideo não incluído até migração ser executada
+              },
               orderBy: { createdAt: 'desc' }
             },
             userrole: true
