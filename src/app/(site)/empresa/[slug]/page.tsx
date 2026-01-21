@@ -873,7 +873,12 @@ export default function BusinessProfilePage() {
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold text-gray-900 text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h3>
                                 {business.isVerified && (
-                                  <VerificationBadge size="sm" />
+                                  <img 
+                                    src="/icons/verificado.png" 
+                                    alt="Verificado" 
+                                    className="w-4 h-4 object-contain"
+                                    title="Empresa verificada"
+                                  />
               )}
             </div>
                               <p className="text-xs text-gray-500">
