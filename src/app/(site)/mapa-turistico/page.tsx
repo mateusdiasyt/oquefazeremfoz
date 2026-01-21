@@ -55,6 +55,7 @@ export default function MapaTuristico() {
   const [selectedEmpresa, setSelectedEmpresa] = useState<Empresa | null>(null)
   const [map, setMap] = useState<any>(null)
   const [markers, setMarkers] = useState<any[]>([])
+  const [empresaMarkers, setEmpresaMarkers] = useState<Map<string, any>>(new Map())
 
   useEffect(() => {
     fetchEmpresas()
@@ -254,6 +255,13 @@ export default function MapaTuristico() {
           })
 
           newMarkers.push(marker)
+          
+          // Armazenar marker associado à empresa
+          setEmpresaMarkers(prev => {
+            const newMap = new Map(prev)
+            newMap.set(empresa.id, marker)
+            return newMap
+          })
         }
       } catch (error) {
         console.error(`Erro ao geocodificar endereço da empresa ${empresa.name}:`, error)
@@ -289,25 +297,47 @@ export default function MapaTuristico() {
   }
 
   const handleLocalizeEmpresa = async (empresa: Empresa) => {
-    if (!map || !window.L) return
+    if (!map || !window.L) {
+      console.error('Mapa não está pronto')
+      return
+    }
 
     try {
+      // Primeiro, tentar encontrar o marker pela empresa ID
+      const marker = empresaMarkers.get(empresa.id)
+      
+      if (marker) {
+        // Se encontrou o marker, usar suas coordenadas
+        const coordinates = marker.getLatLng()
+        map.setView([coordinates.lat, coordinates.lng], 15)
+        setTimeout(() => {
+          marker.openPopup()
+        }, 300)
+        setSelectedEmpresa(empresa)
+        return
+      }
+
+      // Se não encontrou, geocodificar o endereço
       const coordinates = await geocodeAddressNominatim(empresa.address)
       if (coordinates) {
         // Mover o mapa para a empresa
         map.setView(coordinates, 15)
         
-        // Encontrar e abrir o popup do marker correspondente
-        markers.forEach((marker: any) => {
-          const markerLatLng = marker.getLatLng()
+        // Tentar encontrar o marker nas coordenadas
+        markers.forEach((m: any) => {
+          const markerLatLng = m.getLatLng()
           if (
-            Math.abs(markerLatLng.lat - coordinates[0]) < 0.0001 &&
-            Math.abs(markerLatLng.lng - coordinates[1]) < 0.0001
+            Math.abs(markerLatLng.lat - coordinates[0]) < 0.001 &&
+            Math.abs(markerLatLng.lng - coordinates[1]) < 0.001
           ) {
-            marker.openPopup()
+            setTimeout(() => {
+              m.openPopup()
+            }, 300)
             setSelectedEmpresa(empresa)
           }
         })
+      } else {
+        console.error('Não foi possível encontrar coordenadas para:', empresa.address)
       }
     } catch (error) {
       console.error('Erro ao localizar empresa:', error)
