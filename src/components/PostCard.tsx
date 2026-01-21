@@ -153,7 +153,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       const response = await fetch(`/api/posts/comments?postId=${post.id}`)
       if (response.ok) {
         const data = await response.json()
-        setComments(data.comments || [])
+        const fetchedComments = data.comments || []
+        setComments(fetchedComments)
+        // Atualizar a contagem com o valor real quando os comentários são carregados
+        setCommentsCount(fetchedComments.length)
       }
     } catch (error) {
       console.error('Erro ao buscar comentários:', error)
