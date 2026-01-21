@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Processar roles
-    const roles = user.userrole?.map(ur => ur.role) || []
+    const roles = user.userrole?.map((ur: any) => ur.role) || []
     console.log('🔍 DEBUG ROLES:', { roles, rolesCount: roles.length })
 
     // Gerar token JWT
