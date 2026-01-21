@@ -346,16 +346,16 @@ export default function EmpresasPage() {
               return (
               <div 
                 key={business.id} 
-                className={`bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group relative ${
+                className={`bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-visible group relative ${
                   viewMode === 'list' ? 'flex' : ''
                 }`}
                 onMouseEnter={() => videoEmbedUrl && setHoveredBusinessId(business.id)}
                 onMouseLeave={() => setHoveredBusinessId(null)}
               >
-                {/* Popup de vídeo no hover */}
+                {/* Popup de vídeo no hover - flutuante acima do card */}
                 {hoveredBusinessId === business.id && videoEmbedUrl && (
-                  <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center p-4">
-                    <div className="w-full max-w-2xl aspect-video rounded-lg overflow-hidden shadow-2xl">
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
+                    <div className="w-[560px] max-w-[90vw] aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                       <iframe
                         src={`${videoEmbedUrl}?autoplay=1&mute=1`}
                         className="w-full h-full"
