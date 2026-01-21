@@ -864,10 +864,19 @@ export default function BusinessProfilePage() {
                       <div key={post.id} className="border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-shadow">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center border border-gray-100">
-                              <span className="text-sm font-semibold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
-                                {business.name?.charAt(0)?.toUpperCase()}
-                              </span>
+                            {business.profileImage ? (
+                              <img
+                                src={business.profileImage}
+                                alt={business.name}
+                                className="w-11 h-11 rounded-xl object-cover border border-gray-100"
+                              />
+                            ) : (
+                              <div className="w-11 h-11 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center border border-gray-100">
+                                <span className="text-sm font-semibold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
+                                  {business.name?.charAt(0)?.toUpperCase()}
+                                </span>
+                              </div>
+                            )}
               </div>
                             <div>
                               <div className="flex items-center gap-2">
