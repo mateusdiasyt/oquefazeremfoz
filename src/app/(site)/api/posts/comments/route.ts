@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
         if (replyIds.length !== uniqueIds.size) {
           console.log('⚠️ [API] DUPLICATAS ENCONTRADAS no comentário:', comment.id)
           console.log('   IDs das respostas:', replyIds)
-          const duplicates = replyIds.filter((id, idx) => replyIds.indexOf(id) !== idx)
+          const duplicates = replyIds.filter((id: string, idx: number) => replyIds.indexOf(id) !== idx)
           console.log('   IDs duplicados:', duplicates)
         }
         
