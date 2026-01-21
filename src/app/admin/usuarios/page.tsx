@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, AlertTriangle, Search } from 'lucide-react'
+import { Trash2, AlertTriangle, Search, X } from 'lucide-react'
 
 interface User {
   id: string
@@ -20,6 +20,9 @@ export default function AdminUsuariosPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showFinalConfirmModal, setShowFinalConfirmModal] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null)
 
   useEffect(() => {
     fetchUsers()
@@ -43,43 +46,32 @@ export default function AdminUsuariosPage() {
     }
   }
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
-    // Confirmar exclusão
-    const confirmed = confirm(
-      `⚠️ ATENÇÃO: Esta ação não pode ser desfeita!\n\n` +
-      `Tem certeza que deseja deletar o usuário "${userName}"?\n\n` +
-      `Isso irá deletar:\n` +
-      `- O usuário e todas as suas sessões\n` +
-      `- Todas as empresas do usuário\n` +
-      `- Todos os posts, produtos e cupons\n` +
-      `- Todas as mensagens e comentários\n` +
-      `- Todos os likes e seguidores relacionados\n\n` +
-      `Esta ação é PERMANENTE!`
-    )
+  const handleDeleteClick = (userId: string, userName: string) => {
+    setUserToDelete({ id: userId, name: userName })
+    setShowConfirmModal(true)
+  }
 
-    if (!confirmed) return
+  const handleConfirmDelete = () => {
+    setShowConfirmModal(false)
+    setShowFinalConfirmModal(true)
+  }
 
-    // Confirmar novamente
-    const confirmedAgain = confirm(
-      `ÚLTIMA CONFIRMAÇÃO:\n\n` +
-      `Você tem CERTEZA ABSOLUTA que deseja deletar "${userName}"?\n\n` +
-      `Esta ação é IRREVERSÍVEL!`
-    )
-
-    if (!confirmedAgain) return
+  const handleFinalConfirmDelete = async () => {
+    if (!userToDelete) return
 
     try {
-      setDeletingUserId(userId)
+      setDeletingUserId(userToDelete.id)
       setError('')
+      setShowFinalConfirmModal(false)
 
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         // Remover usuário da lista local
-        setUsers(users.filter(u => u.id !== userId))
-        alert('Usuário deletado com sucesso!')
+        setUsers(users.filter(u => u.id !== userToDelete.id))
+        setUserToDelete(null)
       } else {
         const data = await response.json()
         setError(data.message || 'Erro ao deletar usuário')
@@ -89,7 +81,14 @@ export default function AdminUsuariosPage() {
       setError('Erro ao deletar usuário. Tente novamente.')
     } finally {
       setDeletingUserId(null)
+      setUserToDelete(null)
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowConfirmModal(false)
+    setShowFinalConfirmModal(false)
+    setUserToDelete(null)
   }
 
   const filteredUsers = users.filter(user =>
@@ -216,7 +215,7 @@ export default function AdminUsuariosPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        onClick={() => handleDeleteUser(user.id, user.name || user.email)}
+                        onClick={() => handleDeleteClick(user.id, user.name || user.email)}
                         disabled={deletingUserId === user.id}
                         className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -235,6 +234,114 @@ export default function AdminUsuariosPage() {
       <div className="mt-4 text-sm text-gray-500">
         Total de usuários: {filteredUsers.length}
       </div>
+
+      {/* Modal de Confirmação Inicial */}
+      {showConfirmModal && userToDelete && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div 
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={handleCancelDelete}
+            ></div>
+
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-6 pt-5 pb-4 sm:p-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <AlertTriangle className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      ⚠️ ATENÇÃO: Esta ação não pode ser desfeita!
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Tem certeza que deseja deletar o usuário <strong>"{userToDelete.name}"</strong>?
+                    </p>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <p className="text-sm font-semibold text-red-900 mb-2">Isso irá deletar:</p>
+                      <ul className="text-sm text-red-800 space-y-1 list-disc list-inside">
+                        <li>O usuário e todas as suas sessões</li>
+                        <li>Todas as empresas do usuário</li>
+                        <li>Todos os posts, produtos e cupons</li>
+                        <li>Todas as mensagens e comentários</li>
+                        <li>Todos os likes e seguidores relacionados</li>
+                      </ul>
+                      <p className="text-sm font-bold text-red-900 mt-3">
+                        Esta ação é PERMANENTE!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button
+                  onClick={handleConfirmDelete}
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Continuar
+                </button>
+                <button
+                  onClick={handleCancelDelete}
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação Final */}
+      {showFinalConfirmModal && userToDelete && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div 
+              className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75"
+              onClick={handleCancelDelete}
+            ></div>
+
+            <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 px-6 pt-5 pb-4 sm:p-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <AlertTriangle className="h-8 w-8 text-red-600" />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                      ÚLTIMA CONFIRMAÇÃO
+                    </h3>
+                    <p className="text-base text-gray-800 mb-4">
+                      Você tem <strong className="text-red-600">CERTEZA ABSOLUTA</strong> que deseja deletar <strong>"{userToDelete.name}"</strong>?
+                    </p>
+                    <div className="bg-red-100 border-2 border-red-400 rounded-lg p-4">
+                      <p className="text-base font-bold text-red-900 text-center">
+                        Esta ação é IRREVERSÍVEL!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button
+                  onClick={handleFinalConfirmDelete}
+                  disabled={deletingUserId === userToDelete.id}
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-3 bg-red-600 text-base font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  {deletingUserId === userToDelete.id ? 'Deletando...' : 'Sim, Deletar Permanentemente'}
+                </button>
+                <button
+                  onClick={handleCancelDelete}
+                  disabled={deletingUserId === userToDelete.id}
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-3 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
