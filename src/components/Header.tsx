@@ -46,6 +46,13 @@ export default function Header() {
               Descubra
             </a>
             <a 
+              href="/cupons" 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
+              style={{ letterSpacing: '-0.01em' }}
+            >
+              Cupons
+            </a>
+            <a 
               href="/mapa-turistico" 
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200 flex items-center gap-2"
               style={{ letterSpacing: '-0.01em' }}
