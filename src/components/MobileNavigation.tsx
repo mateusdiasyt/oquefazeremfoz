@@ -53,14 +53,14 @@ export default function MobileNavigation() {
               onClick={() => setActiveTab(item.id)}
               className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 ${
                 isActive
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white'
-                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white'
+                  : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
               }`}
             >
               <div className={`p-2 rounded-lg transition-all duration-300 ${
                 isActive
                   ? 'bg-white/20'
-                  : 'hover:bg-blue-100'
+                  : 'hover:bg-pink-100'
               }`}>
                 <Icon size={20} />
               </div>

@@ -102,7 +102,7 @@ function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date:
   }
 
   return (
-    <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border border-blue-100 hover:border-blue-200 transition-colors">
+    <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:border-purple-200 transition-colors">
       {/* Cabeçalho: Nome da empresa e tempo */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
@@ -146,7 +146,7 @@ function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date:
         className={`w-full text-xs flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm shadow-purple-500/20 font-medium ${
           isCopied
             ? 'bg-green-500 text-white hover:bg-green-600'
-            : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
+            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-blue-700 hover:to-cyan-700'
         }`}
       >
         {isCopied ? (
@@ -456,7 +456,7 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-cyan-50/50">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6" style={{ letterSpacing: '-0.03em' }}>
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6" style={{ letterSpacing: '-0.03em' }}>
               O Que Fazer em Foz
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto" style={{ letterSpacing: '-0.01em' }}>
@@ -465,7 +465,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => router.push('/empresas')}
-                className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium rounded-2xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 flex items-center justify-center gap-2"
+                className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-200 flex items-center justify-center gap-2"
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <MapPin className="w-5 h-5" />
@@ -486,12 +486,12 @@ export default function HomePage() {
 
       {/* Search Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl border border-blue-200/50 rounded-3xl shadow-lg shadow-blue-500/5 p-6">
+        <div className="bg-white/80 backdrop-blur-xl border border-purple-200/50 rounded-3xl shadow-lg shadow-purple-500/5 p-6">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             <div className="flex-1 relative w-full">
               <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input 
-                className="w-full pl-12 pr-5 py-4 bg-white/50 border border-blue-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition-all duration-200 text-lg" 
+                className="w-full pl-12 pr-5 py-4 bg-white/50 border border-purple-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 text-lg" 
                 placeholder="Buscar hotéis, restaurantes, atrações..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -527,7 +527,7 @@ export default function HomePage() {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
                               <span className="text-white font-semibold text-sm">
                                 {business.name.charAt(0).toUpperCase()}
                               </span>
@@ -576,7 +576,7 @@ export default function HomePage() {
                 Categoria:
               </label>
               <select 
-                className="input text-sm min-w-[140px] bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                className="input text-sm min-w-[140px] bg-white border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -592,7 +592,7 @@ export default function HomePage() {
             </div>
             
             <button 
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium rounded-2xl whitespace-nowrap hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 text-lg"
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl whitespace-nowrap hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 text-lg"
               onClick={() => {
                 // Redirecionar para página de empresas com filtros
                 const params = new URLSearchParams()
@@ -620,7 +620,7 @@ export default function HomePage() {
             {/* Lista de Posts */}
             {loading ? (
               <div className="card p-12 text-center">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-gray-600 text-lg">Carregando publicações...</p>
               </div>
             ) : posts.length === 0 ? (
@@ -643,7 +643,7 @@ export default function HomePage() {
                 {loadingMore && (
                   <div className="flex justify-center py-8">
                     <div className="flex items-center space-x-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
                       <span className="text-gray-600 text-sm">Carregando mais posts...</span>
                     </div>
                   </div>
@@ -669,7 +669,7 @@ export default function HomePage() {
             {/* Empresas em Destaque */}
             <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
               <div className="flex items-center space-x-3 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                   <Star className="w-5 h-5 text-white" />
                 </div>
                 <h4 className="text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Empresas em Destaque</h4>
@@ -695,7 +695,7 @@ export default function HomePage() {
                             className="w-11 h-11 rounded-xl object-cover border border-gray-200"
                           />
                         ) : (
-                          <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border border-gray-200">
+                          <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border border-gray-200">
                             {business.name.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -730,7 +730,7 @@ export default function HomePage() {
                         className={`p-2 rounded-lg transition-all duration-200 ${
                           business.isFollowing 
                             ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                            : 'text-gray-400 hover:bg-blue-50 hover:text-blue-600'
+                            : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
                         }`}
                         title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
                       >
@@ -747,7 +747,7 @@ export default function HomePage() {
             {/* Cupons do Dia */}
             <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
               <div className="flex items-center space-x-3 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                   <Gift className="w-5 h-5 text-white" />
                 </div>
                 <h4 className="text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Cupons do Dia</h4>
@@ -866,8 +866,8 @@ export default function HomePage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="w-8 h-8 text-blue-500" fill="currentColor" />
+              <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-pink-500" fill="currentColor" />
               </div>
               
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
@@ -888,7 +888,7 @@ export default function HomePage() {
                 </button>
                 <button
                   onClick={handleConfirmUnfollow}
-                  className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors font-medium"
+                  className="flex-1 px-4 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-colors font-medium"
                 >
                   Sim, desseguir
                 </button>

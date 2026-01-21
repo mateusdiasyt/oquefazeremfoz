@@ -512,7 +512,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white font-semibold text-base">
+            <div className="w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-semibold text-base">
               {post.business.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -521,7 +521,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           <div className="flex items-center space-x-2">
             <a
               href={post.business.slug ? `/empresa/${post.business.slug}` : `/empresa/${post.business.id}`}
-              className="font-semibold text-gray-900 text-base hover:text-blue-600 transition-colors duration-200 cursor-pointer truncate"
+              className="font-semibold text-gray-900 text-base hover:text-purple-600 transition-colors duration-200 cursor-pointer truncate"
               style={{ letterSpacing: '-0.01em' }}
             >
               {post.business.name}
@@ -583,7 +583,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         <button
           onClick={handleLike}
           className={`flex items-center space-x-1.5 transition-all duration-200 ${
-            isLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
+            isLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
           }`}
         >
           <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -594,7 +594,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center space-x-1.5 text-gray-500 hover:text-blue-600 transition-all duration-200"
+          className="flex items-center space-x-1.5 text-gray-500 hover:text-purple-600 transition-all duration-200"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -604,7 +604,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
         <button
           onClick={() => setShowShareModal(true)}
-          className="flex items-center space-x-1.5 text-gray-500 hover:text-blue-600 transition-all duration-200"
+          className="flex items-center space-x-1.5 text-gray-500 hover:text-purple-600 transition-all duration-200"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
@@ -622,14 +622,14 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               <div className="flex-1">
                 <div className="relative">
                   {replyingTo && (
-                    <div className="mb-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-                      <span className="text-sm text-blue-700">
+                    <div className="mb-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
+                      <span className="text-sm text-purple-700">
                         Respondendo a <strong>{replyingTo.userName}</strong>
                       </span>
                       <button
                         type="button"
                         onClick={cancelReply}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        className="text-purple-600 hover:text-purple-800 text-sm"
                       >
                         Cancelar
                       </button>
@@ -648,7 +648,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                             {userBusiness.profileImage ? (
                               <img src={userBusiness.profileImage} alt={userBusiness.name} className="w-5 h-5 rounded-full object-cover" />
                             ) : (
-                              <div className="w-5 h-5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                              <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
                                 {userBusiness.name.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -656,7 +656,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                           </>
                         ) : (
                           <>
-                            <div className="w-5 h-5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
                               {user?.name?.charAt(0).toUpperCase() || 'U'}
                             </div>
                             <span className="text-gray-700 font-medium">Comentar como {user?.name || 'Usuário'}</span>
@@ -672,7 +672,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder={replyingTo ? `Responder ${replyingTo.userName}...` : "Adicione um comentário..."}
-                    className="w-full px-4 py-3 pr-12 border border-gray-200 bg-gray-50 rounded-2xl resize-none focus:ring-2 focus:ring-blue-200 focus:bg-white focus:border-blue-300 transition-all duration-200 text-sm placeholder-gray-400"
+                    className="w-full px-4 py-3 pr-12 border border-gray-200 bg-gray-50 rounded-2xl resize-none focus:ring-2 focus:ring-purple-200 focus:bg-white focus:border-purple-300 transition-all duration-200 text-sm placeholder-gray-400"
                     rows={2}
                     disabled={commentLoading}
                     style={{ letterSpacing: '-0.01em' }}
@@ -680,7 +680,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                   <button
                     type="submit"
                     disabled={!newComment.trim() || commentLoading}
-                    className="absolute right-2 bottom-2 p-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    className="absolute right-2 bottom-2 p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                   >
                     {commentLoading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -721,12 +721,12 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                           comment.business.profileImage ? (
                             <img src={comment.business.profileImage} alt={comment.business.name} className="w-8 h-8 rounded-lg object-cover border border-gray-100" />
                           ) : (
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
                               {comment.business.name.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
                             {comment.user?.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
                           </div>
                         )}
@@ -750,7 +750,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                           <textarea
                             value={editCommentText}
                             onChange={(e) => setEditCommentText(e.target.value)}
-                            className="w-full px-3 py-2 border border-blue-300 bg-white rounded-xl resize-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 text-sm"
+                            className="w-full px-3 py-2 border border-purple-300 bg-white rounded-xl resize-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all duration-200 text-sm"
                             rows={3}
                             autoFocus
                           />
@@ -758,7 +758,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                             <button
                               onClick={handleSaveEdit}
                               disabled={!editCommentText.trim()}
-                              className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-xs rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                              className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                             >
                               Salvar
                             </button>
@@ -780,7 +780,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                             <button
                               onClick={() => handleCommentLike(comment.id, likesCount, isLiked)}
                               className={`flex items-center gap-1.5 text-xs transition-colors ${
-                                isLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
+                                isLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
                               }`}
                             >
                               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -788,7 +788,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                             </button>
                             <button
                               onClick={() => handleReply(comment)}
-                              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -801,7 +801,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                 {canEditComment(comment) && (
                                   <button
                                     onClick={() => handleEditComment(comment)}
-                                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                                   >
                                     <Edit3 className="w-4 h-4" />
                                     <span>Editar</span>
@@ -844,12 +844,12 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                   reply.business.profileImage ? (
                                     <img src={reply.business.profileImage} alt={reply.business.name} className="w-6 h-6 rounded-lg object-cover border border-gray-100" />
                                   ) : (
-                                    <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
                                       {reply.business.name.charAt(0).toUpperCase()}
                                     </div>
                                   )
                                 ) : (
-                                  <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
                                     {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'U'}
                                   </div>
                                 )}
@@ -873,7 +873,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                       <textarea
                                         value={editCommentText}
                                         onChange={(e) => setEditCommentText(e.target.value)}
-                                        className="w-full px-3 py-2 border border-blue-300 bg-white rounded-xl resize-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all duration-200 text-xs"
+                                        className="w-full px-3 py-2 border border-purple-300 bg-white rounded-xl resize-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all duration-200 text-xs"
                                         rows={2}
                                         autoFocus
                                       />
@@ -881,7 +881,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                         <button
                                           onClick={handleSaveEdit}
                                           disabled={!editCommentText.trim()}
-                                          className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-xs rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                          className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                                         >
                                           Salvar
                                         </button>
@@ -903,7 +903,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                         <button
                                           onClick={() => handleCommentLike(reply.id, replyLikesCount, replyIsLiked)}
                                           className={`flex items-center gap-1.5 text-xs transition-colors ${
-                                            replyIsLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'
+                                            replyIsLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
                                           }`}
                                         >
                                           <Heart className={`w-3.5 h-3.5 ${replyIsLiked ? 'fill-current' : ''}`} />
@@ -911,7 +911,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                         </button>
                                         <button
                                           onClick={() => handleReply(reply)}
-                                          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                                          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                                         >
                                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -924,7 +924,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                             {canEditComment(reply) && (
                                               <button
                                                 onClick={() => handleEditComment(reply)}
-                                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                                               >
                                                 <Edit3 className="w-3.5 h-3.5" />
                                                 <span>Editar</span>
