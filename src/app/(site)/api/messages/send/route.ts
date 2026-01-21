@@ -81,26 +81,36 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user_message_senderIdTouser: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
             business: {
               select: {
                 id: true,
                 name: true,
                 profileImage: true,
                 isVerified: true
-              }
+              },
+              orderBy: { createdAt: 'desc' }
             }
           }
         },
         user_message_receiverIdTouser: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
             business: {
               select: {
                 id: true,
                 name: true,
                 profileImage: true,
                 isVerified: true
-              }
+              },
+              orderBy: { createdAt: 'desc' }
             }
           }
         }
@@ -113,6 +123,16 @@ export async function POST(request: NextRequest) {
       data: { updatedAt: new Date() }
     })
 
+    // Buscar empresa ativa do remetente
+    const senderActiveBusiness = message.user_message_senderIdTouser.activeBusinessId 
+      ? message.user_message_senderIdTouser.business.find(b => b.id === message.user_message_senderIdTouser.activeBusinessId)
+      : message.user_message_senderIdTouser.business[0]
+
+    // Buscar empresa ativa do receptor
+    const receiverActiveBusiness = message.user_message_receiverIdTouser?.activeBusinessId 
+      ? message.user_message_receiverIdTouser.business?.find(b => b.id === message.user_message_receiverIdTouser.activeBusinessId)
+      : message.user_message_receiverIdTouser?.business?.[0]
+
     // Formatar mensagem
     const formattedMessage = {
       id: message.id,
@@ -121,15 +141,15 @@ export async function POST(request: NextRequest) {
       createdAt: message.createdAt,
       sender: {
         id: message.user_message_senderIdTouser.id,
-        name: message.user_message_senderIdTouser.business?.name || message.user_message_senderIdTouser.name || 'Usuário',
-        profileImage: message.user_message_senderIdTouser.business?.profileImage,
-        isVerified: message.user_message_senderIdTouser.business?.isVerified || false
+        name: senderActiveBusiness?.name || message.user_message_senderIdTouser.name || 'Usuário',
+        profileImage: senderActiveBusiness?.profileImage,
+        isVerified: senderActiveBusiness?.isVerified || false
       },
       receiver: {
         id: message.user_message_receiverIdTouser?.id,
-        name: message.user_message_receiverIdTouser?.business?.name || message.user_message_receiverIdTouser?.name || 'Usuário',
-        profileImage: message.user_message_receiverIdTouser?.business?.profileImage,
-        isVerified: message.user_message_receiverIdTouser?.business?.isVerified || false
+        name: receiverActiveBusiness?.name || message.user_message_receiverIdTouser?.name || 'Usuário',
+        profileImage: receiverActiveBusiness?.profileImage,
+        isVerified: receiverActiveBusiness?.isVerified || false
       }
     }
 
