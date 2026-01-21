@@ -80,11 +80,6 @@ export async function DELETE(
           where: { businessId: business.id }
         })
 
-        // Deletar postlikes da empresa
-        await tx.postlike.deleteMany({
-          where: { businessId: business.id }
-        })
-
         // Deletar follow da empresa
         await tx.follow.deleteMany({
           where: {
