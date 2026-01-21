@@ -20,6 +20,9 @@ interface Business {
   isApproved: boolean
   approvedAt: string | null
   createdAt: string
+  followersCount?: number
+  followingCount?: number
+  likesCount?: number
 }
 
 interface Post {
