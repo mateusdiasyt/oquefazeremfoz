@@ -156,7 +156,8 @@ export default function BusinessProfilePage() {
     if (user && business?.id) {
       updateFollowStatus()
     }
-  }, [user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, business?.id])
 
   const fetchBusinessData = async () => {
     try {
@@ -867,7 +868,6 @@ export default function BusinessProfilePage() {
                                 </span>
                               </div>
                             )}
-              </div>
                             <div>
                               <div className="flex items-center gap-2">
                                 <h3 className="font-semibold text-gray-900 text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h3>
@@ -878,16 +878,16 @@ export default function BusinessProfilePage() {
                                     className="w-4 h-4 object-contain"
                                     title="Empresa verificada"
                                   />
-              )}
-            </div>
+                                )}
+                              </div>
                               <p className="text-xs text-gray-500">
                                 {new Date(post.createdAt).toLocaleDateString('pt-BR')}
                               </p>
-              </div>
-            </div>
-                {isOwner && (
+                            </div>
+                          </div>
+                          {isOwner && (
                             <div className="flex gap-1.5">
-                  <button
+                              <button
                                 onClick={() => {
                                   setEditingPost(post)
                                   setShowPostForm(true)
@@ -903,10 +903,10 @@ export default function BusinessProfilePage() {
                                 title="Excluir post"
                               >
                                 <Trash2 className="w-4 h-4" />
-                  </button>
-              </div>
-                )}
-                  </div>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         <h4 className="font-semibold text-gray-900 mb-3 text-base" style={{ letterSpacing: '-0.01em' }}>{post.title}</h4>
                         {post.body && <p className="text-gray-700 mb-4 text-sm leading-relaxed" style={{ letterSpacing: '-0.01em' }}>{post.body}</p>}
                         {post.imageUrl && (
