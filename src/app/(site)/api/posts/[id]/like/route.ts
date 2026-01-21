@@ -176,47 +176,21 @@ export async function GET(
     const postId = params.id
 
     // Verificar se curtiu (como empresa ou usuário)
+    // Por enquanto, sempre verificar por userId até a migração ser executada
+    // Após a migração, poderemos verificar por businessId também
+    const existingLike = await prisma.postlike.findFirst({
+      where: {
+        userId: user.id,
+        postId: postId
+      }
+    })
+
     const isCompanyUser = user.roles?.includes('COMPANY')
     const activeBusinessId = user.activeBusinessId || user.businessId
-    
-    let existingLike = null
-    
-    if (isCompanyUser && activeBusinessId) {
-      // Verificar se a empresa curtiu
-      // Tentar buscar com businessId, mas se a coluna não existir, usar userId como fallback
-      try {
-        existingLike = await prisma.postlike.findFirst({
-          where: {
-            businessId: activeBusinessId,
-            postId: postId
-          }
-        })
-      } catch (error: any) {
-        // Se businessId não existir ainda (P2022), usar userId como fallback
-        if (error.code === 'P2022' || error.message?.includes('does not exist')) {
-          existingLike = await prisma.postlike.findFirst({
-            where: {
-              userId: user.id,
-              postId: postId
-            }
-          })
-        } else {
-          throw error
-        }
-      }
-    } else {
-      // Verificar se o usuário curtiu
-      existingLike = await prisma.postlike.findFirst({
-        where: {
-          userId: user.id,
-          postId: postId
-        }
-      })
-    }
 
     return NextResponse.json({ 
       liked: !!existingLike,
-      likedAsBusiness: isCompanyUser && !!activeBusinessId
+      likedAsBusiness: false // Sempre false até migração ser executada
     })
 
   } catch (error) {
