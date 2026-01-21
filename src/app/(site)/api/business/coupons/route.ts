@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
+    // Verificar se a empresa está aprovada
+    if (!business.isApproved) {
+      return NextResponse.json({ 
+        message: 'Sua empresa está aguardando aprovação da administração. Você não pode criar cupons até que sua empresa seja aprovada.' 
+      }, { status: 403 })
+    }
+
     const { title, code, description, link, discount, validUntil } = await request.json()
 
     if (!title || !code) {

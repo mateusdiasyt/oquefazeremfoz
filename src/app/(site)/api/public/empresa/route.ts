@@ -92,6 +92,13 @@ export async function GET(req: Request) {
     averageRating,
     post: transformedPosts
   }
+  
+  // Se a empresa não estiver aprovada, ocultar posts, produtos e cupons
+  if (!business.isApproved) {
+    businessWithRating.post = []
+    businessWithRating.businessproduct = []
+    businessWithRating.businesscoupon = []
+  }
 
   return NextResponse.json(businessWithRating)
 }

@@ -72,6 +72,7 @@ interface Business {
   averageRating: number
   isFollowing: boolean
   isVerified?: boolean
+  isApproved?: boolean
 }
 
 interface Post {
@@ -575,6 +576,9 @@ export default function BusinessProfilePage() {
   // Verificar se o usuário é dono da empresa (verifica se está na lista de empresas do usuário)
   const isOwner = user?.businesses?.some(b => b.id === business?.id) || user?.businessId === business?.id || false;
   const userHasReviewed = reviews.some(review => review.userId === user?.id);
+  
+  // Verificar se a empresa está aprovada
+  const isApproved = business?.isApproved !== false; // Default true se não especificado
 
   return (
     <div className="min-h-screen bg-white">
@@ -634,6 +638,26 @@ export default function BusinessProfilePage() {
       {/* Profile Section */}
       <div className="relative -mt-16 px-4 sm:px-6 lg:px-8 pb-20">
         <div className="max-w-6xl mx-auto">
+          {/* Mensagem de aguardando aprovação */}
+          {!isApproved && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-6 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">
+                    Aguardando aprovação da administração
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>Esta empresa está aguardando aprovação da administração. Conteúdo e funcionalidades estarão disponíveis após a aprovação.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Profile Image - agora na mesma linha do título */}

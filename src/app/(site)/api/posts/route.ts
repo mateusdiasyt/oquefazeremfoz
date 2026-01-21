@@ -73,9 +73,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário tem uma empresa
-    if (!user.businessId) {
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
       console.log('❌ Usuário não possui empresa')
       return NextResponse.json({ message: 'Apenas empresas podem criar posts' }, { status: 403 })
+    }
+
+    // Verificar se a empresa está aprovada
+    const business = await prisma.business.findFirst({
+      where: {
+        id: activeBusinessId,
+        userId: user.id
+      },
+      select: {
+        id: true,
+        isApproved: true
+      }
+    })
+
+    if (!business) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    if (!business.isApproved) {
+      return NextResponse.json({ 
+        message: 'Sua empresa está aguardando aprovação da administração. Você não pode publicar posts até que sua empresa seja aprovada.' 
+      }, { status: 403 })
     }
 
     const { title, body, imageUrl, videoUrl } = await request.json()
@@ -101,7 +124,7 @@ export async function POST(request: NextRequest) {
     const post = await prisma.post.create({
       data: {
         id: postId,
-        businessId: user.businessId,
+        businessId: activeBusinessId,
         title: title.trim(),
         body: body?.trim() || null,
         imageUrl: imageUrl?.trim() || null,

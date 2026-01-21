@@ -41,7 +41,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
+    // Verificar se a empresa está aprovada
+    const targetBusiness = await prisma.business.findFirst({
+      where: { id: activeBusinessId },
+      select: { id: true, isApproved: true }
+    })
+
+    if (!targetBusiness) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
     if (action === 'follow') {
+      // Se a empresa não estiver aprovada, não permitir seguir
+      if (!targetBusiness.isApproved) {
+        return NextResponse.json({ 
+          message: 'Esta empresa está aguardando aprovação da administração e não pode ser seguida no momento.' 
+        }, { status: 403 })
+      }
       // Verificar se já está seguindo
       const existingFollow = await prisma.follow.findFirst({
         where: {

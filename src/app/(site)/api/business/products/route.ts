@@ -73,10 +73,33 @@ export async function POST(request: NextRequest) {
       imageFile: imageFile ? { name: imageFile.name, size: imageFile.size } : null
     })
 
-    // Validar se a empresa pertence ao usuário
-    if (user.businessId !== businessId) {
-      console.log('❌ businessId não corresponde:', { userBusinessId: user.businessId, requestBusinessId: businessId })
+    // Validar se a empresa pertence ao usuário e verificar aprovação
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (activeBusinessId !== businessId) {
+      console.log('❌ businessId não corresponde:', { userBusinessId: activeBusinessId, requestBusinessId: businessId })
       return NextResponse.json({ error: 'Você não tem permissão para cadastrar produtos nesta empresa' }, { status: 403 })
+    }
+
+    // Verificar se a empresa está aprovada
+    const business = await prisma.business.findFirst({
+      where: {
+        id: businessId,
+        userId: user.id
+      },
+      select: {
+        id: true,
+        isApproved: true
+      }
+    })
+
+    if (!business) {
+      return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    if (!business.isApproved) {
+      return NextResponse.json({ 
+        error: 'Sua empresa está aguardando aprovação da administração. Você não pode cadastrar produtos até que sua empresa seja aprovada.' 
+      }, { status: 403 })
     }
 
     // Validações
