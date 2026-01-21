@@ -704,9 +704,10 @@ export default function BusinessProfilePage() {
                             href={`https://instagram.com/${business.instagram.replace('@', '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-pink-300 hover:bg-pink-50 transition-all duration-200"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-pink-300 hover:bg-pink-50 transition-all duration-200 group relative"
                             title="Instagram"
                           >
+                            {/* Quando você enviar as imagens, coloque-as em public/icons/instagram-icon.png e whatsapp-icon.png */}
                             <img 
                               src="/icons/instagram-icon.png" 
                               alt="Instagram" 
@@ -714,11 +715,9 @@ export default function BusinessProfilePage() {
                               onError={(e) => {
                                 // Fallback para ícone SVG se a imagem não existir
                                 e.currentTarget.style.display = 'none'
-                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                                if (fallback) fallback.style.display = 'block'
                               }}
                             />
-                            <Instagram className="w-5 h-5 text-pink-600 hidden" />
+                            <Instagram className="w-5 h-5 text-pink-600 absolute top-2.5 left-2.5" style={{ display: 'none' }} />
                           </a>
                         )}
                         {business.facebook && (
@@ -737,9 +736,10 @@ export default function BusinessProfilePage() {
                             href={`https://wa.me/${business.whatsapp}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 group relative"
                             title="WhatsApp"
                           >
+                            {/* Quando você enviar as imagens, coloque-as em public/icons/whatsapp-icon.png */}
                             <img 
                               src="/icons/whatsapp-icon.png" 
                               alt="WhatsApp" 
@@ -747,11 +747,9 @@ export default function BusinessProfilePage() {
                               onError={(e) => {
                                 // Fallback para ícone SVG se a imagem não existir
                                 e.currentTarget.style.display = 'none'
-                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                                if (fallback) fallback.style.display = 'block'
                               }}
                             />
-                            <WhatsAppIcon size={20} className="text-green-600 hidden" />
+                            <WhatsAppIcon size={20} className="text-green-600 absolute top-2.5 left-2.5" style={{ display: 'none' }} />
                           </a>
                         )}
                       </div>
