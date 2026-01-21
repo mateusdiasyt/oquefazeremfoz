@@ -64,15 +64,16 @@ export async function PATCH(request: NextRequest) {
     if (instagram !== undefined) updateData.instagram = instagram?.trim() || null
     if (facebook !== undefined) updateData.facebook = facebook?.trim() || null
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp?.trim() || null
-    // Temporariamente comentado até migração ser executada
-    // if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
+    if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
 
     // Atualizar as informações
-    // Usar select para evitar buscar presentationVideo que ainda não existe
-    const updatedBusiness = await prisma.business.update({
-      where: { id: business.id },
-      data: updateData,
-      select: {
+    // Tentar atualizar com presentationVideo, mas se não existir, fazer sem ele
+    let updatedBusiness: any = null
+    try {
+      updatedBusiness = await prisma.business.update({
+        where: { id: business.id },
+        data: updateData,
+        select: {
         id: true,
         name: true,
         slug: true,
@@ -93,10 +94,48 @@ export async function PATCH(request: NextRequest) {
         followingCount: true,
         createdAt: true,
         updatedAt: true,
-        userId: true
-        // presentationVideo não incluído até migração ser executada
+        userId: true,
+        presentationVideo: true // Tentar incluir se existir
       }
-    })
+      })
+    } catch (error: any) {
+      // Se presentationVideo não existir (P2022), atualizar sem ele
+      if (error.code === 'P2022' || error.message?.includes('presentationVideo') || error.message?.includes('does not exist')) {
+        // Remover presentationVideo do updateData e tentar novamente
+        const { presentationVideo: _, ...updateDataWithoutVideo } = updateData
+        updatedBusiness = await prisma.business.update({
+          where: { id: business.id },
+          data: updateDataWithoutVideo,
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            category: true,
+            address: true,
+            phone: true,
+            website: true,
+            instagram: true,
+            facebook: true,
+            whatsapp: true,
+            profileImage: true,
+            coverImage: true,
+            isApproved: true,
+            isVerified: true,
+            likesCount: true,
+            followersCount: true,
+            followingCount: true,
+            createdAt: true,
+            updatedAt: true,
+            userId: true
+          }
+        })
+        // Adicionar presentationVideo como null no retorno
+        updatedBusiness.presentationVideo = null
+      } else {
+        throw error
+      }
+    }
 
     return NextResponse.json({ 
       message: 'Informações atualizadas com sucesso',
