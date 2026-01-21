@@ -747,9 +747,11 @@ export default function BusinessProfilePage() {
                               onError={(e) => {
                                 // Fallback para ícone SVG se a imagem não existir
                                 e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.parentElement?.querySelector('.whatsapp-fallback') as HTMLElement
+                                if (fallback) fallback.style.display = 'block'
                               }}
                             />
-                            <WhatsAppIcon size={20} className="text-green-600 absolute top-2.5 left-2.5" style={{ display: 'none' }} />
+                            <WhatsAppIcon size={20} className="text-green-600 absolute top-2.5 left-2.5 whatsapp-fallback hidden" />
                           </a>
                         )}
                       </div>
