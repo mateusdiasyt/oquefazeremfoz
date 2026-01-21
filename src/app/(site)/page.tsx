@@ -787,7 +787,7 @@ export default function HomePage() {
                         </div>
                             </div>
                       <div className="mb-2">
-                        <h5 className="font-semibold text-gray-800 text-sm">{coupon.code}</h5>
+                        <h5 className="font-semibold text-gray-800 text-sm">{coupon.title}</h5>
                         {coupon.description && (
                           <p className="text-sm text-gray-600 mt-1">{coupon.description}</p>
                           )}
