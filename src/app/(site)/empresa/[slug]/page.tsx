@@ -816,6 +816,17 @@ export default function BusinessProfilePage() {
                         />
                         <p className="text-xs text-gray-500 mt-1">O número será usado para criar um link direto do WhatsApp</p>
                       </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Vídeo de Apresentação</label>
+                        <input
+                          type="url"
+                          value={editPresentationVideo}
+                          onChange={(e) => setEditPresentationVideo(e.target.value)}
+                          placeholder="Ex: https://www.youtube.com/watch?v=..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Link do YouTube para um vídeo de apresentação da empresa</p>
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={handleInfoUpdate}
