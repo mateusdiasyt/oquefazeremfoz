@@ -7,7 +7,7 @@ import { useNotification } from '../../../../contexts/NotificationContext'
 import ProductForm from '../../../../components/ProductForm'
 import CouponForm from '../../../../components/CouponForm'
 import ReviewForm from '../../../../components/ReviewForm'
-import PostForm from '../../../../components/PostForm'
+import CreatePost from '../../../../components/CreatePost'
 import FollowersModal from '../../../../components/FollowersModal'
 import { 
   Heart, 
@@ -999,21 +999,21 @@ export default function BusinessProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Posts Column */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Criar Post - apenas para empresas aprovadas */}
+              {isOwner && business?.isApproved && (
+                <CreatePost onPostCreated={() => {
+                  // Recarregar dados da empresa após criar novo post
+                  fetchBusinessData()
+                }} />
+              )}
+              
               <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
                     <MessageSquare className="w-5 h-5 text-purple-600" />
                     Posts
                   </h2>
-                  {isOwner && (
-                          <button
-                      onClick={() => setShowPostForm(true)}
-                      className="p-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors shadow-sm shadow-purple-500/20"
-                                  >
-                      <Plus className="w-4 h-4" />
-                          </button>
-                          )}
-                  </div>
+                </div>
 
                 <div className="space-y-4">
                   {posts.length === 0 ? (
