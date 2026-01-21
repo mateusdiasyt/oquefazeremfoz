@@ -34,7 +34,7 @@ import {
 } from 'lucide-react'
 
 // Ícone simplificado do WhatsApp
-const WhatsAppIcon = ({ size = 20, className = "" }) => (
+const WhatsAppIcon = ({ size = 20, className = "" }: { size?: number; className?: string }) => (
   <svg
     width={size}
     height={size}
@@ -143,7 +143,6 @@ export default function BusinessProfilePage() {
   const [newDescription, setNewDescription] = useState('')
   const [editingInfo, setEditingInfo] = useState(false)
   const [editAddress, setEditAddress] = useState('')
-  const [editPhone, setEditPhone] = useState('')
   const [editWebsite, setEditWebsite] = useState('')
   const [editInstagram, setEditInstagram] = useState('')
   const [editFacebook, setEditFacebook] = useState('')
