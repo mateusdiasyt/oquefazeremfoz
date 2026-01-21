@@ -848,8 +848,18 @@ export default function HomePage() {
                         const dayDate = new Date(today)
                         dayDate.setDate(today.getDate() + index)
                         
-                        const dayNames = ['Hoje', 'Amanhã', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-                        const dayName = index < 2 ? dayNames[index] : dayNames[dayDate.getDay() + 1]
+                        // Mapear dias da semana: getDay() retorna 0=Domingo, 1=Segunda, etc.
+                        const weekDayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+                        
+                        let dayName: string
+                        if (index === 0) {
+                          dayName = 'Hoje'
+                        } else if (index === 1) {
+                          dayName = 'Amanhã'
+                        } else {
+                          // Para os demais dias, usar o nome do dia da semana
+                          dayName = weekDayNames[dayDate.getDay()]
+                        }
                         
                         return (
                           <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
