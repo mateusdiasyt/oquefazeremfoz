@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
       allConversations.push({
         id: conv.id,
-        business: otherParticipantActiveBusiness ? {
+        business: otherParticipantActiveBusiness && otherParticipant ? {
           id: otherParticipantActiveBusiness.id,
           name: otherParticipantActiveBusiness.name,
           slug: otherParticipantActiveBusiness.slug,
