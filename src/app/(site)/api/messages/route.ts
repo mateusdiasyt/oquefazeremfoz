@@ -133,7 +133,11 @@ export async function GET(request: NextRequest) {
       },
       include: {
         user: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
             business: {
               select: {
                 id: true,
@@ -142,7 +146,8 @@ export async function GET(request: NextRequest) {
                 profileImage: true,
                 isVerified: true,
                 category: true
-              }
+              },
+              orderBy: { createdAt: 'desc' }
             }
           }
         },
@@ -180,18 +185,32 @@ export async function GET(request: NextRequest) {
       },
       include: {
         user_follow_followingIdTouser: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            activeBusinessId: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            }
           }
         }
       }
     })
 
-    const followedBusinessIds = followedBusinesses.map(f => f.user_follow_followingIdTouser.business?.id).filter(Boolean)
+    const followedBusinessIds = followedBusinesses.map(f => {
+      const followingUser = f.user_follow_followingIdTouser
+      const activeBusinessId = followingUser.activeBusinessId || followingUser.business[0]?.id
+      return activeBusinessId
+    }).filter(Boolean) as string[]
 
     const filteredConversations = conversations.filter(conv => {
       const otherParticipant = conv.user.find(p => p.id !== user.id)
-      return otherParticipant?.business && followedBusinessIds.includes(otherParticipant.business.id)
+      if (!otherParticipant) return false
+      
+      const otherParticipantActiveBusiness = otherParticipant.activeBusinessId 
+        ? otherParticipant.business.find(b => b.id === otherParticipant.activeBusinessId)
+        : otherParticipant.business[0]
+      
+      return otherParticipantActiveBusiness && followedBusinessIds.includes(otherParticipantActiveBusiness.id)
     })
 
     return NextResponse.json({ conversations: filteredConversations })
