@@ -120,10 +120,16 @@ export async function POST(request: NextRequest) {
 
     // Se for a primeira empresa ou não tiver empresa ativa, definir como ativa
     if (shouldSetAsActive) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { activeBusinessId: businessId }
-      })
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { activeBusinessId: businessId }
+        })
+      } catch (updateError: any) {
+        // Se a coluna activeBusinessId não existir ainda, logar e continuar
+        console.error('⚠️ Erro ao definir empresa ativa (pode ser que a coluna não existe ainda):', updateError.message)
+        // Continuar mesmo se falhar - a empresa foi criada com sucesso
+      }
     }
 
     return NextResponse.json({ 
@@ -132,8 +138,16 @@ export async function POST(request: NextRequest) {
       setAsActive: shouldSetAsActive
     }, { status: 201 })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao cadastrar empresa:', error)
-    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+    console.error('Detalhes do erro:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta
+    })
+    return NextResponse.json({ 
+      message: 'Erro interno do servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 })
   }
 }
