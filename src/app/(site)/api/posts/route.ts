@@ -20,12 +20,23 @@ export async function GET(request: NextRequest) {
     const isCompanyUser = user?.roles?.includes('COMPANY')
     const activeBusinessId = user?.activeBusinessId || user?.businessId
 
-    // Filtrar apenas posts de empresas aprovadas (exceto se buscar por businessId específico)
-    const whereClauseWithApproval: any = { ...whereClause }
+    // Se não está filtrando por businessId específico, filtrar apenas empresas aprovadas
+    let whereClauseWithApproval: any = { ...whereClause }
     if (!businessId) {
-      // Se não está filtrando por businessId específico, filtrar apenas empresas aprovadas
-      whereClauseWithApproval.business = {
-        isApproved: true
+      // Buscar IDs das empresas aprovadas
+      const approvedBusinesses = await prisma.business.findMany({
+        where: { isApproved: true },
+        select: { id: true }
+      })
+      const approvedBusinessIds = approvedBusinesses.map(b => b.id)
+      
+      if (approvedBusinessIds.length > 0) {
+        whereClauseWithApproval.businessId = {
+          in: approvedBusinessIds
+        }
+      } else {
+        // Se não há empresas aprovadas, retornar array vazio
+        return NextResponse.json({ posts: [] }, { status: 200 })
       }
     }
 
