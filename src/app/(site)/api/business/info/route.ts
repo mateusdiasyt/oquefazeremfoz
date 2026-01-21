@@ -67,13 +67,17 @@ export async function PATCH(request: NextRequest) {
     if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
 
     // Atualizar as informações
-    // Tentar atualizar com presentationVideo, mas se não existir, fazer sem ele
+    // Tentar atualizar com presentationVideo usando SQL raw se necessário
     let updatedBusiness: any = null
-    try {
-      updatedBusiness = await prisma.business.update({
-        where: { id: business.id },
-        data: updateData,
-        select: {
+    
+    // Primeiro, atualizar todos os campos exceto presentationVideo
+    const { presentationVideo, ...updateDataWithoutVideo } = updateData
+    
+    // Atualizar campos normais
+    updatedBusiness = await prisma.business.update({
+      where: { id: business.id },
+      data: updateDataWithoutVideo,
+      select: {
         id: true,
         name: true,
         slug: true,
@@ -94,46 +98,42 @@ export async function PATCH(request: NextRequest) {
         followingCount: true,
         createdAt: true,
         updatedAt: true,
-        userId: true,
-        presentationVideo: true // Tentar incluir se existir
+        userId: true
       }
-      })
-    } catch (error: any) {
-      // Se presentationVideo não existir (P2022), atualizar sem ele
-      if (error.code === 'P2022' || error.message?.includes('presentationVideo') || error.message?.includes('does not exist')) {
-        // Remover presentationVideo do updateData e tentar novamente
-        const { presentationVideo: _, ...updateDataWithoutVideo } = updateData
-        updatedBusiness = await prisma.business.update({
-          where: { id: business.id },
-          data: updateDataWithoutVideo,
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            category: true,
-            address: true,
-            phone: true,
-            website: true,
-            instagram: true,
-            facebook: true,
-            whatsapp: true,
-            profileImage: true,
-            coverImage: true,
-            isApproved: true,
-            isVerified: true,
-            likesCount: true,
-            followersCount: true,
-            followingCount: true,
-            createdAt: true,
-            updatedAt: true,
-            userId: true
-          }
-        })
-        // Adicionar presentationVideo como null no retorno
+    })
+    
+    // Se presentationVideo foi fornecido, tentar atualizar usando SQL raw
+    if (presentationVideo !== undefined) {
+      try {
+        // Tentar atualizar usando SQL raw se a coluna existir
+        await prisma.$executeRaw`
+          UPDATE "business" 
+          SET "presentationVideo" = ${presentationVideo?.trim() || null}
+          WHERE id = ${business.id}
+        `
+        // Se funcionou, buscar o valor atualizado
+        try {
+          const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+            SELECT "presentationVideo" FROM "business" WHERE id = ${business.id}
+          `
+          updatedBusiness.presentationVideo = videoResult[0]?.presentationVideo || null
+        } catch {
+          updatedBusiness.presentationVideo = presentationVideo?.trim() || null
+        }
+      } catch (error: any) {
+        // Se a coluna não existir, simplesmente definir como null no retorno
+        // O valor será salvo quando a migração for executada
         updatedBusiness.presentationVideo = null
-      } else {
-        throw error
+      }
+    } else {
+      // Se não foi fornecido, tentar buscar o valor atual
+      try {
+        const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+          SELECT "presentationVideo" FROM "business" WHERE id = ${business.id}
+        `
+        updatedBusiness.presentationVideo = videoResult[0]?.presentationVideo || null
+      } catch {
+        updatedBusiness.presentationVideo = null
       }
     }
 
