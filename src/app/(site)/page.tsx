@@ -329,7 +329,8 @@ export default function HomePage() {
       const response = await fetch('/api/coupons/recent')
       if (response.ok) {
         const data = await response.json()
-        setCoupons(data.coupons || [])
+        // A API retorna o array diretamente, não um objeto com 'coupons'
+        setCoupons(Array.isArray(data) ? data : (data.coupons || []))
       }
     } catch (error) {
       console.error('Erro ao buscar cupons:', error)
