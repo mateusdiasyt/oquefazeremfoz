@@ -744,9 +744,6 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                       {formatDate(reply.createdAt)}
                                     </span>
                                   </div>
-                                  <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
-                                    {reply.body}
-                                  </p>
                                   {/* Modo de edição ou visualização da resposta */}
                                   {editingComment && editingComment.id === reply.id ? (
                                     <div className="mb-2">
@@ -775,6 +772,9 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                     </div>
                                   ) : (
                                     <>
+                                      <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
+                                        {reply.body}
+                                      </p>
                                       {/* Ações da resposta */}
                                       <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-200">
                                         <button
