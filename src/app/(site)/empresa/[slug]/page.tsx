@@ -9,7 +9,6 @@ import CouponForm from '../../../../components/CouponForm'
 import ReviewForm from '../../../../components/ReviewForm'
 import PostForm from '../../../../components/PostForm'
 import FollowersModal from '../../../../components/FollowersModal'
-import VerificationBadge from '../../../../components/VerificationBadge'
 import { 
   Heart, 
   MessageCircle, 

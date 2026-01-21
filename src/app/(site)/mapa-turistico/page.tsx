@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Star, Users, Phone, Globe, Instagram, ExternalLink } from 'lucide-react'
-import VerificationBadge from '../../../components/VerificationBadge'
 
 // Ícone do WhatsApp
 const WhatsAppIcon = ({ size = 20, className = "" }) => (
@@ -566,7 +565,14 @@ export default function MapaTuristico() {
                         <h3 className="font-semibold text-gray-900 truncate group-hover:text-pink-600 transition-colors">
                           {empresa.name}
                         </h3>
-                        {empresa.isVerified && <VerificationBadge size="sm" />}
+                        {empresa.isVerified && (
+                          <img 
+                            src="/icons/verificado.png" 
+                            alt="Verificado" 
+                            className="w-4 h-4 object-contain"
+                            title="Empresa verificada"
+                          />
+                        )}
                         <span className="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
                           #{index + 1}
                         </span>
@@ -614,7 +620,12 @@ export default function MapaTuristico() {
             </div>
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <VerificationBadge size="sm" />
+                <img 
+                  src="/icons/verificado.png" 
+                  alt="Verificado" 
+                  className="w-4 h-4 object-contain"
+                  title="Empresa verificada"
+                />
               </div>
               <div>
                 <div className="font-medium text-gray-900">Apenas Verificadas</div>

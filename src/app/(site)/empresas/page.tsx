@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
-import VerificationBadge from '../../../components/VerificationBadge'
 import { 
   Search, 
   Filter, 
@@ -361,7 +360,12 @@ export default function EmpresasPage() {
                           {business.name}
                         </h3>
                         {business.isVerified && (
-                          <VerificationBadge size="md" />
+                          <img 
+                            src="/icons/verificado.png" 
+                            alt="Verificado" 
+                            className="w-5 h-5 object-contain"
+                            title="Empresa verificada"
+                          />
                         )}
                       </div>
                       {business.description && (
