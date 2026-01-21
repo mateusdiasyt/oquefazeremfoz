@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         instagram: true,
         facebook: true,
         whatsapp: true,
-        presentationVideo: true,
+        // presentationVideo: true, // Comentado até migração ser executada
         profileImage: true, // Garantir que profileImage está incluído
         coverImage: true,
         likesCount: true,
@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
         instagram: business.instagram,
         facebook: business.facebook,
         whatsapp: business.whatsapp,
+        presentationVideo: (business as any).presentationVideo || null, // Campo opcional até migração
         profileImage: business.profileImage,
         coverImage: business.coverImage,
         likesCount: business.likesCount,
