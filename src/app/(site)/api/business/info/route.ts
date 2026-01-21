@@ -105,24 +105,33 @@ export async function PATCH(request: NextRequest) {
     // Se presentationVideo foi fornecido, tentar atualizar usando SQL raw
     if (presentationVideo !== undefined) {
       try {
-        // Tentar atualizar usando SQL raw se a coluna existir
+        // Primeiro, verificar se a coluna existe e criá-la se necessário
+        await prisma.$executeRaw`
+          DO $$ 
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns 
+              WHERE table_name = 'business' AND column_name = 'presentationVideo'
+            ) THEN
+              ALTER TABLE "business" ADD COLUMN "presentationVideo" TEXT;
+            END IF;
+          END $$;
+        `
+        
+        // Agora atualizar o valor
         await prisma.$executeRaw`
           UPDATE "business" 
           SET "presentationVideo" = ${presentationVideo?.trim() || null}
           WHERE id = ${business.id}
         `
-        // Se funcionou, buscar o valor atualizado
-        try {
-          const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
-            SELECT "presentationVideo" FROM "business" WHERE id = ${business.id}
-          `
-          updatedBusiness.presentationVideo = videoResult[0]?.presentationVideo || null
-        } catch {
-          updatedBusiness.presentationVideo = presentationVideo?.trim() || null
-        }
+        
+        // Buscar o valor atualizado
+        const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+          SELECT "presentationVideo" FROM "business" WHERE id = ${business.id}
+        `
+        updatedBusiness.presentationVideo = videoResult[0]?.presentationVideo || null
       } catch (error: any) {
-        // Se a coluna não existir, simplesmente definir como null no retorno
-        // O valor será salvo quando a migração for executada
+        // Se ainda der erro, definir como null
         updatedBusiness.presentationVideo = null
       }
     } else {
