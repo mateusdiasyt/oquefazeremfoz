@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
         instagram: true,
         facebook: true,
         whatsapp: true,
+        presentationVideo: true,
         profileImage: true, // Garantir que profileImage está incluído
         coverImage: true,
         likesCount: true,
