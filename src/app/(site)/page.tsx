@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
 import FloatingChat from '@/components/FloatingChat'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
 
 interface Post {
   id: string
@@ -84,6 +84,85 @@ interface Coupon {
     isVerified: boolean
     profileImage: string | null
   }
+}
+
+function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date: string) => string }) {
+  const [isCopied, setIsCopied] = useState(false)
+  
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(coupon.code)
+      setIsCopied(true)
+      setTimeout(() => {
+        setIsCopied(false)
+      }, 2000)
+    } catch (error) {
+      console.error('Erro ao copiar código:', error)
+    }
+  }
+
+  return (
+    <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:border-purple-200 transition-colors">
+      {/* Cabeçalho: Nome da empresa e tempo */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium text-gray-700">
+            {coupon.business.name}
+          </span>
+          {coupon.business.isVerified && (
+            <img 
+              src="/icons/verificado.png" 
+              alt="Verificado" 
+              className="w-3.5 h-3.5 object-contain"
+              title="Empresa verificada"
+            />
+          )}
+        </div>
+        <span className="text-xs text-gray-500">
+          {getTimeAgo(coupon.createdAt)}
+        </span>
+      </div>
+
+      {/* Título do cupom */}
+      <h5 className="font-semibold text-gray-900 text-sm mb-2" style={{ letterSpacing: '-0.01em' }}>
+        {coupon.title}
+      </h5>
+
+      {/* Desconto e código */}
+      <div className="flex items-center justify-between mb-3">
+        {coupon.discount && (
+          <span className="text-sm font-bold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
+            {coupon.discount}
+          </span>
+        )}
+        <span className="font-mono font-bold text-gray-900 text-sm tracking-wider">
+          {coupon.code}
+        </span>
+      </div>
+
+      {/* Botão copiar */}
+      <button
+        onClick={handleCopyCode}
+        className={`w-full text-xs flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm shadow-purple-500/20 font-medium ${
+          isCopied
+            ? 'bg-green-500 text-white hover:bg-green-600'
+            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+        }`}
+      >
+        {isCopied ? (
+          <>
+            <Check className="w-4 h-4" />
+            <span>Copiado</span>
+          </>
+        ) : (
+          <>
+            <Copy className="w-4 h-4" />
+            <span>Copiar Código</span>
+          </>
+        )}
+      </button>
+    </div>
+  )
 }
 
 interface Weather {
