@@ -509,22 +509,10 @@ export default function MapaTuristico() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="flex justify-center mb-8">
           <div className="bg-white rounded-2xl p-6 shadow-soft text-center">
             <div className="text-3xl font-bold text-pink-600 mb-2">{empresas.length}</div>
             <div className="text-gray-600">Empresas Verificadas</div>
-          </div>
-          <div className="bg-white rounded-2xl p-6 shadow-soft text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {empresas.reduce((total, emp) => total + emp.followersCount, 0)}
-            </div>
-            <div className="text-gray-600">Total de Seguidores</div>
-          </div>
-          <div className="bg-white rounded-2xl p-6 shadow-soft text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">
-              {empresas.reduce((total, emp) => total + emp.reviewsCount, 0)}
-            </div>
-            <div className="text-gray-600">Avaliações</div>
           </div>
         </div>
 
