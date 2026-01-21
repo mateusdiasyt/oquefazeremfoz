@@ -349,10 +349,24 @@ export default function EmpresasPage() {
                 className={`bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-visible group relative ${
                   viewMode === 'list' ? 'flex' : ''
                 }`}
-                onMouseEnter={() => videoEmbedUrl && setHoveredBusinessId(business.id)}
-                onMouseLeave={() => setHoveredBusinessId(null)}
               >
-                {/* Popup de vídeo no hover - flutuante acima do card */}
+                {/* Botão para ver vídeo de apresentação */}
+                {videoEmbedUrl && (
+                  <div className="absolute top-2 right-2 z-40">
+                    <button
+                      className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-medium rounded-lg shadow-md transition-colors duration-200 flex items-center gap-1.5"
+                      onMouseEnter={() => setHoveredBusinessId(business.id)}
+                      onMouseLeave={() => setHoveredBusinessId(null)}
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                      </svg>
+                      Ver vídeo
+                    </button>
+                  </div>
+                )}
+                
+                {/* Popup de vídeo no hover do botão - flutuante acima do card */}
                 {hoveredBusinessId === business.id && videoEmbedUrl && (
                   <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none">
                     <div className="w-[560px] max-w-[90vw] aspect-video rounded-xl overflow-hidden shadow-2xl border-4 border-white bg-white">
