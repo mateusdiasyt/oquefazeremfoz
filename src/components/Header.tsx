@@ -8,6 +8,7 @@ interface Business {
   id: string
   name: string
   slug: string
+  profileImage?: string | null
 }
 
 export default function Header() {
@@ -135,9 +136,19 @@ export default function Header() {
                                 onClick={() => setShowDropdown(false)}
                                 style={{ letterSpacing: '-0.01em' }}
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+                                {business.profileImage ? (
+                                  <img
+                                    src={business.profileImage}
+                                    alt={business.name}
+                                    className="w-6 h-6 rounded-lg object-cover flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <span className="text-white text-xs font-medium">
+                                      {business.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
                                 <span className="truncate">{business.name}</span>
                               </a>
                             ))}
