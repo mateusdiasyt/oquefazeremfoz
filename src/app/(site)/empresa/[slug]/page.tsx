@@ -168,6 +168,7 @@ export default function BusinessProfilePage() {
   const [editInstagram, setEditInstagram] = useState('')
   const [editFacebook, setEditFacebook] = useState('')
   const [editWhatsapp, setEditWhatsapp] = useState('')
+  const [editPresentationVideo, setEditPresentationVideo] = useState('')
 
   useEffect(() => {
     fetchBusinessData()
@@ -438,7 +439,8 @@ export default function BusinessProfilePage() {
           website: editWebsite,
           instagram: editInstagram,
           facebook: editFacebook,
-          whatsapp: cleanWhatsapp || null
+          whatsapp: cleanWhatsapp || null,
+          presentationVideo: editPresentationVideo || null
         })
       })
 
@@ -464,6 +466,7 @@ export default function BusinessProfilePage() {
     setEditInstagram(business?.instagram || '')
     setEditFacebook(business?.facebook || '')
     setEditWhatsapp(business?.whatsapp || '')
+    setEditPresentationVideo(business?.presentationVideo || '')
     setEditingInfo(true)
   }
 
@@ -828,6 +831,7 @@ export default function BusinessProfilePage() {
                             setEditInstagram('')
                             setEditFacebook('')
                             setEditWhatsapp('')
+                            setEditPresentationVideo('')
                           }}
                           className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
                         >
