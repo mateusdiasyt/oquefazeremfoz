@@ -299,48 +299,159 @@ export default function MapaTuristico() {
   const handleLocalizeEmpresa = async (empresa: Empresa) => {
     if (!map || !window.L) {
       console.error('Mapa não está pronto')
+      alert('Mapa ainda não está carregado. Aguarde alguns segundos e tente novamente.')
       return
     }
 
     try {
+      console.log('🔍 Localizando empresa:', empresa.name, empresa.id)
+      
       // Primeiro, tentar encontrar o marker pela empresa ID
       const marker = empresaMarkers.get(empresa.id)
+      console.log('📍 Marker encontrado no mapa:', marker ? 'Sim' : 'Não')
       
       if (marker) {
         // Se encontrou o marker, usar suas coordenadas
         const coordinates = marker.getLatLng()
-        map.setView([coordinates.lat, coordinates.lng], 15)
+        console.log('✅ Usando coordenadas do marker:', coordinates)
+        map.setView([coordinates.lat, coordinates.lng], 15, { animate: true })
         setTimeout(() => {
           marker.openPopup()
-        }, 300)
+          marker.setZIndexOffset(1000) // Garantir que o marker fique visível
+        }, 500)
         setSelectedEmpresa(empresa)
         return
       }
 
-      // Se não encontrou, geocodificar o endereço
+      // Se não encontrou o marker, buscar nas coordenadas dos markers existentes
+      console.log('🔍 Procurando marker nas coordenadas...')
+      let foundMarker = null
+      
+      for (const m of markers) {
+        try {
+          const markerLatLng = m.getLatLng()
+          // Geocodificar o endereço para comparar
+          const coordinates = await geocodeAddressNominatim(empresa.address)
+          if (coordinates) {
+            if (
+              Math.abs(markerLatLng.lat - coordinates[0]) < 0.01 &&
+              Math.abs(markerLatLng.lng - coordinates[1]) < 0.01
+            ) {
+              foundMarker = m
+              break
+            }
+          }
+        } catch (e) {
+          // Continuar procurando
+        }
+      }
+
+      if (foundMarker) {
+        const coordinates = foundMarker.getLatLng()
+        map.setView([coordinates.lat, coordinates.lng], 15, { animate: true })
+        setTimeout(() => {
+          foundMarker.openPopup()
+          foundMarker.setZIndexOffset(1000)
+        }, 500)
+        setSelectedEmpresa(empresa)
+        return
+      }
+
+      // Se ainda não encontrou, geocodificar o endereço e criar um marker temporário
+      console.log('🔍 Geocodificando endereço:', empresa.address)
       const coordinates = await geocodeAddressNominatim(empresa.address)
       if (coordinates) {
+        console.log('✅ Coordenadas encontradas:', coordinates)
         // Mover o mapa para a empresa
-        map.setView(coordinates, 15)
+        map.setView(coordinates, 15, { animate: true })
         
-        // Tentar encontrar o marker nas coordenadas
-        markers.forEach((m: any) => {
-          const markerLatLng = m.getLatLng()
-          if (
-            Math.abs(markerLatLng.lat - coordinates[0]) < 0.001 &&
-            Math.abs(markerLatLng.lng - coordinates[1]) < 0.001
-          ) {
-            setTimeout(() => {
-              m.openPopup()
-            }, 300)
-            setSelectedEmpresa(empresa)
-          }
+        // Criar um marker temporário destacado
+        const highlightIcon = window.L.divIcon({
+          html: `
+            <div style="
+              width: 50px; 
+              height: 50px; 
+              background: #EF4444; 
+              border: 3px solid #FFFFFF; 
+              border-radius: 50%; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              color: white; 
+              font-weight: bold; 
+              font-size: 20px;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+              animation: pulse 2s infinite;
+            ">
+              ${empresa.name.charAt(0).toUpperCase()}
+            </div>
+            <style>
+              @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+              }
+            </style>
+          `,
+          className: 'custom-div-icon',
+          iconSize: [50, 50],
+          iconAnchor: [25, 50]
         })
+
+        const tempMarker = window.L.marker(coordinates, { 
+          icon: highlightIcon,
+          zIndexOffset: 1000
+        }).addTo(map)
+
+        const popupContent = `
+          <div style="min-width: 200px; padding: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-weight: bold; color: #1f2937;">${empresa.name}</h3>
+              ${empresa.isVerified ? '<div style="width: 16px; height: 16px; background: #3B82F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px;">✓</div>' : ''}
+            </div>
+            <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">${empresa.category}</p>
+            <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">📍 ${empresa.address}</p>
+            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 12px; font-size: 12px; color: #6b7280;">
+              <span>👥 ${empresa.followersCount} seguidores</span>
+            </div>
+            <button 
+              onclick="window.location.href='/empresa/${empresa.slug || empresa.id}'" 
+              style="
+                width: 100%; 
+                background: #3B82F6; 
+                color: white; 
+                border: none; 
+                padding: 8px 12px; 
+                border-radius: 6px; 
+                cursor: pointer;
+                font-size: 12px;
+              "
+              onmouseover="this.style.background='#2563EB'"
+              onmouseout="this.style.background='#3B82F6'"
+            >
+              Ver Perfil
+            </button>
+          </div>
+        `
+
+        tempMarker.bindPopup(popupContent)
+        
+        setTimeout(() => {
+          tempMarker.openPopup()
+        }, 500)
+
+        setSelectedEmpresa(empresa)
+        
+        // Remover o marker temporário após 10 segundos
+        setTimeout(() => {
+          map.removeLayer(tempMarker)
+        }, 10000)
       } else {
-        console.error('Não foi possível encontrar coordenadas para:', empresa.address)
+        console.error('❌ Não foi possível encontrar coordenadas para:', empresa.address)
+        alert(`Não foi possível localizar o endereço: ${empresa.address || 'Endereço não informado'}`)
       }
     } catch (error) {
       console.error('Erro ao localizar empresa:', error)
+      alert('Erro ao localizar empresa. Verifique se o endereço está correto.')
     }
   }
 
