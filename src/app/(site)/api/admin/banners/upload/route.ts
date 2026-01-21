@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser, isAdmin } from '../../../../../../lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
+import { put } from '@vercel/blob'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,27 +28,24 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    const fileExtension = file.name.split('.').pop() || 'jpg'
+    const fileName = `banners/banner-${Date.now()}.${fileExtension}`
 
-    // Criar diretório se não existir
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'banners')
-    await mkdir(uploadDir, { recursive: true })
+    // Fazer upload para Vercel Blob Storage
+    const blob = await put(fileName, bytes, {
+      access: 'public',
+      contentType: file.type,
+    })
 
-    // Gerar nome único para o arquivo
-    const timestamp = Date.now()
-    const extension = file.name.split('.').pop()
-    const filename = `banner-${timestamp}.${extension}`
-    const filepath = join(uploadDir, filename)
-
-    // Salvar arquivo
-    await writeFile(filepath, buffer)
-
-    const imageUrl = `/uploads/banners/${filename}`
+    const imageUrl = blob.url
 
     return NextResponse.json({ imageUrl }, { status: 200 })
 
   } catch (error) {
     console.error('Erro ao fazer upload da imagem:', error)
-    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json({ 
+      message: 'Erro interno do servidor',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    }, { status: 500 })
   }
 }
