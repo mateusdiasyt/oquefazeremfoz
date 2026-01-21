@@ -431,9 +431,9 @@ export default function BusinessProfilePage() {
   const userHasReviewed = reviews.some(review => review.userId === user?.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50">
+    <div className="min-h-screen bg-white">
       {/* Cover Section */}
-      <div className="relative h-80 md:h-96 overflow-hidden group">
+      <div className="relative h-64 md:h-80 overflow-hidden group">
         {business.coverImage ? (
           <img
             src={business.coverImage}
@@ -441,8 +441,8 @@ export default function BusinessProfilePage() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-            <Camera className="text-white/50 w-16 h-16" />
+          <div className="w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+            <Camera className="text-white/30 w-12 h-12" />
           </div>
         )}
         {isOwner && (
@@ -486,9 +486,9 @@ export default function BusinessProfilePage() {
       </div>
 
       {/* Profile Section */}
-      <div className="relative -mt-20 px-4 sm:px-6 lg:px-8 pb-20">
+      <div className="relative -mt-16 px-4 sm:px-6 lg:px-8 pb-20">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Profile Image */}
               <div className="relative group">
@@ -496,11 +496,11 @@ export default function BusinessProfilePage() {
                   <img
                     src={business.profileImage}
                     alt={business.name}
-                  className="w-32 h-32 rounded-2xl border-4 border-white shadow-strong object-cover"
+                  className="w-28 h-28 rounded-2xl border-4 border-white shadow-md object-cover"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-strong bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                    <span className="text-4xl font-bold text-blue-600">
+                  <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-md bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-purple-600" style={{ letterSpacing: '-0.02em' }}>
                       {business.name?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
@@ -543,40 +543,40 @@ export default function BusinessProfilePage() {
               </div>
 
               {/* Business Info */}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">{business.name}</h1>
+                  <h1 className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>{business.name}</h1>
                   {business.isVerified && (
                     <VerificationBadge size="lg" />
                   )}
                 </div>
-                <p className="text-gray-600 mb-4">{business.category}</p>
+                <p className="text-base text-gray-600 mb-5" style={{ letterSpacing: '-0.01em' }}>{business.category}</p>
                 
                 {/* Stats */}
-                <div className="flex flex-wrap gap-6 mb-4">
+                <div className="flex flex-wrap gap-6 mb-5">
                     <button
                     onClick={() => setShowFollowersModal(true)}
-                    className="flex items-center gap-2 hover:bg-gray-100 px-2 py-1 rounded-lg transition-colors duration-200 cursor-pointer"
+                    className="flex items-center gap-2 hover:bg-gray-50 px-3 py-1.5 rounded-xl transition-colors duration-200 cursor-pointer border border-transparent hover:border-gray-100"
                     >
-                    <Users className="w-5 h-5 text-blue-600" />
-                    <span className="font-semibold text-gray-700">{business.followersCount || 0}</span>
-                    <span className="text-gray-500">seguidores</span>
+                    <Users className="w-4 h-4 text-purple-600" />
+                    <span className="font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>{business.followersCount || 0}</span>
+                    <span className="text-sm text-gray-500">seguidores</span>
                     </button>
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-yellow-500" />
-                    <span className="font-semibold text-gray-700">{business.averageRating || 0}</span>
-                    <span className="text-gray-500">({reviews.length} avaliações)</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5">
+                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    <span className="font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>{business.averageRating || 0}</span>
+                    <span className="text-sm text-gray-500">({reviews.length} avaliações)</span>
                       </div>
               </div>
 
                 {/* Contact Info */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-700">Informações de Contato</h3>
+                    <h3 className="text-base font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Informações de Contato</h3>
                     {isOwner && !editingInfo && (
                       <button
                         onClick={startEditingInfo}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
+                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                         title="Editar informações"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -671,17 +671,17 @@ export default function BusinessProfilePage() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="flex flex-wrap gap-3 mb-4">
                         {business.address && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-4 h-4" />
-                            <span className="text-sm">{business.address}</span>
+                          <div className="flex items-center gap-2 text-gray-700 px-3 py-2 bg-gray-50 rounded-xl border border-gray-100">
+                            <MapPin className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm" style={{ letterSpacing: '-0.01em' }}>{business.address}</span>
                           </div>
                         )}
                         {business.phone && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <Phone className="w-4 h-4" />
-                            <span className="text-sm">{business.phone}</span>
+                          <div className="flex items-center gap-2 text-gray-700 px-3 py-2 bg-gray-50 rounded-xl border border-gray-100">
+                            <Phone className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm" style={{ letterSpacing: '-0.01em' }}>{business.phone}</span>
                           </div>
                         )}
                         {business.website && (
@@ -689,7 +689,7 @@ export default function BusinessProfilePage() {
                             href={business.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 px-3 py-2 bg-purple-50 rounded-xl border border-purple-100 hover:border-purple-200 transition-colors"
                           >
                             <Globe className="w-4 h-4" />
                             <span className="text-sm">Website</span>
@@ -698,15 +698,27 @@ export default function BusinessProfilePage() {
                       </div>
 
                       {/* Social Links */}
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         {business.instagram && (
                           <a
-                            href={`https://instagram.com/${business.instagram}`}
+                            href={`https://instagram.com/${business.instagram.replace('@', '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-pink-100 text-pink-600 rounded-lg hover:bg-pink-200 transition-colors"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-pink-300 hover:bg-pink-50 transition-all duration-200"
+                            title="Instagram"
                           >
-                            <Instagram className="w-5 h-5" />
+                            <img 
+                              src="/icons/instagram-icon.png" 
+                              alt="Instagram" 
+                              className="w-5 h-5 object-contain"
+                              onError={(e) => {
+                                // Fallback para ícone SVG se a imagem não existir
+                                e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                if (fallback) fallback.style.display = 'block'
+                              }}
+                            />
+                            <Instagram className="w-5 h-5 text-pink-600 hidden" />
                           </a>
                         )}
                         {business.facebook && (
@@ -714,9 +726,10 @@ export default function BusinessProfilePage() {
                             href={`https://facebook.com/${business.facebook}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200"
+                            title="Facebook"
                           >
-                            <Facebook className="w-5 h-5" />
+                            <Facebook className="w-5 h-5 text-blue-600" />
                           </a>
                         )}
                         {business.whatsapp && (
@@ -724,9 +737,21 @@ export default function BusinessProfilePage() {
                             href={`https://wa.me/${business.whatsapp}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200"
+                            title="WhatsApp"
                           >
-                            <WhatsAppIcon size={20} />
+                            <img 
+                              src="/icons/whatsapp-icon.png" 
+                              alt="WhatsApp" 
+                              className="w-5 h-5 object-contain"
+                              onError={(e) => {
+                                // Fallback para ícone SVG se a imagem não existir
+                                e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                                if (fallback) fallback.style.display = 'block'
+                              }}
+                            />
+                            <WhatsAppIcon size={20} className="text-green-600 hidden" />
                           </a>
                         )}
                       </div>
@@ -741,7 +766,8 @@ export default function BusinessProfilePage() {
                   {business?.isFollowing ? (
                     <button
                       onClick={() => setShowUnfollowModal(true)}
-                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                      className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center gap-2 font-medium shadow-sm"
+                      style={{ letterSpacing: '-0.01em' }}
                     >
                       <CheckCircle className="w-4 h-4" />
                       Seguindo
@@ -749,7 +775,8 @@ export default function BusinessProfilePage() {
                   ) : (
                     <button
                       onClick={handleFollow}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                      className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors flex items-center gap-2 font-medium shadow-md shadow-purple-500/20"
+                      style={{ letterSpacing: '-0.01em' }}
                     >
                       <Plus className="w-4 h-4" />
                       Seguir
@@ -760,20 +787,22 @@ export default function BusinessProfilePage() {
           </div>
 
             {/* Description */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="mt-6 pt-6 border-t border-gray-100">
               {editingDescription ? (
                 <div className="space-y-3">
                     <textarea
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-200 focus:border-purple-300 text-sm"
                     rows={4}
                     placeholder="Descreva sua empresa..."
+                    style={{ letterSpacing: '-0.01em' }}
                   />
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                       <button
                       onClick={handleDescriptionUpdate}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors font-medium text-sm shadow-sm shadow-purple-500/20"
+                      style={{ letterSpacing: '-0.01em' }}
                       >
                         Salvar
                       </button>
@@ -782,7 +811,8 @@ export default function BusinessProfilePage() {
                         setEditingDescription(false)
                         setNewDescription(business.description || '')
                                           }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
+                      style={{ letterSpacing: '-0.01em' }}
                       >
                         Cancelar
                       </button>
@@ -790,13 +820,13 @@ export default function BusinessProfilePage() {
                   </div>
                 ) : (
                 <div className="flex items-start justify-between">
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed text-sm" style={{ letterSpacing: '-0.01em' }}>
                     {business.description || 'Sem descrição disponível.'}
                   </p>
                   {isOwner && (
                     <button
                       onClick={() => setEditingDescription(true)}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                     >
                       <Edit3 className="w-4 h-4" />
                                               </button>
@@ -810,16 +840,16 @@ export default function BusinessProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Posts Column */}
             <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
+                    <MessageSquare className="w-5 h-5 text-purple-600" />
                     Posts
                   </h2>
                   {isOwner && (
                           <button
                       onClick={() => setShowPostForm(true)}
-                      className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="p-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors shadow-sm shadow-purple-500/20"
                                   >
                       <Plus className="w-4 h-4" />
                           </button>
@@ -831,40 +861,41 @@ export default function BusinessProfilePage() {
                     <p className="text-gray-500 text-center py-8">Nenhum post ainda.</p>
                   ) : (
                     posts.map((post) => (
-                      <div key={post.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-3">
+                      <div key={post.id} className="border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-shadow">
+                        <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-semibold text-blue-600">
+                            <div className="w-11 h-11 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center border border-gray-100">
+                              <span className="text-sm font-semibold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
                                 {business.name?.charAt(0)?.toUpperCase()}
                               </span>
               </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-gray-900">{business.name}</h3>
+                                <h3 className="font-semibold text-gray-900 text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h3>
                                 {business.isVerified && (
                                   <VerificationBadge size="sm" />
               )}
             </div>
-                              <p className="text-sm text-gray-500">
+                              <p className="text-xs text-gray-500">
                                 {new Date(post.createdAt).toLocaleDateString('pt-BR')}
                               </p>
               </div>
             </div>
                 {isOwner && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-1.5">
                   <button
                                 onClick={() => {
                                   setEditingPost(post)
                                   setShowPostForm(true)
                                 }}
-                                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                                 title="Editar post"
                               >
                                 <Edit3 className="w-4 h-4" />
                               </button>
                               <button 
-                                className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                onClick={() => handleDeletePost(post.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                 title="Excluir post"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -872,32 +903,32 @@ export default function BusinessProfilePage() {
               </div>
                 )}
                   </div>
-                        <h4 className="font-semibold text-gray-900 mb-2">{post.title}</h4>
-                        {post.body && <p className="text-gray-700 mb-3">{post.body}</p>}
+                        <h4 className="font-semibold text-gray-900 mb-3 text-base" style={{ letterSpacing: '-0.01em' }}>{post.title}</h4>
+                        {post.body && <p className="text-gray-700 mb-4 text-sm leading-relaxed" style={{ letterSpacing: '-0.01em' }}>{post.body}</p>}
                         {post.imageUrl && (
                           <img
                             src={post.imageUrl}
                             alt="Post"
-                            className="w-full h-64 object-cover rounded-lg mb-3"
+                            className="w-full h-auto object-cover rounded-2xl mb-4 border border-gray-100"
                           />
                         )}
                         {post.videoUrl && (
                           <video
                             src={post.videoUrl}
                             controls
-                            className="w-full h-64 rounded-lg mb-3"
+                            className="w-full h-auto rounded-2xl mb-4 border border-gray-100"
                           />
                         )}
-                        <div className="flex items-center gap-4">
-                          <button className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors">
+                        <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                          <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
                             <Heart className="w-4 h-4" />
-                            <span className="text-sm">{post.likes || 0}</span>
+                            <span className="text-sm font-medium">{post.likes || 0}</span>
                           </button>
-                          <button className="flex items-center gap-2 text-gray-500 hover:text-blue-500 transition-colors">
+                          <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
                             <MessageCircle className="w-4 h-4" />
-                            <span className="text-sm">0</span>
+                            <span className="text-sm font-medium">{post._count?.comment || 0}</span>
                           </button>
-                          <button className="flex items-center gap-2 text-gray-500 hover:text-green-500 transition-colors">
+                          <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
                             <Share2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -911,10 +942,10 @@ export default function BusinessProfilePage() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Products */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-green-600" />
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
+                    <Package className="w-5 h-5 text-purple-600" />
                     Produtos
                   </h3>
                           {isOwner && (
@@ -923,7 +954,7 @@ export default function BusinessProfilePage() {
                         setEditingProduct(null)
                         setShowProductForm(true)
                       }}
-                      className="p-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                      className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors shadow-sm shadow-purple-500/20"
                       title="Adicionar produto"
                             >
                       <Plus className="w-4 h-4" />
@@ -935,17 +966,17 @@ export default function BusinessProfilePage() {
                     <p className="text-gray-500 text-sm">Nenhum produto cadastrado.</p>
                   ) : (
                     products.slice(0, 3).map((product) => (
-                      <div key={product.id} className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group">
+                      <div key={product.id} className="flex items-center gap-3 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 hover:border-gray-200 transition-colors group">
                         {product.imageUrl ? (
-                          <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                          <img src={product.imageUrl} alt={product.name} className="w-12 h-12 object-cover rounded-lg border border-gray-100" />
                         ) : (
-                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-100">
                             <Package className="w-5 h-5 text-gray-400" />
                         </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{product.name}</h4>
-                          <p className="text-sm text-green-600 font-semibold">R$ {(product.priceCents / 100).toFixed(2)}</p>
+                          <h4 className="font-medium text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{product.name}</h4>
+                          <p className="text-sm text-purple-600 font-semibold" style={{ letterSpacing: '-0.01em' }}>R$ {(product.priceCents / 100).toFixed(2)}</p>
                         </div>
                         {isOwner && (
                           <button
@@ -966,16 +997,16 @@ export default function BusinessProfilePage() {
               </div>
               
               {/* Coupons */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
                     <Gift className="w-5 h-5 text-purple-600" />
                     Cupons
                   </h3>
                               {isOwner && (
                                   <button
                       onClick={() => setShowCouponForm(true)}
-                      className="p-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                      className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors shadow-sm shadow-purple-500/20"
                                   >
                       <Plus className="w-4 h-4" />
                                   </button>
@@ -983,16 +1014,18 @@ export default function BusinessProfilePage() {
                           </div>
                 <div className="space-y-3">
                   {coupons.length === 0 ? (
-                    <p className="text-gray-500 text-sm">Nenhum cupom disponível.</p>
+                    <p className="text-gray-500 text-sm text-center py-4">Nenhum cupom disponível.</p>
                   ) : (
                     coupons.slice(0, 3).map((coupon) => (
-                      <div key={coupon.id} className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div key={coupon.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-2xl hover:border-purple-200 transition-colors">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold text-purple-800">{coupon.code}</span>
-                          <span className="text-sm font-semibold text-purple-600">{coupon.discount} OFF</span>
+                          <span className="font-bold text-purple-800 text-sm" style={{ letterSpacing: '-0.01em' }}>{coupon.code}</span>
+                          {coupon.discount && (
+                            <span className="text-xs font-semibold text-purple-600 bg-purple-100 px-2 py-1 rounded-lg">{coupon.discount}</span>
+                          )}
                     </div>
-                        <h5 className="font-semibold text-purple-900 text-sm mb-1">{coupon.title}</h5>
-                        <p className="text-sm text-gray-700">{coupon.description}</p>
+                        <h5 className="font-semibold text-purple-900 text-sm mb-1" style={{ letterSpacing: '-0.01em' }}>{coupon.title}</h5>
+                        <p className="text-sm text-gray-700" style={{ letterSpacing: '-0.01em' }}>{coupon.description}</p>
                       </div>
                     ))
                   )}
@@ -1000,16 +1033,16 @@ export default function BusinessProfilePage() {
           </div>
 
               {/* Reviews */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <Star className="w-5 h-5 text-yellow-500" />
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
+                    <Star className="w-5 h-5 text-yellow-500 fill-current" />
                     Avaliações
                   </h3>
                   {business?.isFollowing && !userHasReviewed && (
                 <button
                   onClick={() => setShowReviewForm(true)}
-                      className="p-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                      className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors shadow-sm shadow-purple-500/20"
                 >
                       <Plus className="w-4 h-4" />
                 </button>
@@ -1020,7 +1053,7 @@ export default function BusinessProfilePage() {
                     <p className="text-gray-500 text-sm">Nenhuma avaliação ainda.</p>
                   ) : (
                     reviews.slice(0, 3).map((review) => (
-                      <div key={review.id} className="border-b border-gray-200 pb-3 last:border-b-0">
+                      <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
                             <div className="flex items-center gap-2 mb-2">
                               <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -1032,9 +1065,9 @@ export default function BusinessProfilePage() {
                                   />
                                 ))}
                               </div>
-                          <span className="text-sm font-medium text-gray-700">{review.user?.name || review.user?.email || 'Usuário'}</span>
+                          <span className="text-sm font-medium text-gray-900" style={{ letterSpacing: '-0.01em' }}>{review.user?.name || review.user?.email || 'Usuário'}</span>
                             </div>
-                        <p className="text-sm text-gray-600">{review.comment}</p>
+                        <p className="text-sm text-gray-600 leading-relaxed" style={{ letterSpacing: '-0.01em' }}>{review.comment}</p>
                                     </div>
                     ))
                   )}
@@ -1128,21 +1161,23 @@ export default function BusinessProfilePage() {
 
       {showUnfollowModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Deixar de seguir</h3>
-              <p className="text-gray-600 mb-6">
-              Você realmente quer parar de seguir <span className="font-semibold text-gray-800">{business?.name}</span>?
+          <div className="bg-white border border-gray-100 rounded-3xl shadow-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.01em' }}>Deixar de seguir</h3>
+              <p className="text-gray-600 mb-6 text-sm" style={{ letterSpacing: '-0.01em' }}>
+              Você realmente quer parar de seguir <span className="font-semibold text-gray-900">{business?.name}</span>?
               </p>
               <div className="flex gap-3">
                 <button
                 onClick={handleUnfollow}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium text-sm shadow-sm"
+                style={{ letterSpacing: '-0.01em' }}
                 >
                 Deixar de seguir
                 </button>
                 <button
                 onClick={() => setShowUnfollowModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium text-sm"
+                style={{ letterSpacing: '-0.01em' }}
                 >
                 Cancelar
                 </button>
