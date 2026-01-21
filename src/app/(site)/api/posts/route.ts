@@ -16,6 +16,10 @@ export async function GET(request: NextRequest) {
       whereClause.businessId = businessId
     }
 
+    const user = await getCurrentUser()
+    const isCompanyUser = user?.roles?.includes('COMPANY')
+    const activeBusinessId = user?.activeBusinessId || user?.businessId
+
     const posts = await prisma.post.findMany({
       where: whereClause,
       include: {
@@ -26,6 +30,24 @@ export async function GET(request: NextRequest) {
             profileImage: true,
             isVerified: true,
             slug: true
+          }
+        },
+        postlike: {
+          include: {
+            business: {
+              select: {
+                id: true,
+                name: true,
+                profileImage: true,
+                isVerified: true
+              }
+            },
+            user: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         },
         _count: {
@@ -42,14 +64,34 @@ export async function GET(request: NextRequest) {
       take: limit
     })
 
-    // Transformar os dados para incluir contadores
-    const transformedPosts = posts.map(post => ({
-      ...post,
-      comments: [],
-      postLikes: [],
-      commentsCount: post._count.comment,
-      likesCount: post._count.postlike
-    }))
+    // Transformar os dados para incluir contadores e verificar se curtiu
+    const transformedPosts = posts.map(post => {
+      // Verificar se o usuário atual curtiu
+      let isLiked = false
+      if (user) {
+        if (isCompanyUser && activeBusinessId) {
+          isLiked = post.postlike.some(like => like.businessId === activeBusinessId)
+        } else {
+          isLiked = post.postlike.some(like => like.userId === user.id)
+        }
+      }
+
+      // Listar empresas que curtiram
+      const businessesLiked = post.postlike
+        .filter(like => like.businessId && like.business)
+        .map(like => like.business)
+        .filter(b => b !== null)
+
+      return {
+        ...post,
+        comments: [],
+        postLikes: [],
+        commentsCount: post._count.comment,
+        likesCount: post._count.postlike,
+        isLiked,
+        businessesLiked: businessesLiked // Empresas que curtiram este post
+      }
+    })
 
     return NextResponse.json({ posts: transformedPosts }, { status: 200 })
   } catch (error) {

@@ -32,14 +32,31 @@ export async function POST(
       return NextResponse.json({ message: 'Post não encontrado' }, { status: 404 })
     }
 
-    // Verificar se o usuário já curtiu o post
-    const existingLike = await prisma.postlike.findFirst({
-      where: {
-        userId: user.id,
-        postId: postId
-      }
-    })
-    console.log('❤️ Like existente:', existingLike ? 'Sim' : 'Não')
+    // Determinar se é empresa e qual empresa usar para curtir
+    const isCompanyUser = user.roles?.includes('COMPANY')
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    
+    let existingLike = null
+    
+    if (isCompanyUser && activeBusinessId) {
+      // Se for empresa, verificar se a empresa já curtiu
+      existingLike = await prisma.postlike.findFirst({
+        where: {
+          businessId: activeBusinessId,
+          postId: postId
+        }
+      })
+      console.log('❤️ Like existente (como empresa):', existingLike ? 'Sim' : 'Não')
+    } else {
+      // Se for usuário normal, verificar se o usuário curtiu
+      existingLike = await prisma.postlike.findFirst({
+        where: {
+          userId: user.id,
+          postId: postId
+        }
+      })
+      console.log('❤️ Like existente (como usuário):', existingLike ? 'Sim' : 'Não')
+    }
 
     if (existingLike) {
       console.log('🗑️ Descurtindo post...')
@@ -68,13 +85,22 @@ export async function POST(
       })
     } else {
       console.log('➕ Curtindo post...')
-      // Curtir - adicionar o like
+      // Curtir - adicionar o like como empresa ou usuário
+      const likeData: any = {
+        id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        postId: postId
+      }
+      
+      if (isCompanyUser && activeBusinessId) {
+        likeData.businessId = activeBusinessId
+        console.log('👍 Curtindo como empresa:', activeBusinessId)
+      } else {
+        likeData.userId = user.id
+        console.log('👍 Curtindo como usuário:', user.id)
+      }
+      
       await prisma.postlike.create({
-        data: {
-          id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          userId: user.id,
-          postId: postId
-        }
+        data: likeData
       })
 
       // Atualizar contador de likes
@@ -91,7 +117,8 @@ export async function POST(
       return NextResponse.json({ 
         message: 'Post curtido',
         liked: true,
-        likesCount: updatedPost.likes
+        likesCount: updatedPost.likes,
+        likedAsBusiness: isCompanyUser && !!activeBusinessId
       })
     }
 
@@ -115,16 +142,33 @@ export async function GET(
 
     const postId = params.id
 
-    // Verificar se o usuário curtiu o post
-    const existingLike = await prisma.postlike.findFirst({
-      where: {
-        userId: user.id,
-        postId: postId
-      }
-    })
+    // Verificar se curtiu (como empresa ou usuário)
+    const isCompanyUser = user.roles?.includes('COMPANY')
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    
+    let existingLike = null
+    
+    if (isCompanyUser && activeBusinessId) {
+      // Verificar se a empresa curtiu
+      existingLike = await prisma.postlike.findFirst({
+        where: {
+          businessId: activeBusinessId,
+          postId: postId
+        }
+      })
+    } else {
+      // Verificar se o usuário curtiu
+      existingLike = await prisma.postlike.findFirst({
+        where: {
+          userId: user.id,
+          postId: postId
+        }
+      })
+    }
 
     return NextResponse.json({ 
-      liked: !!existingLike
+      liked: !!existingLike,
+      likedAsBusiness: isCompanyUser && !!activeBusinessId
     })
 
   } catch (error) {

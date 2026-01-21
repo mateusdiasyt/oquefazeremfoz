@@ -21,31 +21,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    // Buscar a empresa
-    const business = await prisma.business.findUnique({
+    // Buscar a empresa sendo seguida
+    const targetBusiness = await prisma.business.findUnique({
       where: { id: businessId },
       include: { user: true }
     })
 
-    if (!business) {
+    if (!targetBusiness) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
-    // Verificar se já está seguindo (usando businesslike)
-    const existingLike = await prisma.businesslike.findFirst({
-      where: {
-        userId: user.id,
-        businessId: businessId
-      }
-    })
+    // Determinar se é empresa e qual empresa usar para seguir
+    const isCompanyUser = user.roles?.includes('COMPANY')
+    const activeBusinessId = user.activeBusinessId || user.businessId
 
-    if (existingLike) {
-      console.log('Desseguindo empresa...')
-      // Desseguir - remover businesslike
-      await prisma.businesslike.delete({
-        where: { id: existingLike.id }
+    let existingFollow = null
+    
+    if (isCompanyUser && activeBusinessId) {
+      // Se for empresa, seguir como empresa usando businessId
+      existingFollow = await prisma.follow.findFirst({
+        where: {
+          followerBusinessId: activeBusinessId,
+          followingBusinessId: businessId
+        }
       })
-      console.log('businesslike deletado')
+      console.log('🔍 Follow existente (como empresa):', existingFollow ? 'Sim' : 'Não')
+    } else {
+      // Se for usuário normal, seguir como usuário (manter compatibilidade com sistema atual usando businesslike)
+      existingFollow = await prisma.businesslike.findFirst({
+        where: {
+          userId: user.id,
+          businessId: businessId
+        }
+      })
+      console.log('🔍 Follow existente (como usuário):', existingFollow ? 'Sim' : 'Não')
+    }
+
+    if (existingFollow) {
+      console.log('Desseguindo empresa...')
+      
+      if (isCompanyUser && activeBusinessId) {
+        // Desseguir como empresa - remover follow
+        await prisma.follow.delete({
+          where: {
+            id: existingFollow.id
+          }
+        })
+      } else {
+        // Desseguir como usuário - remover businesslike
+        await prisma.businesslike.delete({
+          where: { id: existingFollow.id }
+        })
+      }
 
       // Atualizar contadores
       const updatedBusiness = await prisma.business.update({
@@ -56,7 +83,6 @@ export async function POST(request: NextRequest) {
           }
         }
       })
-      console.log('Contador atualizado:', updatedBusiness.followersCount)
 
       return NextResponse.json({ 
         message: 'Empresa desseguida com sucesso',
@@ -65,15 +91,30 @@ export async function POST(request: NextRequest) {
       })
     } else {
       console.log('Seguindo empresa...')
-      // Seguir - criar businesslike
-      await prisma.businesslike.create({
-        data: {
-          id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          userId: user.id,
-          businessId: businessId
-        }
-      })
-      console.log('businesslike criado')
+      
+      if (isCompanyUser && activeBusinessId) {
+        // Seguir como empresa - criar follow com businessId
+        await prisma.follow.create({
+          data: {
+            id: `follow_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            followerId: user.id, // Manter para compatibilidade
+            followingId: targetBusiness.userId, // Manter para compatibilidade
+            followerBusinessId: activeBusinessId,
+            followingBusinessId: businessId
+          }
+        })
+        console.log('✅ Follow criado como empresa')
+      } else {
+        // Seguir como usuário - criar businesslike (manter sistema atual)
+        await prisma.businesslike.create({
+          data: {
+            id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            userId: user.id,
+            businessId: businessId
+          }
+        })
+        console.log('✅ Follow criado como usuário (businesslike)')
+      }
 
       // Atualizar contadores
       const updatedBusiness = await prisma.business.update({
@@ -84,12 +125,12 @@ export async function POST(request: NextRequest) {
           }
         }
       })
-      console.log('Contador atualizado:', updatedBusiness.followersCount)
 
       return NextResponse.json({ 
         message: 'Empresa seguida com sucesso',
         isFollowing: true,
-        followersCount: updatedBusiness.followersCount
+        followersCount: updatedBusiness.followersCount,
+        followedAsBusiness: isCompanyUser && !!activeBusinessId
       })
     }
 
@@ -125,16 +166,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
-    // Verificar se está seguindo (usando businesslike)
-    const existingLike = await prisma.businesslike.findFirst({
-      where: {
-        userId: user.id,
-        businessId: businessId
-      }
-    })
+    // Verificar se está seguindo (como empresa ou usuário)
+    const isCompanyUser = user.roles?.includes('COMPANY')
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    
+    let existingFollow = null
+    
+    if (isCompanyUser && activeBusinessId) {
+      // Verificar se a empresa está seguindo
+      existingFollow = await prisma.follow.findFirst({
+        where: {
+          followerBusinessId: activeBusinessId,
+          followingBusinessId: businessId
+        }
+      })
+    } else {
+      // Verificar se o usuário está seguindo (businesslike)
+      existingFollow = await prisma.businesslike.findFirst({
+        where: {
+          userId: user.id,
+          businessId: businessId
+        }
+      })
+    }
 
     return NextResponse.json({ 
-      isFollowing: !!existingLike 
+      isFollowing: !!existingFollow,
+      followedAsBusiness: isCompanyUser && !!activeBusinessId
     })
 
   } catch (error) {

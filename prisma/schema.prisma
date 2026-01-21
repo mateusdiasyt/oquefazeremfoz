@@ -51,6 +51,9 @@ model business {
   businessreview  businessreview[]
   post            post[]
   comment         comment[]
+  postlike        postlike[]
+  follow_follow_followerBusinessId follow[] @relation("follow_followerBusinessId")
+  follow_follow_followingBusinessId follow[] @relation("follow_followingBusinessId")
 
   @@index([userId], map: "Business_userId_idx")
 }
@@ -212,15 +215,21 @@ model coupon {
 }
 
 model follow {
-  id                            String   @id
+  id                            String    @id
   followerId                    String
   followingId                   String
-  createdAt                     DateTime @default(now())
-  user_follow_followerIdTouser  user     @relation("follow_followerIdTouser", fields: [followerId], references: [id], onDelete: Cascade, map: "Follow_followerId_fkey")
-  user_follow_followingIdTouser user     @relation("follow_followingIdTouser", fields: [followingId], references: [id], onDelete: Cascade, map: "Follow_followingId_fkey")
+  followerBusinessId            String?   // Para seguir como empresa
+  followingBusinessId           String?   // Empresa sendo seguida
+  createdAt                     DateTime  @default(now())
+  user_follow_followerIdTouser  user      @relation("follow_followerIdTouser", fields: [followerId], references: [id], onDelete: Cascade, map: "Follow_followerId_fkey")
+  user_follow_followingIdTouser user      @relation("follow_followingIdTouser", fields: [followingId], references: [id], onDelete: Cascade, map: "Follow_followingId_fkey")
+  business_follow_followerBusinessId business? @relation("follow_followerBusinessId", fields: [followerBusinessId], references: [id], onDelete: Cascade, map: "Follow_followerBusinessId_fkey")
+  business_follow_followingBusinessId business? @relation("follow_followingBusinessId", fields: [followingBusinessId], references: [id], onDelete: Cascade, map: "Follow_followingBusinessId_fkey")
 
   @@unique([followerId, followingId], map: "Follow_followerId_followingId_key")
+  @@unique([followerBusinessId, followingBusinessId], map: "Follow_followerBusinessId_followingBusinessId_key")
   @@index([followingId], map: "Follow_followingId_idx")
+  @@index([followingBusinessId], map: "Follow_followingBusinessId_idx")
 }
 
 model message {
@@ -287,14 +296,18 @@ model post {
 }
 
 model postlike {
-  id     String  @id
-  postId String
-  userId String?
-  post   post    @relation(fields: [postId], references: [id], map: "PostLike_postId_fkey")
-  user   user?   @relation(fields: [userId], references: [id], map: "PostLike_userId_fkey")
+  id         String    @id
+  postId     String
+  userId     String?
+  businessId String?   // Para curtir como empresa
+  post       post      @relation(fields: [postId], references: [id], map: "PostLike_postId_fkey")
+  user       user?     @relation(fields: [userId], references: [id], map: "PostLike_userId_fkey")
+  business   business? @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "PostLike_businessId_fkey")
 
   @@unique([postId, userId], map: "PostLike_postId_userId_key")
+  @@unique([postId, businessId], map: "PostLike_postId_businessId_key")
   @@index([userId], map: "PostLike_userId_idx")
+  @@index([businessId], map: "PostLike_businessId_idx")
 }
 
 model product {

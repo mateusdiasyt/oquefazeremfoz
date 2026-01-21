@@ -14,17 +14,36 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    // Buscar empresa ativa do usuário
-    const activeBusinessId = user.activeBusinessId || user.businessId
-    
-    if (!activeBusinessId) {
-      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    // Verificar se foi fornecido um ID específico
+    const { searchParams } = new URL(request.url)
+    const requestedBusinessId = searchParams.get('id')
+
+    // Determinar qual empresa buscar
+    let businessId: string | null = null
+    if (requestedBusinessId) {
+      // Verificar se a empresa solicitada pertence ao usuário
+      const requestedBusiness = await prisma.business.findFirst({
+        where: { 
+          id: requestedBusinessId,
+          userId: user.id
+        }
+      })
+      if (requestedBusiness) {
+        businessId = requestedBusinessId
+      }
+    } else {
+      // Usar empresa ativa ou primeira empresa
+      businessId = user.activeBusinessId || user.businessId || user.businesses?.[0]?.id || null
     }
 
-    // Buscar dados da empresa ativa
+    if (!businessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa encontrada' }, { status: 404 })
+    }
+
+    // Buscar dados da empresa
     const business = await prisma.business.findFirst({
       where: { 
-        id: activeBusinessId,
+        id: businessId,
         userId: user.id // Verificar se pertence ao usuário
       },
       include: {
