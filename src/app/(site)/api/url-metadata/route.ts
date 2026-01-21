@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       title: title || 'Link',
       description: description || 'Clique para acessar',
-      image: processedImage,
+      image: image || null,
       siteName: siteName || null
     })
 
