@@ -498,11 +498,11 @@ export default function BusinessProfilePage() {
                   <img
                     src={business.profileImage}
                     alt={business.name}
-                  className="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-4 border-white shadow-md object-cover"
+                  className="w-28 h-28 md:w-36 md:h-36 rounded-2xl border-4 border-white shadow-md object-cover"
                   />
                 ) : (
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-4 border-white shadow-md bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <span className="text-2xl md:text-3xl font-bold text-purple-600" style={{ letterSpacing: '-0.02em' }}>
+                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl border-4 border-white shadow-md bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <span className="text-3xl md:text-4xl font-bold text-purple-600" style={{ letterSpacing: '-0.02em' }}>
                       {business.name?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
