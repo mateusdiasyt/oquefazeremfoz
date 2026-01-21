@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
         email: true,
         password: true,
         name: true,
+        activeBusinessId: true,
         userrole: {
           select: {
             role: true
@@ -59,7 +60,8 @@ export async function POST(request: NextRequest) {
         business: {
           select: {
             id: true
-          }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       }
     })
@@ -148,6 +150,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Determinar empresa ativa (usa activeBusinessId ou primeira empresa)
+    const activeBusinessId = user.activeBusinessId || user.business[0]?.id || undefined
+
     // Configurar cookie
     const response = NextResponse.json({
       success: true,
@@ -157,7 +162,9 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.name,
         roles,
-        businessId: user.business?.id || undefined
+        businessId: activeBusinessId, // Mantém compatibilidade
+        activeBusinessId: activeBusinessId,
+        businesses: user.business.map(b => ({ id: b.id }))
       }
     })
 
