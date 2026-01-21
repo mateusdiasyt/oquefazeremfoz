@@ -41,45 +41,97 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar dados da empresa
-    const business = await prisma.business.findFirst({
-      where: { 
-        id: businessId,
-        userId: user.id // Verificar se pertence ao usuário
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        category: true,
-        address: true,
-        phone: true,
-        website: true,
-        instagram: true,
-        facebook: true,
-        whatsapp: true,
-        profileImage: true,
-        coverImage: true,
-        isApproved: true,
-        isVerified: true,
-        likesCount: true,
-        createdAt: true,
-        updatedAt: true,
-        userId: true,
-        // presentationVideo não incluído até migração ser executada
-        post: {
-          orderBy: { createdAt: 'desc' },
-          include: {
-            _count: {
-              select: {
-                postlike: true,
-                comment: true
+    // Tentar buscar com presentationVideo, mas se não existir, usar fallback
+    let business: any = null
+    try {
+      business = await prisma.business.findFirst({
+        where: { 
+          id: businessId,
+          userId: user.id // Verificar se pertence ao usuário
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          category: true,
+          address: true,
+          phone: true,
+          website: true,
+          instagram: true,
+          facebook: true,
+          whatsapp: true,
+          profileImage: true,
+          coverImage: true,
+          isApproved: true,
+          isVerified: true,
+          likesCount: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+          presentationVideo: true, // Tentar buscar se existir
+          post: {
+            orderBy: { createdAt: 'desc' },
+            include: {
+              _count: {
+                select: {
+                  postlike: true,
+                  comment: true
+                }
               }
             }
           }
         }
+      })
+    } catch (error: any) {
+      // Se presentationVideo não existir (P2022), buscar sem ele
+      if (error.code === 'P2022' || error.message?.includes('presentationVideo') || error.message?.includes('does not exist')) {
+        business = await prisma.business.findFirst({
+          where: { 
+            id: businessId,
+            userId: user.id
+          },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            category: true,
+            address: true,
+            phone: true,
+            website: true,
+            instagram: true,
+            facebook: true,
+            whatsapp: true,
+            profileImage: true,
+            coverImage: true,
+            isApproved: true,
+            isVerified: true,
+            likesCount: true,
+            createdAt: true,
+            updatedAt: true,
+            userId: true,
+            post: {
+              orderBy: { createdAt: 'desc' },
+              include: {
+                _count: {
+                  select: {
+                    postlike: true,
+                    comment: true
+                  }
+                }
+              }
+            }
+          }
+        })
+        // Adicionar presentationVideo como null se não existir
+        if (business) {
+          business.presentationVideo = null
+        }
+      } else {
+        throw error
       }
-    })
+    }
 
     if (!business) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
