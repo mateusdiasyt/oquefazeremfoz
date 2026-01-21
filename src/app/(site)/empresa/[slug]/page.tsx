@@ -32,7 +32,9 @@ import {
   MessageSquare,
   ThumbsUp,
   Images,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 // Ícone simplificado do WhatsApp
@@ -145,6 +147,8 @@ export default function BusinessProfilePage() {
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [uploadingGallery, setUploadingGallery] = useState(false)
+  const [showGalleryPreview, setShowGalleryPreview] = useState(false)
+  const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0)
   
   // Edit states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -1141,17 +1145,27 @@ export default function BusinessProfilePage() {
                     <p className="text-gray-500 text-sm text-center py-4">Nenhuma foto na galeria ainda.</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
-                      {gallery.map((item) => (
-                        <div key={item.id} className="relative group">
+                      {gallery.map((item, index) => (
+                        <div 
+                          key={item.id} 
+                          className="relative group cursor-pointer"
+                          onClick={() => {
+                            setSelectedGalleryIndex(index)
+                            setShowGalleryPreview(true)
+                          }}
+                        >
                           <img
                             src={item.imageUrl}
                             alt="Galeria"
-                            className="w-full h-24 object-cover rounded-xl border border-gray-100"
+                            className="w-full h-24 object-cover rounded-xl border border-gray-100 hover:opacity-90 transition-opacity"
                           />
                           {isOwner && (
                             <button
-                              onClick={() => handleGalleryDelete(item.id)}
-                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleGalleryDelete(item.id)
+                              }}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               title="Remover foto"
                             >
                               <X className="w-3 h-3" />
