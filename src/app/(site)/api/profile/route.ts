@@ -10,10 +10,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    // Se for uma empresa, retornar dados da empresa
+    // Se for uma empresa, retornar dados da empresa ativa
     if (isCompany(user.roles)) {
-      const business = await prisma.business.findUnique({
-        where: { userId: user.id }
+      // Buscar empresa ativa do usuário
+      const activeBusinessId = user.activeBusinessId || user.businessId
+      if (!activeBusinessId) {
+        return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+      }
+
+      const business = await prisma.business.findFirst({
+        where: { 
+          id: activeBusinessId,
+          userId: user.id // Verificar se pertence ao usuário
+        }
       })
 
       if (!business) {
