@@ -130,72 +130,14 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
       if (response.ok) {
         const data = await response.json()
-        // Adicionar o novo comentário no início da lista
-        if (data.comment) {
-          if (replyingTo) {
-            // Se for uma resposta, adicionar à lista de replies do comentário pai
-            setComments(prev => prev.map(comment => {
-              const parentId = data.comment.parentId || replyingTo.id
-              
-              // Verificar se o parentId corresponde ao comentário principal
-              if (comment.id === parentId) {
-                // Verificar se o comentário já existe para evitar duplicação
-                const replyExists = comment.replies?.some((r: any) => r.id === data.comment.id)
-                if (replyExists) {
-                  return comment
-                }
-                return {
-                  ...comment,
-                  replies: [...(comment.replies || []), data.comment],
-                  _count: {
-                    ...comment._count,
-                    replies: (comment._count?.replies || 0) + 1
-                  }
-                }
-              }
-              
-              // Verificar se o parentId corresponde a uma resposta dentro deste comentário
-              if (comment.replies && comment.replies.length > 0) {
-                const replyIndex = comment.replies.findIndex((r: any) => r.id === parentId)
-                if (replyIndex !== -1) {
-                  // Verificar se o comentário já existe para evitar duplicação
-                  const replyExists = comment.replies.some((r: any) => r.id === data.comment.id)
-                  if (replyExists) {
-                    return comment
-                  }
-                  // Adicionar a resposta ao comentário principal (mantém hierarquia plana)
-                  return {
-                    ...comment,
-                    replies: [...(comment.replies || []), data.comment],
-                    _count: {
-                      ...comment._count,
-                      replies: (comment._count?.replies || 0) + 1
-                    }
-                  }
-                }
-              }
-              
-              return comment
-            }))
-          } else {
-            // Se for um comentário principal, verificar se já existe antes de adicionar
-            setComments(prev => {
-              const exists = prev.some(c => c.id === data.comment.id)
-              if (exists) {
-                return prev
-              }
-              return [data.comment, ...prev]
-            })
-            setCommentsCount(prev => prev + 1)
-          }
-          setNewComment('')
-          setReplyingTo(null)
-        } else {
-          // Se não veio no formato esperado, recarregar os comentários
-          await fetchComments()
-          setNewComment('')
-          setReplyingTo(null)
-        }
+        
+        // Limpar o formulário imediatamente
+        setNewComment('')
+        const wasReplying = !!replyingTo
+        setReplyingTo(null)
+        
+        // Recarregar todos os comentários para garantir estrutura completa e evitar duplicações
+        await fetchComments()
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Erro ao comentar' }))
         console.error('Erro ao comentar:', errorData.message)
