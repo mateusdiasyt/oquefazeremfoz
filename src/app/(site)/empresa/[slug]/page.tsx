@@ -8,6 +8,7 @@ import ProductForm from '../../../../components/ProductForm'
 import CouponForm from '../../../../components/CouponForm'
 import ReviewForm from '../../../../components/ReviewForm'
 import CreatePost from '../../../../components/CreatePost'
+import PostForm from '../../../../components/PostForm'
 import FollowersModal from '../../../../components/FollowersModal'
 import { 
   Heart, 
