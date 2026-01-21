@@ -56,9 +56,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    // Verificar se o usuário é dono da empresa
+    // Verificar se o usuário é dono da empresa (usando empresa ativa se fornecido, senão verificar se pertence ao usuário)
     const business = await prisma.business.findFirst({
-      where: { userId: user.id }
+      where: {
+        id: businessId,
+        userId: user.id // Verificar se pertence ao usuário
+      }
     })
 
     if (!business || business.id !== businessId) {

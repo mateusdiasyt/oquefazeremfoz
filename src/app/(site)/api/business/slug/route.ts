@@ -32,11 +32,29 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Verificar se o slug já existe
+    // Buscar empresa ativa do usuário
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
+      return NextResponse.json({ error: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    }
+
+    // Buscar a empresa ativa
+    const business = await prisma.business.findFirst({
+      where: { 
+        id: activeBusinessId,
+        userId: user.id // Verificar se pertence ao usuário
+      }
+    })
+
+    if (!business) {
+      return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    // Verificar se o slug já existe (excluindo a própria empresa)
     const existingBusiness = await prisma.business.findFirst({
       where: { 
         slug: slug,
-        NOT: { userId: user.id } // Excluir a própria empresa
+        NOT: { id: business.id } // Excluir a própria empresa
       }
     })
 
@@ -44,15 +62,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Este slug já está sendo usado por outra empresa' 
       }, { status: 400 })
-    }
-
-    // Buscar a empresa do usuário
-    const business = await prisma.business.findUnique({
-      where: { userId: user.id }
-    })
-
-    if (!business) {
-      return NextResponse.json({ error: 'Empresa não encontrada' }, { status: 404 })
     }
 
     // Atualizar o slug
