@@ -421,9 +421,22 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     return commentAge <= fiveMinutes
   }
 
+  // Pré-carregar comentários quando o componente é montado
+  useEffect(() => {
+    // Se não há comentários carregados ainda, carregar imediatamente
+    if (comments.length === 0 && post._count?.comment && post._count.comment > 0) {
+      fetchComments()
+    }
+  }, [])
+
+  // Atualizar comentários quando showComments muda para true
   useEffect(() => {
     if (showComments) {
-      fetchComments()
+      // Se já temos comentários, não precisa recarregar a menos que sejam muito antigos
+      // Recarregar apenas se não temos comentários ou se o usuário explicitamente abriu
+      if (comments.length === 0) {
+        fetchComments()
+      }
     }
   }, [showComments])
 
