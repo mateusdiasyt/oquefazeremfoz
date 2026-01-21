@@ -83,6 +83,26 @@ export default function EmpresasPage() {
     'Outro'
   ]
 
+  // Função para converter URL do YouTube para formato embed
+  const getYouTubeEmbedUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null
+    
+    // Extrair ID do vídeo de diferentes formatos de URL do YouTube
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+    ]
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match && match[1]) {
+        return `https://www.youtube.com/embed/${match[1]}`
+      }
+    }
+    
+    return null
+  }
+
   useEffect(() => {
     fetchBusinesses()
   }, [])
