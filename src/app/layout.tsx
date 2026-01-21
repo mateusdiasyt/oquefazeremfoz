@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     description: 'Descubra os melhores hotéis, restaurantes, atrações, passeios, ingressos e promoções em Foz do Iguaçu. Encontre empresas verificadas, cupons exclusivos e monte seu roteiro perfeito.',
     images: [
       {
-        url: 'https://oquefazeremfoz.com.br/og-image.jpg',
+        url: 'https://oquefazeremfoz.com.br/og-image.png',
         width: 1200,
         height: 630,
         alt: 'OQFOZ - O que fazer em Foz do Iguaçu',
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'OQFOZ - O que fazer em Foz do Iguaçu',
     description: 'Descubra os melhores hotéis, restaurantes, atrações, passeios, ingressos e promoções em Foz do Iguaçu',
-    images: ['https://oquefazeremfoz.com.br/og-image.jpg'],
+    images: ['https://oquefazeremfoz.com.br/og-image.png'],
   },
   robots: {
     index: true,
