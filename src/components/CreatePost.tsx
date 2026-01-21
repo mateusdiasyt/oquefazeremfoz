@@ -12,6 +12,7 @@ interface Business {
   id: string
   name: string
   profileImage: string | null
+  isApproved?: boolean
 }
 
 export default function CreatePost({ onPostCreated }: CreatePostProps) {
@@ -27,24 +28,45 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   const [showVideoInput, setShowVideoInput] = useState(false)
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null)
   const [business, setBusiness] = useState<Business | null>(null)
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchBusinessData = async () => {
-      if (user?.businessId) {
+    const fetchBusinesses = async () => {
+      if (user?.roles?.includes('COMPANY')) {
         try {
-          const response = await fetch('/api/business/profile')
+          const response = await fetch('/api/business/my-businesses')
           if (response.ok) {
             const data = await response.json()
-            setBusiness(data.business)
+            const userBusinesses = data.businesses || []
+            setBusinesses(userBusinesses)
+            
+            // Selecionar primeira empresa aprovada ou primeira disponível
+            const approvedBusiness = userBusinesses.find((b: any) => b.isApproved)
+            const defaultBusiness = approvedBusiness || userBusinesses[0]
+            if (defaultBusiness) {
+              setSelectedBusinessId(defaultBusiness.id)
+              setBusiness(defaultBusiness)
+            }
           }
         } catch (error) {
-          console.error('Erro ao buscar dados da empresa:', error)
+          console.error('Erro ao buscar empresas:', error)
         }
       }
     }
 
-    fetchBusinessData()
+    fetchBusinesses()
   }, [user])
+
+  // Atualizar business quando selecionar outra empresa
+  useEffect(() => {
+    if (selectedBusinessId && businesses.length > 0) {
+      const selected = businesses.find(b => b.id === selectedBusinessId)
+      if (selected) {
+        setBusiness(selected)
+      }
+    }
+  }, [selectedBusinessId, businesses])
 
   const handleImageClick = () => {
     setShowImageInput(!showImageInput)
@@ -163,12 +185,19 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
     setError('')
 
     try {
+      if (!selectedBusinessId) {
+        setError('Selecione uma empresa para publicar')
+        setLoading(false)
+        return
+      }
+
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          businessId: selectedBusinessId,
           title: content.substring(0, 100) || (mediaType === 'image' ? 'Imagem compartilhada' : 'Vídeo compartilhado'),
           body: content || null,
           imageUrl: imageUrl || null,
@@ -225,6 +254,32 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
         </div>
         
         <div className="flex-1 min-w-0">
+          {/* Seletor de Empresa (se tiver múltiplas) */}
+          {businesses.length > 1 && (
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Publicar como:
+              </label>
+              <select
+                value={selectedBusinessId || ''}
+                onChange={(e) => setSelectedBusinessId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              >
+                {businesses
+                  .filter((b: any) => b.isApproved) // Apenas empresas aprovadas
+                  .map((b: Business) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+              </select>
+              {businesses.filter((b: any) => b.isApproved).length === 0 && (
+                <p className="text-xs text-yellow-600 mt-1">
+                  Nenhuma empresa aprovada. Aguarde a aprovação para publicar.
+                </p>
+              )}
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             <textarea
               value={content}

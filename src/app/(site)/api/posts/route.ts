@@ -20,8 +20,17 @@ export async function GET(request: NextRequest) {
     const isCompanyUser = user?.roles?.includes('COMPANY')
     const activeBusinessId = user?.activeBusinessId || user?.businessId
 
+    // Filtrar apenas posts de empresas aprovadas (exceto se buscar por businessId específico)
+    const whereClauseWithApproval: any = { ...whereClause }
+    if (!businessId) {
+      // Se não está filtrando por businessId específico, filtrar apenas empresas aprovadas
+      whereClauseWithApproval.business = {
+        isApproved: true
+      }
+    }
+
     const posts = await prisma.post.findMany({
-      where: whereClause,
+      where: whereClauseWithApproval,
       include: {
         business: {
           select: {
@@ -29,7 +38,8 @@ export async function GET(request: NextRequest) {
             name: true,
             profileImage: true,
             isVerified: true,
-            slug: true
+            slug: true,
+            isApproved: true
           }
         },
         postlike: {
@@ -115,16 +125,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o usuário tem uma empresa
-    const activeBusinessId = user.activeBusinessId || user.businessId
-    if (!activeBusinessId) {
+    const activeBusinessId = user.activeBusinessId || user.businessId || user.businesses?.[0]?.id
+    
+    if (!activeBusinessId && !user.businesses?.length) {
       console.log('❌ Usuário não possui empresa')
       return NextResponse.json({ message: 'Apenas empresas podem criar posts' }, { status: 403 })
     }
 
+    const { title, body, imageUrl, videoUrl, businessId: requestedBusinessId } = await request.json()
+    console.log('📝 Dados recebidos:', { title, body: body?.substring(0, 50), imageUrl: !!imageUrl, videoUrl: !!videoUrl, requestedBusinessId })
+
+    // Determinar qual empresa usar
+    let finalBusinessId = requestedBusinessId || activeBusinessId
+    
+    // Se forneceu um businessId, verificar se pertence ao usuário
+    if (requestedBusinessId) {
+      const requestedBusiness = await prisma.business.findFirst({
+        where: {
+          id: requestedBusinessId,
+          userId: user.id
+        }
+      })
+      
+      if (!requestedBusiness) {
+        return NextResponse.json({ message: 'Empresa não encontrada ou não pertence a você' }, { status: 403 })
+      }
+      
+      finalBusinessId = requestedBusinessId
+    }
+
+    if (!finalBusinessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa selecionada' }, { status: 400 })
+    }
+
     // Verificar se a empresa está aprovada
-    const business = await prisma.business.findFirst({
+    const finalBusiness = await prisma.business.findFirst({
       where: {
-        id: activeBusinessId,
+        id: finalBusinessId,
         userId: user.id
       },
       select: {
@@ -133,18 +170,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    if (!business) {
+    if (!finalBusiness) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
-    if (!business.isApproved) {
+    if (!finalBusiness.isApproved) {
       return NextResponse.json({ 
         message: 'Sua empresa está aguardando aprovação da administração. Você não pode publicar posts até que sua empresa seja aprovada.' 
       }, { status: 403 })
     }
-
-    const { title, body, imageUrl, videoUrl } = await request.json()
-    console.log('📝 Dados recebidos:', { title, body: body?.substring(0, 50), imageUrl: !!imageUrl, videoUrl: !!videoUrl })
 
     // Validações
     if (!title || title.trim() === '') {
@@ -166,7 +200,7 @@ export async function POST(request: NextRequest) {
     const post = await prisma.post.create({
       data: {
         id: postId,
-        businessId: activeBusinessId,
+        businessId: finalBusinessId,
         title: title.trim(),
         body: body?.trim() || null,
         imageUrl: imageUrl?.trim() || null,
