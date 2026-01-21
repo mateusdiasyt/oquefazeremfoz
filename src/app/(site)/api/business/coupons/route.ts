@@ -55,15 +55,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Título e código são obrigatórios' }, { status: 400 })
     }
 
-    // Verificar limite de cupons: apenas 1 a cada 3 dias
-    const threeDaysAgo = new Date()
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+    // Verificar limite de cupons: apenas 1 a cada 24 horas
+    const twentyFourHoursAgo = new Date()
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
 
     const recentCoupons = await prisma.businesscoupon.findMany({
       where: { 
         businessId: business.id,
         createdAt: {
-          gte: threeDaysAgo
+          gte: twentyFourHoursAgo
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -71,13 +71,14 @@ export async function POST(request: NextRequest) {
 
     if (recentCoupons.length > 0) {
       const lastCouponDate = recentCoupons[0].createdAt
-      const daysSinceLastCoupon = Math.floor((Date.now() - lastCouponDate.getTime()) / (1000 * 60 * 60 * 24))
+      const hoursSinceLastCoupon = Math.floor((Date.now() - lastCouponDate.getTime()) / (1000 * 60 * 60))
+      const remainingHours = 24 - hoursSinceLastCoupon
       
-      if (daysSinceLastCoupon < 3) {
-        const remainingDays = 3 - daysSinceLastCoupon
+      if (remainingHours > 0) {
+        const hoursText = remainingHours === 1 ? 'hora' : 'horas'
         return NextResponse.json({ 
-          message: `Você só pode criar um cupom a cada 3 dias. Tente novamente em ${remainingDays} dia(s).`,
-          remainingDays 
+          message: `Você só pode criar um cupom a cada 24 horas. Tente novamente em ${remainingHours} ${hoursText}.`,
+          remainingHours 
         }, { status: 429 })
       }
     }
