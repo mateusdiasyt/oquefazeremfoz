@@ -46,7 +46,27 @@ export async function GET(request: NextRequest) {
         id: businessId,
         userId: user.id // Verificar se pertence ao usuário
       },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        category: true,
+        address: true,
+        phone: true,
+        website: true,
+        instagram: true,
+        facebook: true,
+        whatsapp: true,
+        profileImage: true,
+        coverImage: true,
+        isApproved: true,
+        isVerified: true,
+        likesCount: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true,
+        // presentationVideo não incluído até migração ser executada
         post: {
           orderBy: { createdAt: 'desc' },
           include: {

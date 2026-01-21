@@ -40,13 +40,29 @@ export async function POST(
     
     if (isCompanyUser && activeBusinessId) {
       // Se for empresa, verificar se a empresa já curtiu
-      existingLike = await prisma.postlike.findFirst({
-        where: {
-          businessId: activeBusinessId,
-          postId: postId
+      // Tentar buscar com businessId, mas se a coluna não existir, usar userId como fallback
+      try {
+        existingLike = await prisma.postlike.findFirst({
+          where: {
+            businessId: activeBusinessId,
+            postId: postId
+          }
+        })
+        console.log('❤️ Like existente (como empresa):', existingLike ? 'Sim' : 'Não')
+      } catch (error: any) {
+        // Se businessId não existir ainda (P2022), usar userId como fallback
+        if (error.code === 'P2022' || error.message?.includes('does not exist')) {
+          console.log('⚠️ businessId não existe ainda, usando userId como fallback')
+          existingLike = await prisma.postlike.findFirst({
+            where: {
+              userId: user.id,
+              postId: postId
+            }
+          })
+        } else {
+          throw error
         }
-      })
-      console.log('❤️ Like existente (como empresa):', existingLike ? 'Sim' : 'Não')
+      }
     } else {
       // Se for usuário normal, verificar se o usuário curtiu
       existingLike = await prisma.postlike.findFirst({
@@ -92,16 +108,33 @@ export async function POST(
       }
       
       if (isCompanyUser && activeBusinessId) {
-        likeData.businessId = activeBusinessId
-        console.log('👍 Curtindo como empresa:', activeBusinessId)
+        // Tentar criar com businessId, mas usar userId como fallback se a coluna não existir
+        try {
+          likeData.businessId = activeBusinessId
+          console.log('👍 Curtindo como empresa:', activeBusinessId)
+          await prisma.postlike.create({
+            data: likeData
+          })
+        } catch (error: any) {
+          // Se businessId não existir ainda (P2022), usar userId como fallback
+          if (error.code === 'P2022' || error.message?.includes('does not exist')) {
+            console.log('⚠️ businessId não existe ainda, usando userId como fallback')
+            delete likeData.businessId
+            likeData.userId = user.id
+            await prisma.postlike.create({
+              data: likeData
+            })
+          } else {
+            throw error
+          }
+        }
       } else {
         likeData.userId = user.id
         console.log('👍 Curtindo como usuário:', user.id)
+        await prisma.postlike.create({
+          data: likeData
+        })
       }
-      
-      await prisma.postlike.create({
-        data: likeData
-      })
 
       // Atualizar contador de likes
       const updatedPost = await prisma.post.update({
@@ -150,12 +183,27 @@ export async function GET(
     
     if (isCompanyUser && activeBusinessId) {
       // Verificar se a empresa curtiu
-      existingLike = await prisma.postlike.findFirst({
-        where: {
-          businessId: activeBusinessId,
-          postId: postId
+      // Tentar buscar com businessId, mas se a coluna não existir, usar userId como fallback
+      try {
+        existingLike = await prisma.postlike.findFirst({
+          where: {
+            businessId: activeBusinessId,
+            postId: postId
+          }
+        })
+      } catch (error: any) {
+        // Se businessId não existir ainda (P2022), usar userId como fallback
+        if (error.code === 'P2022' || error.message?.includes('does not exist')) {
+          existingLike = await prisma.postlike.findFirst({
+            where: {
+              userId: user.id,
+              postId: postId
+            }
+          })
+        } else {
+          throw error
         }
-      })
+      }
     } else {
       // Verificar se o usuário curtiu
       existingLike = await prisma.postlike.findFirst({
