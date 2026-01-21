@@ -128,10 +128,10 @@ export async function GET(
             name: receiverActiveBusiness.name,
             profileImage: receiverActiveBusiness.profileImage
           } : undefined
-        }
-      },
-      createdAt: message.createdAt.toISOString(),
-      isRead: message.isRead
+        },
+        createdAt: message.createdAt.toISOString(),
+        isRead: message.isRead
+      }
     })
 
     return NextResponse.json({ messages: formattedMessages }, { status: 200 })
