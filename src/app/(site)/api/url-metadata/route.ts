@@ -53,10 +53,26 @@ export async function GET(request: NextRequest) {
       extractMeta('twitter:description', html)
 
     // Extrair imagem
-    const image = 
+    let image = 
       extractMeta('og:image', html) ||
       extractMeta('twitter:image', html) ||
       extractMeta('twitter:image:src', html)
+
+    // Converter URL relativa para absoluta se necessário
+    if (image && !image.startsWith('http')) {
+      try {
+        const baseUrl = new URL(url)
+        if (image.startsWith('//')) {
+          image = `${baseUrl.protocol}${image}`
+        } else if (image.startsWith('/')) {
+          image = `${baseUrl.protocol}//${baseUrl.host}${image}`
+        } else {
+          image = `${baseUrl.protocol}//${baseUrl.host}/${image}`
+        }
+      } catch (e) {
+        console.error('Erro ao converter URL de imagem:', e)
+      }
+    }
 
     // Extrair nome do site
     const siteName = 
