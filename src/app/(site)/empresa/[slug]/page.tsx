@@ -317,6 +317,29 @@ export default function BusinessProfilePage() {
     }
   }
 
+  const handleDeleteCoupon = async (couponId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este cupom?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/business/coupons?id=${couponId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        fetchBusinessData()
+        showNotification('Cupom excluído com sucesso!', 'success')
+      } else {
+        const data = await response.json()
+        showNotification(data.message || 'Erro ao excluir cupom', 'error')
+      }
+    } catch (error) {
+      console.error('Erro ao excluir cupom:', error)
+      showNotification('Erro ao excluir cupom', 'error')
+    }
+  }
+
   const handleLikePost = async (postId: string) => {
     if (!user) {
       showNotification('Faça login para curtir posts', 'error')
