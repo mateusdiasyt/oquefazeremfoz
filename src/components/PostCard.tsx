@@ -116,19 +116,46 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       })
 
       if (response.ok) {
-        const text = await response.text()
-        if (text) {
-          const data = JSON.parse(text)
+        const data = await response.json()
+        // Adicionar o novo comentário no início da lista
+        if (data.comment) {
           setComments(prev => [data.comment, ...prev])
           setNewComment('')
+        } else {
+          // Se não veio no formato esperado, recarregar os comentários
+          await fetchComments()
+          setNewComment('')
         }
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Erro ao comentar' }))
+        console.error('Erro ao comentar:', errorData.message)
+        alert(errorData.message || 'Erro ao comentar')
       }
     } catch (error) {
       console.error('Erro ao comentar:', error)
+      alert('Erro ao comentar. Tente novamente.')
     } finally {
       setCommentLoading(false)
     }
   }
+
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(`/api/posts/comments?postId=${post.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setComments(data.comments || [])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar comentários:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (showComments) {
+      fetchComments()
+    }
+  }, [showComments])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
