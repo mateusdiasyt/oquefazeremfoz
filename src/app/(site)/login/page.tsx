@@ -4,6 +4,9 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
 
+// Forçar renderização dinâmica para evitar pré-renderização
+export const dynamic = 'force-dynamic'
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
