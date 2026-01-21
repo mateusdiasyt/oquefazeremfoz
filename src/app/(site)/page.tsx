@@ -131,7 +131,7 @@ function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date:
       {/* Desconto e código */}
       <div className="flex items-center justify-between mb-3">
         {coupon.discount && (
-          <span className="text-sm font-bold text-blue-600" style={{ letterSpacing: '-0.01em' }}>
+          <span className="text-sm font-bold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
             {coupon.discount}
           </span>
         )}
@@ -146,7 +146,7 @@ function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date:
         className={`w-full text-xs flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm shadow-purple-500/20 font-medium ${
           isCopied
             ? 'bg-green-500 text-white hover:bg-green-600'
-            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-blue-700 hover:to-cyan-700'
+            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
         }`}
       >
         {isCopied ? (
@@ -453,7 +453,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-cyan-50/50">
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6" style={{ letterSpacing: '-0.03em' }}>
@@ -527,7 +527,7 @@ export default function HomePage() {
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
                               <span className="text-white font-semibold text-sm">
                                 {business.name.charAt(0).toUpperCase()}
                               </span>
@@ -559,7 +559,7 @@ export default function HomePage() {
                         
                         {/* Indicador de Ação */}
                         <div className="flex-shrink-0">
-                          <div className="text-xs text-blue-600 font-medium">
+                          <div className="text-xs text-purple-600 font-medium">
                             Ver perfil
                           </div>
                         </div>
@@ -592,7 +592,7 @@ export default function HomePage() {
             </div>
             
             <button 
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl whitespace-nowrap hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 text-lg"
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl whitespace-nowrap hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 text-lg"
               onClick={() => {
                 // Redirecionar para página de empresas com filtros
                 const params = new URLSearchParams()
@@ -729,7 +729,7 @@ export default function HomePage() {
                         }}
                         className={`p-2 rounded-lg transition-all duration-200 ${
                           business.isFollowing 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
                             : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
                         }`}
                         title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
