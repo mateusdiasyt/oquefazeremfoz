@@ -81,18 +81,20 @@ interface Banner {
 interface Coupon {
   id: string
   code: string
+  title: string
   description: string | null
-  discountPct: number | null
-  discountCents: number | null
-  startsAt: string
-  endsAt: string | null
-  quantity: number | null
+  discount: string | null
+  link: string | null
+  validUntil: string | null
+  isActive: boolean
   createdAt: string
+  updatedAt: string
   business: {
     id: string
     name: string
     slug: string
     isVerified: boolean
+    profileImage: string | null
   }
 }
 
@@ -792,9 +794,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-pink-600">
-                          {coupon.discountPct ? `${coupon.discountPct}% OFF` : 
-                           coupon.discountCents ? `R$ ${(coupon.discountCents / 100).toFixed(2)} OFF` : 
-                           'Desconto'}
+                          {coupon.discount || 'Desconto'}
                         </span>
                         <button className="text-xs bg-pink-500 text-white px-3 py-1 rounded-full hover:bg-pink-600 transition-colors">
                           Usar
