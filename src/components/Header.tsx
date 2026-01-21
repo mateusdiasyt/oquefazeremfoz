@@ -62,6 +62,16 @@ export default function Header() {
               </svg>
               Mapa Turístico
             </a>
+            <a 
+              href="/selo-verificado" 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200 flex items-center gap-2"
+              style={{ letterSpacing: '-0.01em' }}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.755 2.123l4.05 2.897a2.715 2.715 0 01.97 2.793l-1.706 5.288a3.066 3.066 0 01-1.755 2.123L9.82 19.75a3.066 3.066 0 01-2.123-1.755l-1.706-5.288a2.715 2.715 0 01-.97-2.793l4.05-2.897a3.066 3.066 0 001.755-2.123L6.267 3.455z" clipRule="evenodd" />
+              </svg>
+              Selo Verificado
+            </a>
           </nav>
 
           {/* User Menu */}
