@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: 'google-site-verification-code', // Adicione quando tiver o código do Google Search Console
+    google: 'HtFQT-bg3ZX_MfDDzU8eXUTHtScvgCZWVFiuDngfxA',
   },
   alternates: {
     canonical: 'https://oquefazeremfoz.com.br',
