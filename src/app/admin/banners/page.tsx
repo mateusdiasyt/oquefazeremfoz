@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { Plus, Edit2, Trash2, Image as ImageIcon, Link2, ArrowUpDown, CheckCircle2, XCircle, Upload, X } from 'lucide-react'
 
 interface Banner {
   id: string
@@ -120,12 +121,12 @@ export default function AdminBanners() {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
 
       const response = await fetch('/api/admin/banners/upload', {
         method: 'POST',
-        body: formData,
+        body: formDataUpload,
       })
 
       if (response.ok) {
@@ -152,126 +153,163 @@ export default function AdminBanners() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-dark-300">Carregando banners...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando banners...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-dark-100 mb-2">Gerenciar Banners</h1>
-          <p className="text-dark-300">Configure os banners exibidos na página inicial</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gerenciar Banners</h1>
+          <p className="text-gray-600">Configure os banners exibidos no rodapé do site</p>
         </div>
 
         {/* Botão de adicionar */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowForm(true)}
-            className="btn-primary"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Adicionar Banner
-          </button>
-        </div>
+        {!showForm && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center px-4 py-2 bg-pink-600 text-white font-medium rounded-lg hover:bg-pink-700 transition-colors shadow-sm hover:shadow-md"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Adicionar Banner
+            </button>
+          </div>
+        )}
 
         {/* Formulário */}
         {showForm && (
-          <div className="card mb-8">
-            <h2 className="text-xl font-semibold text-dark-100 mb-6">
-              {editingBanner ? 'Editar Banner' : 'Novo Banner'}
-            </h2>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {editingBanner ? 'Editar Banner' : 'Novo Banner'}
+              </h2>
+              <button
+                onClick={handleCancel}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Link */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Link2 className="w-4 h-4 inline mr-2" />
+                  Link de Redirecionamento
+                </label>
+                <input
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900"
+                  placeholder="https://exemplo.com"
+                />
+                <p className="mt-1 text-xs text-gray-500">URL para onde o banner redirecionará ao ser clicado</p>
+              </div>
+
+              {/* Grid com Ordem e Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-dark-200 mb-2">
-                    Link de Redirecionamento
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.link}
-                    onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
-                    className="input"
-                    placeholder="https://example.com"
-                  />
-                  <p className="mt-1 text-xs text-dark-400">URL para onde o banner redirecionará ao ser clicado</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-dark-200 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <ArrowUpDown className="w-4 h-4 inline mr-2" />
                     Ordem de Exibição
                   </label>
                   <input
                     type="number"
                     value={formData.order}
                     onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
-                    className="input"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900"
                     placeholder="0"
                     min="0"
                   />
                 </div>
 
-                <div className="flex items-center space-x-4">
-                  <label className="flex items-center">
+                <div className="flex items-center">
+                  <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.isActive}
                       onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                      className="w-4 h-4 text-primary-600 bg-dark-700 border-dark-600 rounded focus:ring-primary-500"
+                      className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
                     />
-                    <span className="ml-2 text-sm text-dark-200">Ativo</span>
+                    <span className="ml-3 text-sm text-gray-700">Banner ativo</span>
                   </label>
                 </div>
               </div>
 
+              {/* Upload de Imagem */}
               <div>
-                <label className="block text-sm font-medium text-dark-200 mb-2">
-                  Imagem de Fundo (Opcional)
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <ImageIcon className="w-4 h-4 inline mr-2" />
+                  Imagem do Banner
                 </label>
                 <div className="space-y-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    className="block w-full text-sm text-dark-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-700"
-                  />
-                  {uploading && (
-                    <p className="text-sm text-primary-400">Enviando imagem...</p>
-                  )}
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        className="hidden"
+                      />
+                      <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-pink-400 hover:bg-pink-50 transition-colors">
+                        {uploading ? (
+                          <div className="flex items-center text-gray-600">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600 mr-2"></div>
+                            Enviando...
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-gray-600">
+                            <Upload className="w-5 h-5 mr-2" />
+                            Clique para fazer upload
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                  
                   {formData.imageUrl && (
-                    <div className="mt-2">
+                    <div className="relative">
                       <img
                         src={formData.imageUrl}
                         alt="Preview"
-                        className="w-32 h-20 object-cover rounded-lg"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex space-x-4">
+              {/* Botões de ação */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="flex-1 px-6 py-3 bg-pink-600 text-white font-medium rounded-lg hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={uploading}
                 >
-                  {editingBanner ? 'Atualizar' : 'Criar'} Banner
+                  {editingBanner ? 'Atualizar Banner' : 'Criar Banner'}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="btn-secondary"
+                  className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -283,54 +321,89 @@ export default function AdminBanners() {
         {/* Lista de banners */}
         <div className="space-y-4">
           {banners.length === 0 ? (
-            <div className="card text-center py-12">
-              <p className="text-dark-300">Nenhum banner encontrado</p>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 font-medium">Nenhum banner encontrado</p>
+              <p className="text-sm text-gray-500 mt-1">Comece adicionando seu primeiro banner</p>
             </div>
           ) : (
             banners.map((banner) => (
-              <div key={banner.id} className="card">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        banner.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {banner.isActive ? 'Ativo' : 'Inativo'}
-                      </span>
-                      <span className="text-sm text-dark-400">Ordem: {banner.order}</span>
-                      {banner.link && (
-                        <span className="text-xs text-primary-400">Link: {banner.link}</span>
+              <div key={banner.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                <div className="p-6">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Preview da Imagem */}
+                    <div className="flex-shrink-0">
+                      {banner.imageUrl ? (
+                        <div className="w-full lg:w-64 h-40 rounded-lg overflow-hidden border border-gray-200">
+                          <img
+                            src={banner.imageUrl}
+                            alt="Banner"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full lg:w-64 h-40 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                          <ImageIcon className="w-12 h-12 text-gray-400" />
+                        </div>
                       )}
                     </div>
-                    {banner.imageUrl && (
-                      <img
-                        src={banner.imageUrl}
-                        alt="Banner"
-                        className="w-32 h-20 object-cover rounded-lg"
-                      />
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(banner)}
-                      className="p-2 text-primary-400 hover:text-primary-300 transition-colors"
-                      title="Editar"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(banner.id)}
-                      className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                      title="Deletar"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+
+                    {/* Informações */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3 flex-wrap">
+                            {banner.isActive ? (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Ativo
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <XCircle className="w-3 h-3 mr-1" />
+                                Inativo
+                              </span>
+                            )}
+                            <span className="inline-flex items-center text-sm text-gray-600">
+                              <ArrowUpDown className="w-4 h-4 mr-1" />
+                              Ordem: {banner.order}
+                            </span>
+                          </div>
+                          
+                          {banner.link && (
+                            <div className="mb-3">
+                              <a
+                                href={banner.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-sm text-pink-600 hover:text-pink-700 hover:underline break-all"
+                              >
+                                <Link2 className="w-4 h-4 mr-1 flex-shrink-0" />
+                                {banner.link}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Botões de ação */}
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleEdit(banner)}
+                            className="p-2 text-gray-600 hover:text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(banner.id)}
+                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Deletar"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -341,9 +414,3 @@ export default function AdminBanners() {
     </div>
   )
 }
-
-
-
-
-
-
