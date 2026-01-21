@@ -30,7 +30,9 @@ import {
   Package,
   Gift,
   MessageSquare,
-  ThumbsUp
+  ThumbsUp,
+  Images,
+  X
 } from 'lucide-react'
 
 // Ícone simplificado do WhatsApp
@@ -114,6 +116,13 @@ interface Coupon {
   title: string
 }
 
+interface GalleryItem {
+  id: string
+  imageUrl: string
+  order: number
+  createdAt: string
+}
+
 export default function BusinessProfilePage() {
   const params = useParams()
   const { user } = useAuth()
@@ -125,6 +134,7 @@ export default function BusinessProfilePage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [coupons, setCoupons] = useState<Coupon[]>([])
+  const [gallery, setGallery] = useState<GalleryItem[]>([])
   const [followers, setFollowers] = useState<any[]>([])
   
   // Modal states
@@ -134,6 +144,7 @@ export default function BusinessProfilePage() {
   const [showPostForm, setShowPostForm] = useState(false)
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
+  const [uploadingGallery, setUploadingGallery] = useState(false)
   
   // Edit states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -197,6 +208,15 @@ export default function BusinessProfilePage() {
       if (businessData.businessreview) setReviews(businessData.businessreview)
       if (businessData.businessproduct) setProducts(businessData.businessproduct.filter((p: any) => p.isActive !== false))
       if (businessData.businesscoupon) setCoupons(businessData.businesscoupon)
+      
+      // Buscar galeria separadamente
+      if (businessData.id) {
+        const galleryResponse = await fetch(`/api/business/gallery?businessId=${businessData.id}`)
+        if (galleryResponse.ok) {
+          const galleryData = await galleryResponse.json()
+          setGallery(galleryData.gallery || [])
+        }
+      }
 
     } catch (error) {
       console.error('Erro ao carregar dados da empresa:', error)
@@ -412,6 +432,59 @@ export default function BusinessProfilePage() {
     setEditFacebook(business?.facebook || '')
     setEditWhatsapp(business?.whatsapp || '')
     setEditingInfo(true)
+  }
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !business?.id) return
+
+    setUploadingGallery(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      formData.append('businessId', business.id)
+
+      const response = await fetch('/api/business/gallery', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setGallery(prev => [...prev, data.galleryItem])
+        showNotification('Foto adicionada à galeria com sucesso!', 'success')
+        fetchBusinessData()
+      } else {
+        const errorData = await response.json()
+        showNotification(errorData.message || 'Erro ao adicionar foto', 'error')
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar foto à galeria:', error)
+      showNotification('Erro ao adicionar foto à galeria', 'error')
+    } finally {
+      setUploadingGallery(false)
+    }
+  }
+
+  const handleGalleryDelete = async (galleryId: string) => {
+    if (!confirm('Tem certeza que deseja remover esta foto da galeria?')) return
+
+    try {
+      const response = await fetch(`/api/business/gallery?id=${galleryId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setGallery(prev => prev.filter(item => item.id !== galleryId))
+        showNotification('Foto removida da galeria com sucesso!', 'success')
+      } else {
+        const errorData = await response.json()
+        showNotification(errorData.message || 'Erro ao remover foto', 'error')
+      }
+    } catch (error) {
+      console.error('Erro ao remover foto da galeria:', error)
+      showNotification('Erro ao remover foto da galeria', 'error')
+    }
   }
 
   if (loading) {
@@ -1042,6 +1115,57 @@ export default function BusinessProfilePage() {
                   )}
             </div>
           </div>
+
+              {/* Gallery */}
+              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
+                    <Images className="w-5 h-5 text-purple-600" />
+                    Galeria
+                  </h3>
+                  {isOwner && (
+                    <label className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-colors shadow-sm shadow-purple-500/20 cursor-pointer">
+                      <Plus className="w-4 h-4" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleGalleryUpload}
+                        disabled={uploadingGallery}
+                      />
+                    </label>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  {gallery.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center py-4">Nenhuma foto na galeria ainda.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {gallery.map((item) => (
+                        <div key={item.id} className="relative group">
+                          <img
+                            src={item.imageUrl}
+                            alt="Galeria"
+                            className="w-full h-24 object-cover rounded-xl border border-gray-100"
+                          />
+                          {isOwner && (
+                            <button
+                              onClick={() => handleGalleryDelete(item.id)}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Remover foto"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {uploadingGallery && (
+                    <p className="text-sm text-purple-600 text-center">Enviando foto...</p>
+                  )}
+                </div>
+              </div>
 
               {/* Reviews */}
               <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">

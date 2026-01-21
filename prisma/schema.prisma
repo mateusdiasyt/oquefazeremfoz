@@ -45,6 +45,7 @@ model business {
   followingCount  Int               @default(0)
   user            user              @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Business_userId_fkey")
   businesscoupon  businesscoupon[]
+  businessgallery businessgallery[]
   businesslike    businesslike[]
   businessproduct businessproduct[]
   businessreview  businessreview[]
@@ -94,6 +95,18 @@ model businessproduct {
   business    business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessProduct_businessId_fkey")
 
   @@index([businessId], map: "BusinessProduct_businessId_idx")
+}
+
+model businessgallery {
+  id         String   @id
+  businessId String
+  imageUrl   String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  business   business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessGallery_businessId_fkey")
+
+  @@index([businessId], map: "BusinessGallery_businessId_idx")
 }
 
 model businessreview {
