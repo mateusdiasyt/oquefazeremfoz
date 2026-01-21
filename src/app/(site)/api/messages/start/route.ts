@@ -50,8 +50,22 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
+            business: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                profileImage: true,
+                isVerified: true,
+                category: true
+              },
+              orderBy: { createdAt: 'desc' }
+            }
           }
         }
       }
@@ -72,8 +86,22 @@ export async function POST(request: NextRequest) {
         },
         include: {
           user: {
-            include: {
-              business: true
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              activeBusinessId: true,
+              business: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  profileImage: true,
+                  isVerified: true,
+                  category: true
+                },
+                orderBy: { createdAt: 'desc' }
+              }
             }
           }
         }
@@ -83,15 +111,20 @@ export async function POST(request: NextRequest) {
     // Transformar dados para o formato esperado pelo componente
     const otherParticipant = conversation.user.find(p => p.id !== user.id)
     
+    // Buscar empresa ativa do outro participante
+    const otherParticipantActiveBusiness = otherParticipant?.activeBusinessId 
+      ? otherParticipant.business.find(b => b.id === otherParticipant.activeBusinessId)
+      : otherParticipant?.business[0]
+    
     const formattedConversation = {
       id: conversation.id,
-      business: otherParticipant?.business ? {
-        id: otherParticipant.business.id,
-        name: otherParticipant.business.name,
-        slug: otherParticipant.business.slug,
-        profileImage: otherParticipant.business.profileImage,
-        isVerified: otherParticipant.business.isVerified,
-        category: otherParticipant.business.category,
+      business: otherParticipantActiveBusiness && otherParticipant ? {
+        id: otherParticipantActiveBusiness.id,
+        name: otherParticipantActiveBusiness.name,
+        slug: otherParticipantActiveBusiness.slug,
+        profileImage: otherParticipantActiveBusiness.profileImage,
+        isVerified: otherParticipantActiveBusiness.isVerified,
+        category: otherParticipantActiveBusiness.category,
         followedAt: new Date().toISOString(), // Placeholder
         userId: otherParticipant.id // Adicionar userId para envio de mensagens
       } : null,
