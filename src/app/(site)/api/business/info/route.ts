@@ -14,7 +14,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    const { address, phone, website, instagram, facebook, whatsapp } = await request.json()
+    const { address, phone, website, instagram, facebook, whatsapp, presentationVideo } = await request.json()
 
     // Buscar empresa ativa do usuário
     const activeBusinessId = user.activeBusinessId || user.businessId
@@ -42,6 +42,15 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
+    // Validar URL do vídeo de apresentação se fornecida
+    if (presentationVideo && presentationVideo.trim() !== '') {
+      // Verificar se é uma URL válida do YouTube
+      const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)/
+      if (!youtubePattern.test(presentationVideo.trim())) {
+        return NextResponse.json({ message: 'URL do vídeo deve ser do YouTube' }, { status: 400 })
+      }
+    }
+
     // Preparar dados para atualização (apenas os campos fornecidos)
     const updateData: any = {}
     if (address !== undefined) updateData.address = address?.trim() || null
@@ -50,6 +59,7 @@ export async function PATCH(request: NextRequest) {
     if (instagram !== undefined) updateData.instagram = instagram?.trim() || null
     if (facebook !== undefined) updateData.facebook = facebook?.trim() || null
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp?.trim() || null
+    if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
 
     // Atualizar as informações
     const updatedBusiness = await prisma.business.update({
