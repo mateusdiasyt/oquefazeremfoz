@@ -407,12 +407,12 @@ export default function HomePage() {
 
       {/* Search Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
-        <div className="card p-6 shadow-soft">
+        <div className="bg-white/80 backdrop-blur-xl border border-purple-200/50 rounded-3xl shadow-lg shadow-purple-500/5 p-6">
           <div className="flex flex-col lg:flex-row items-center gap-4">
             <div className="flex-1 relative w-full">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input 
-                className="input pl-12 w-full text-lg" 
+                className="w-full pl-12 pr-5 py-4 bg-white/50 border border-purple-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 text-lg" 
                 placeholder="Buscar hotéis, restaurantes, atrações..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -508,7 +508,7 @@ export default function HomePage() {
             </div>
             
             <button 
-              className="btn-primary px-8 text-lg whitespace-nowrap"
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl whitespace-nowrap hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 text-lg"
               onClick={() => {
                 // Redirecionar para página de empresas com filtros
                 const params = new URLSearchParams()

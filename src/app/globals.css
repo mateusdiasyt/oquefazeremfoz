@@ -17,12 +17,14 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-blue-50 via-white to-pink-50 text-gray-800;
+    @apply bg-white text-gray-900;
     font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-sans font-semibold tracking-tight text-gray-900;
+    letter-spacing: -0.02em;
   }
   
   /* Força cores corretas em inputs e elementos de formulário */
@@ -45,7 +47,8 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-pink-500/25;
+    @apply bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-6 py-4 rounded-2xl transition-all duration-200 shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30;
+    letter-spacing: -0.01em;
   }
   
   .btn-secondary {
@@ -57,7 +60,7 @@
   }
   
   .card {
-    @apply bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300;
+    @apply bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300;
   }
   
   .card-hover {
@@ -65,7 +68,8 @@
   }
   
   .input {
-    @apply bg-white border border-gray-300 text-gray-800 placeholder-gray-500 rounded-xl px-4 py-3 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all duration-300;
+    @apply bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl px-5 py-4 text-base focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all duration-200;
+    letter-spacing: -0.01em;
   }
   
   .gradient-text {

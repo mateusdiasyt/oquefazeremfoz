@@ -35,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans bg-dark-900 text-dark-50 antialiased">
+      <body className="font-sans bg-white text-gray-900 antialiased">
         <AuthProvider>
           <NotificationProvider>
             {children}
