@@ -5,26 +5,31 @@ import { prisma } from '../../../../../lib/db'
 // POST - Seguir ou desseguir uma empresa
 export async function POST(request: NextRequest) {
   try {
-    console.log('Iniciando follow/unfollow...')
     const user = await getCurrentUser()
     
     if (!user) {
-      console.log('Usuário não autorizado')
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
     const { businessId } = await request.json()
-    console.log('BusinessId recebido:', businessId)
 
     if (!businessId) {
-      console.log('BusinessId não fornecido')
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
     // Buscar a empresa sendo seguida
     const targetBusiness = await prisma.business.findUnique({
       where: { id: businessId },
-      include: { user: true }
+      select: {
+        id: true,
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
     })
 
     if (!targetBusiness) {
@@ -45,7 +50,6 @@ export async function POST(request: NextRequest) {
           followingBusinessId: businessId
         }
       })
-      console.log('🔍 Follow existente (como empresa):', existingFollow ? 'Sim' : 'Não')
     } else {
       // Se for usuário normal, seguir como usuário (manter compatibilidade com sistema atual usando businesslike)
       existingFollow = await prisma.businesslike.findFirst({
@@ -54,11 +58,9 @@ export async function POST(request: NextRequest) {
           businessId: businessId
         }
       })
-      console.log('🔍 Follow existente (como usuário):', existingFollow ? 'Sim' : 'Não')
     }
 
     if (existingFollow) {
-      console.log('Desseguindo empresa...')
       
       if (isCompanyUser && activeBusinessId) {
         // Desseguir como empresa - remover follow
@@ -81,6 +83,9 @@ export async function POST(request: NextRequest) {
           followersCount: {
             decrement: 1
           }
+        },
+        select: {
+          followersCount: true
         }
       })
 
@@ -90,8 +95,6 @@ export async function POST(request: NextRequest) {
         followersCount: updatedBusiness.followersCount
       })
     } else {
-      console.log('Seguindo empresa...')
-      
       if (isCompanyUser && activeBusinessId) {
         // Seguir como empresa - criar follow com businessId
         await prisma.follow.create({
@@ -103,7 +106,6 @@ export async function POST(request: NextRequest) {
             followingBusinessId: businessId
           }
         })
-        console.log('✅ Follow criado como empresa')
       } else {
         // Seguir como usuário - criar businesslike (manter sistema atual)
         await prisma.businesslike.create({
@@ -113,7 +115,6 @@ export async function POST(request: NextRequest) {
             businessId: businessId
           }
         })
-        console.log('✅ Follow criado como usuário (businesslike)')
       }
 
       // Atualizar contadores
@@ -123,6 +124,9 @@ export async function POST(request: NextRequest) {
           followersCount: {
             increment: 1
           }
+        },
+        select: {
+          followersCount: true
         }
       })
 
@@ -159,7 +163,10 @@ export async function GET(request: NextRequest) {
     // Buscar a empresa
     const business = await prisma.business.findUnique({
       where: { id: businessId },
-      include: { user: true }
+      select: {
+        id: true,
+        userId: true
+      }
     })
 
     if (!business) {

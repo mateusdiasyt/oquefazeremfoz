@@ -63,9 +63,34 @@ export async function PATCH(request: NextRequest) {
     // if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
 
     // Atualizar as informações
+    // Usar select para evitar buscar presentationVideo que ainda não existe
     const updatedBusiness = await prisma.business.update({
       where: { id: business.id },
-      data: updateData
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        category: true,
+        address: true,
+        phone: true,
+        website: true,
+        instagram: true,
+        facebook: true,
+        whatsapp: true,
+        profileImage: true,
+        coverImage: true,
+        isApproved: true,
+        isVerified: true,
+        likesCount: true,
+        followersCount: true,
+        followingCount: true,
+        createdAt: true,
+        updatedAt: true,
+        userId: true
+        // presentationVideo não incluído até migração ser executada
+      }
     })
 
     return NextResponse.json({ 
