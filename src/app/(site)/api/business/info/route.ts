@@ -26,6 +26,11 @@ export async function PATCH(request: NextRequest) {
       where: { 
         id: activeBusinessId,
         userId: user.id
+      },
+      select: {
+        id: true
+        // Apenas precisamos do ID para verificar se existe
+        // presentationVideo não incluído até migração ser executada
       }
     })
 
