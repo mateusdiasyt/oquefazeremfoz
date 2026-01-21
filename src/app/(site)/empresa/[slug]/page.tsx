@@ -584,37 +584,27 @@ export default function BusinessProfilePage() {
         </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
-                {!isOwner && (
-                  <>
-                    {business?.isFollowing ? (
-                      <button
-                        onClick={() => setShowUnfollowModal(true)}
-                        className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+              {!isOwner && (
+                <div className="flex flex-col gap-3">
+                  {business?.isFollowing ? (
+                    <button
+                      onClick={() => setShowUnfollowModal(true)}
+                      className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
                     >
-                        <CheckCircle className="w-4 h-4" />
-                        Seguindo
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleFollow}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Seguir
-                      </button>
-                    )}
-                  </>
-                )}
-                
-                            <button 
-                  onClick={() => setShowFollowersModal(true)}
-                  className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-                >
-                  <Users className="w-4 h-4" />
-                  Seguidores
-                        </button>
-                      </div>
+                      <CheckCircle className="w-4 h-4" />
+                      Seguindo
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleFollow}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Seguir
+                    </button>
+                  )}
+                </div>
+              )}
           </div>
 
             {/* Description */}
