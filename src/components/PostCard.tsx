@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, Heart } from 'lucide-react'
+import { CheckCircle, Heart, Edit3, Trash2 } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 import UrlPreview from './UrlPreview'
 import ShareModal from './ShareModal'
 import { extractUrlsFromText } from '../utils/urlDetector'
@@ -49,6 +50,7 @@ interface PostCardProps {
 
 export default function PostCard({ post, onLike }: PostCardProps) {
   const router = useRouter()
+  const { user } = useAuth()
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
   const [showComments, setShowComments] = useState(false)
@@ -60,6 +62,11 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [commentLoading, setCommentLoading] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null)
+  const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
+  const [editCommentText, setEditCommentText] = useState('')
+  const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
+  const [editCommentText, setEditCommentText] = useState('')
+  const { user } = useAuth()
 
   useEffect(() => {
     // Verificar se o usuário curtiu o post
@@ -238,6 +245,147 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const cancelReply = () => {
     setReplyingTo(null)
     setNewComment('')
+  }
+
+  const handleEditComment = (comment: any) => {
+    // Verificar se passou 5 minutos
+    const commentAge = Date.now() - new Date(comment.createdAt).getTime()
+    const fiveMinutes = 5 * 60 * 1000 // 5 minutos em milissegundos
+
+    if (commentAge > fiveMinutes) {
+      alert('Você só pode editar comentários dentro de 5 minutos após a criação')
+      return
+    }
+
+    setEditingComment(comment)
+    // Remover @ se houver no início (para respostas)
+    const textWithoutAt = comment.body.replace(/^@\w+\s+/, '')
+    setEditCommentText(textWithoutAt)
+    setReplyingTo(null)
+  }
+
+  const cancelEdit = () => {
+    setEditingComment(null)
+    setEditCommentText('')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingComment || !editCommentText.trim()) return
+
+    try {
+      const response = await fetch('/api/posts/comments', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          commentId: editingComment.id,
+          content: editCommentText.trim()
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Atualizar o comentário na lista
+        setComments(prev => prev.map(comment => {
+          if (comment.id === editingComment.id) {
+            return {
+              ...comment,
+              body: data.comment.body,
+              ...data.comment
+            }
+          }
+          // Atualizar também nas respostas
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map((reply: any) => {
+                if (reply.id === editingComment.id) {
+                  return {
+                    ...reply,
+                    body: data.comment.body,
+                    ...data.comment
+                  }
+                }
+                return reply
+              })
+            }
+          }
+          return comment
+        }))
+        setEditingComment(null)
+        setEditCommentText('')
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || 'Erro ao editar comentário')
+      }
+    } catch (error) {
+      console.error('Erro ao editar comentário:', error)
+      alert('Erro ao editar comentário')
+    }
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este comentário?')) return
+
+    try {
+      const response = await fetch(`/api/posts/comments?id=${commentId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        // Remover o comentário da lista
+        setComments(prev => {
+          // Verificar se é um comentário principal ou resposta
+          let found = false
+          const updatedComments = prev.map(comment => {
+            if (comment.id === commentId) {
+              found = true
+              return null // Marcar para remover
+            }
+            // Verificar nas respostas
+            if (comment.replies) {
+              const updatedReplies = comment.replies.filter((reply: any) => reply.id !== commentId)
+              if (updatedReplies.length !== comment.replies.length) {
+                found = true
+                return {
+                  ...comment,
+                  replies: updatedReplies,
+                  _count: {
+                    ...comment._count,
+                    replies: (comment._count?.replies || 0) - 1
+                  }
+                }
+              }
+            }
+            return comment
+          })
+
+          // Filtrar comentários removidos
+          const filtered = updatedComments.filter(c => c !== null)
+          
+          // Atualizar contagem apenas se for comentário principal
+          if (found) {
+            setCommentsCount(prev => Math.max(0, prev - 1))
+          }
+
+          return filtered
+        })
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || 'Erro ao excluir comentário')
+      }
+    } catch (error) {
+      console.error('Erro ao excluir comentário:', error)
+      alert('Erro ao excluir comentário')
+    }
+  }
+
+  const canEditComment = (comment: any) => {
+    if (!user || comment.userId !== user.id) return false
+    const commentAge = Date.now() - new Date(comment.createdAt).getTime()
+    const fiveMinutes = 5 * 60 * 1000
+    return commentAge <= fiveMinutes
   }
 
   useEffect(() => {
@@ -446,17 +594,45 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="bg-gray-50 rounded-2xl px-4 py-2.5 group-hover:bg-gray-100 transition-colors duration-200 border border-transparent group-hover:border-gray-200">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
-                              {comment.user?.name || comment.user?.email || 'Usuário'}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {formatDate(comment.createdAt)}
-                            </span>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
+                          {comment.user?.name || comment.user?.email || 'Usuário'}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {formatDate(comment.createdAt)}
+                        </span>
+                      </div>
+                      {/* Modo de edição ou visualização */}
+                      {editingComment && editingComment.id === comment.id ? (
+                        <div className="mb-2">
+                          <textarea
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            className="w-full px-3 py-2 border border-purple-300 bg-white rounded-xl resize-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all duration-200 text-sm"
+                            rows={3}
+                            autoFocus
+                          />
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={handleSaveEdit}
+                              disabled={!editCommentText.trim()}
+                              className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                            >
+                              Salvar
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                              Cancelar
+                            </button>
                           </div>
-                          <p className="text-gray-700 text-sm leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
-                            {comment.body}
-                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-gray-700 text-sm leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
+                          {comment.body}
+                        </p>
+                      )}
                           {/* Ações do comentário */}
                           <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-200">
                             <button
@@ -477,6 +653,27 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                               </svg>
                               <span>Responder</span>
                             </button>
+                            {/* Botões de editar/excluir apenas para o dono do comentário */}
+                            {user && comment.userId === user.id && (
+                              <>
+                                {canEditComment(comment) && (
+                                  <button
+                                    onClick={() => handleEditComment(comment)}
+                                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                    <span>Editar</span>
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span>Excluir</span>
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -509,27 +706,81 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                   <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
                                     {reply.body}
                                   </p>
-                                  {/* Ações da resposta */}
-                                  <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-200">
-                                    <button
-                                      onClick={() => handleCommentLike(reply.id, replyLikesCount, replyIsLiked)}
-                                      className={`flex items-center gap-1.5 text-xs transition-colors ${
-                                        replyIsLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
-                                      }`}
-                                    >
-                                      <Heart className={`w-3.5 h-3.5 ${replyIsLiked ? 'fill-current' : ''}`} />
-                                      <span>{replyLikesCount}</span>
-                                    </button>
-                                    <button
-                                      onClick={() => handleReply(reply)}
-                                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
-                                    >
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                      </svg>
-                                      <span>Responder</span>
-                                    </button>
-                                  </div>
+                                  {/* Modo de edição ou visualização da resposta */}
+                                  {editingComment && editingComment.id === reply.id ? (
+                                    <div className="mb-2">
+                                      <textarea
+                                        value={editCommentText}
+                                        onChange={(e) => setEditCommentText(e.target.value)}
+                                        className="w-full px-3 py-2 border border-purple-300 bg-white rounded-xl resize-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400 transition-all duration-200 text-xs"
+                                        rows={2}
+                                        autoFocus
+                                      />
+                                      <div className="flex items-center gap-2 mt-2">
+                                        <button
+                                          onClick={handleSaveEdit}
+                                          disabled={!editCommentText.trim()}
+                                          className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                                        >
+                                          Salvar
+                                        </button>
+                                        <button
+                                          onClick={cancelEdit}
+                                          className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs rounded-lg hover:bg-gray-300 transition-colors"
+                                        >
+                                          Cancelar
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
+                                        {reply.body}
+                                      </p>
+                                      {/* Ações da resposta */}
+                                      <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-200">
+                                        <button
+                                          onClick={() => handleCommentLike(reply.id, replyLikesCount, replyIsLiked)}
+                                          className={`flex items-center gap-1.5 text-xs transition-colors ${
+                                            replyIsLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
+                                          }`}
+                                        >
+                                          <Heart className={`w-3.5 h-3.5 ${replyIsLiked ? 'fill-current' : ''}`} />
+                                          <span>{replyLikesCount}</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleReply(reply)}
+                                          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                                        >
+                                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                          </svg>
+                                          <span>Responder</span>
+                                        </button>
+                                        {/* Botões de editar/excluir apenas para o dono da resposta */}
+                                        {user && reply.userId === user.id && (
+                                          <>
+                                            {canEditComment(reply) && (
+                                              <button
+                                                onClick={() => handleEditComment(reply)}
+                                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                                              >
+                                                <Edit3 className="w-3.5 h-3.5" />
+                                                <span>Editar</span>
+                                              </button>
+                                            )}
+                                            <button
+                                              onClick={() => handleDeleteComment(reply.id)}
+                                              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <span>Excluir</span>
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>

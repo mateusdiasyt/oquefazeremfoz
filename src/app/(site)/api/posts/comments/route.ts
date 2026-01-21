@@ -197,13 +197,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: 'Você só pode editar seus próprios comentários' }, { status: 403 })
     }
 
-    // Verificar se passou de 24 horas
+    // Verificar se passou de 5 minutos
     const commentAge = Date.now() - new Date(comment.createdAt).getTime()
-    const twentyFourHours = 24 * 60 * 60 * 1000 // 24 horas em milissegundos
+    const fiveMinutes = 5 * 60 * 1000 // 5 minutos em milissegundos
 
-    if (commentAge > twentyFourHours) {
+    if (commentAge > fiveMinutes) {
       return NextResponse.json({ 
-        message: 'Você só pode editar comentários dentro de 24 horas após a criação' 
+        message: 'Você só pode editar comentários dentro de 5 minutos após a criação' 
       }, { status: 403 })
     }
 
@@ -265,15 +265,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: 'Você só pode deletar seus próprios comentários' }, { status: 403 })
     }
 
-    // Verificar se passou de 24 horas
-    const commentAge = Date.now() - new Date(comment.createdAt).getTime()
-    const twentyFourHours = 24 * 60 * 60 * 1000 // 24 horas em milissegundos
-
-    if (commentAge > twentyFourHours) {
-      return NextResponse.json({ 
-        message: 'Você só pode deletar comentários dentro de 24 horas após a criação' 
-      }, { status: 403 })
-    }
+    // Permitir deletar a qualquer momento (sem limite de tempo)
 
     // Deletar comentário
     await prisma.comment.delete({
