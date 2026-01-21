@@ -29,9 +29,26 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // Se usuário tem empresas mas não tem activeBusinessId, definir a primeira como ativa
+    let activeBusinessId = user.activeBusinessId || businesses[0]?.id || null
+    if (businesses.length > 0 && !user.activeBusinessId) {
+      // Definir a primeira empresa como ativa automaticamente
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { activeBusinessId: businesses[0].id }
+        })
+        activeBusinessId = businesses[0].id
+        console.log(`✅ Empresa ativa definida automaticamente para usuário ${user.id}`)
+      } catch (error) {
+        console.error('Erro ao definir empresa ativa:', error)
+        // Continuar mesmo se falhar (pode ser que activeBusinessId não existe ainda no banco)
+      }
+    }
+
     return NextResponse.json({ 
       businesses,
-      activeBusinessId: user.activeBusinessId || businesses[0]?.id || null
+      activeBusinessId: activeBusinessId
     }, { status: 200 })
 
   } catch (error) {
