@@ -289,7 +289,7 @@ export default function HomePage() {
   }, [searchTerm, selectedCategory, businesses])
 
   useEffect(() => {
-    fetchUser()
+    // Usuário já está disponível via useAuth context
     fetchPosts()
     fetchBusinesses()
     fetchCoupons()
