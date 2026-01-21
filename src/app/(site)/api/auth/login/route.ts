@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determinar empresa ativa (usa activeBusinessId ou primeira empresa)
-    const activeBusinessId = user.activeBusinessId || user.business[0]?.id || undefined
+    const activeBusinessId = user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined
 
     // Configurar cookie
     const response = NextResponse.json({
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
         roles,
         businessId: activeBusinessId, // Mantém compatibilidade
         activeBusinessId: activeBusinessId,
-        businesses: user.business.map(b => ({ id: b.id }))
+        businesses: (user.business || []).map(b => ({ id: b.id }))
       }
     })
 

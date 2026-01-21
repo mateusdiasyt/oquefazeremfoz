@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Determinar businessId ativo (usa activeBusinessId ou primeira empresa)
-    const activeBusinessId = user.activeBusinessId || user.business[0]?.id || undefined
+    const activeBusinessId = user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined
 
     // Retornar dados do usuário
     const userData = {
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
       roles: user.userrole.map(ur => ur.role),
       businessId: activeBusinessId, // Mantém compatibilidade
       activeBusinessId: activeBusinessId,
-      businesses: user.business.map(b => ({ id: b.id }))
+      businesses: (user.business || []).map(b => ({ id: b.id }))
     }
 
     return NextResponse.json({
