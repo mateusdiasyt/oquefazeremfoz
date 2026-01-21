@@ -11,7 +11,7 @@ interface Coupon {
   link?: string
   discount?: string
   validUntil?: string
-  isActive: boolean
+  isActive?: boolean
 }
 
 interface CouponFormProps {

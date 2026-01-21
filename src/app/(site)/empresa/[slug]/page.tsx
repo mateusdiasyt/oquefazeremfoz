@@ -1334,7 +1334,10 @@ export default function BusinessProfilePage() {
       {showCouponForm && (
         <CouponForm
           businessId={business?.id || ''}
-          editCoupon={editingCoupon || undefined}
+          editCoupon={editingCoupon ? {
+            ...editingCoupon,
+            isActive: editingCoupon.isActive ?? true
+          } : undefined}
           onClose={() => {
             setShowCouponForm(false)
             setEditingCoupon(null)
