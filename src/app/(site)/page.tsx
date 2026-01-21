@@ -761,66 +761,9 @@ export default function HomePage() {
                 </div>
               ) : (
               <div className="space-y-3">
-                  {coupons.map((coupon) => {
-                    const handleCopyCode = async () => {
-                      try {
-                        await navigator.clipboard.writeText(coupon.code)
-                        alert('Código copiado!')
-                      } catch (error) {
-                        console.error('Erro ao copiar código:', error)
-                        alert('Erro ao copiar código')
-                      }
-                    }
-
-                    return (
-                      <div key={coupon.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:border-purple-200 transition-colors">
-                        {/* Cabeçalho: Nome da empresa e tempo */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-medium text-gray-700">
-                              {coupon.business.name}
-                            </span>
-                            {coupon.business.isVerified && (
-                              <img 
-                                src="/icons/verificado.png" 
-                                alt="Verificado" 
-                                className="w-3.5 h-3.5 object-contain"
-                                title="Empresa verificada"
-                              />
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            {getTimeAgo(coupon.createdAt)}
-                          </span>
-                        </div>
-
-                        {/* Título do cupom */}
-                        <h5 className="font-semibold text-gray-900 text-sm mb-2" style={{ letterSpacing: '-0.01em' }}>
-                          {coupon.title}
-                        </h5>
-
-                        {/* Desconto e código */}
-                        <div className="flex items-center justify-between mb-3">
-                          {coupon.discount && (
-                            <span className="text-sm font-bold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
-                              {coupon.discount}
-                            </span>
-                          )}
-                          <span className="font-mono font-bold text-gray-900 text-sm tracking-wider">
-                            {coupon.code}
-                          </span>
-                        </div>
-
-                        {/* Botão copiar */}
-                        <button
-                          onClick={handleCopyCode}
-                          className="w-full text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2.5 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-sm shadow-purple-500/20 font-medium"
-                        >
-                          Copiar Código
-                        </button>
-                      </div>
-                    )
-                  })}
+                  {coupons.map((coupon) => (
+                    <CouponCard key={coupon.id} coupon={coupon} getTimeAgo={getTimeAgo} />
+                  ))}
                   </div>
                 )}
             </div>
