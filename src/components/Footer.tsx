@@ -44,7 +44,6 @@ export default function Footer() {
       if (response.ok) {
         const data = await response.json()
         const activeBanners = (data.banners || []).filter((b: Banner) => b.isActive)
-        console.log('🎯 Banners carregados:', activeBanners.length)
         setBanners(activeBanners)
       } else {
         console.error('❌ Erro ao buscar banners:', response.status)

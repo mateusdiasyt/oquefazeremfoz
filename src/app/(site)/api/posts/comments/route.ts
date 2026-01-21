@@ -14,8 +14,6 @@ export async function GET(request: NextRequest) {
 
     const user = await getCurrentUser()
     
-    console.log('🔍 [API] Buscando comentários para postId:', postId)
-    
     const comments = await prisma.comment.findMany({
       where: { postId, parentId: null }, // Apenas comentários principais (sem parentId)
       include: {

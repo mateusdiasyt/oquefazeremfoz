@@ -60,25 +60,17 @@ export async function createSession(userId: string): Promise<string> {
 
 export async function getCurrentUser(): Promise<{ id: string; email: string; name: string | null; profileImage: string | null; roles: string[]; businessId?: string; activeBusinessId?: string; businesses?: Array<{ id: string }>; createdAt?: string } | null> {
   try {
-    console.log('🔍 getCurrentUser: Iniciando verificação')
-    
     const cookieStore = cookies()
     const token = cookieStore.get('auth-token')?.value
-    console.log('🔑 Token encontrado:', !!token)
 
     if (!token) {
-      console.log('❌ Nenhum token encontrado')
       return null
     }
 
     const payload = verifyToken(token)
-    console.log('🔓 Token válido:', !!payload, payload ? `userId: ${payload.userId}` : '')
     if (!payload) {
-      console.log('❌ Token inválido')
       return null
     }
-
-    console.log('🔍 Buscando sessão no banco de dados...')
     
     // Buscar sessão sem activeBusinessId primeiro (campo pode não existir)
     let session: any = null
@@ -125,7 +117,6 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
     } catch (error: any) {
       // Se falhar, tentar buscar sem incluir activeBusinessId
       if (error.message && (error.message.includes('Unknown column') || error.message.includes('does not exist'))) {
-        console.log('⚠️ Campo activeBusinessId não existe, buscando sem ele...')
         // Buscar usuário diretamente sem tentar incluir activeBusinessId
         const user = await prisma.user.findUnique({
           where: { id: payload.userId },
@@ -184,18 +175,7 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       }
     }
 
-    console.log('📊 Sessão encontrada:', !!session)
-    if (session) {
-      console.log('📅 Sessão expira em:', session.expiresAt)
-      console.log('⏰ Data atual:', new Date())
-      console.log('✅ Sessão válida:', session.expiresAt >= new Date())
-      console.log('👤 Usuário da sessão:', { id: session.user.id, email: session.user.email })
-      console.log('🎭 Roles do usuário:', session.user.userrole.map((ur: any) => ur.role))
-      console.log('🏢 Empresas do usuário:', session.user.business?.length || 0)
-    }
-
     if (!session || session.expiresAt < new Date()) {
-      console.log('❌ Sessão não encontrada ou expirada')
       return null
     }
 
@@ -218,7 +198,6 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       createdAt: session.user.createdAt.toISOString()
     }
     
-    console.log('✅ Retornando dados do usuário:', userData)
     return userData
   } catch (error) {
     console.error('❌ Erro ao buscar usuário:', error)

@@ -8,27 +8,20 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log('🔍 POST /api/posts/[id]/like - Iniciando')
-    
     const user = await getCurrentUser()
-    console.log('👤 Usuário encontrado:', user ? 'Sim' : 'Não')
     
     if (!user) {
-      console.log('❌ Usuário não autorizado')
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
     const postId = params.id
-    console.log('📝 Post ID:', postId)
 
     // Verificar se o post existe
     const post = await prisma.post.findUnique({
       where: { id: postId }
     })
-    console.log('📝 Post encontrado:', post ? 'Sim' : 'Não')
 
     if (!post) {
-      console.log('❌ Post não encontrado')
       return NextResponse.json({ message: 'Post não encontrado' }, { status: 404 })
     }
 
@@ -46,10 +39,8 @@ export async function POST(
         postId: postId
       }
     })
-    console.log('❤️ Like existente:', existingLike ? 'Sim' : 'Não')
 
     if (existingLike) {
-      console.log('🗑️ Descurtindo post...')
       // Descurtir - remover o like
       await prisma.postlike.delete({
         where: {
@@ -67,14 +58,12 @@ export async function POST(
         }
       })
 
-      console.log('✅ Post descurtido, likes:', updatedPost.likes)
       return NextResponse.json({ 
         message: 'Post descurtido',
         liked: false,
         likesCount: updatedPost.likes
       })
     } else {
-      console.log('➕ Curtindo post...')
       // Curtir - adicionar o like como empresa ou usuário
       const likeData: any = {
         id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -84,7 +73,6 @@ export async function POST(
       // Por enquanto, sempre usar userId até a migração ser executada
       // Após a migração, poderemos usar businessId também
       likeData.userId = user.id
-      console.log('👍 Curtindo como usuário:', user.id)
       await prisma.postlike.create({
         data: likeData
       })
@@ -99,7 +87,6 @@ export async function POST(
         }
       })
 
-      console.log('✅ Post curtido, likes:', updatedPost.likes)
       return NextResponse.json({ 
         message: 'Post curtido',
         liked: true,
