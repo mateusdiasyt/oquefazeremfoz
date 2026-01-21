@@ -79,23 +79,66 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
     }
 
     console.log('🔍 Buscando sessão no banco de dados...')
-    const session = await prisma.session.findFirst({
-      where: { 
-        userId: payload.userId,
-        expiresAt: { gte: new Date() }
-      },
-      orderBy: { createdAt: 'desc' },
-      include: { 
-        user: {
+    
+    // Buscar sessão sem activeBusinessId primeiro (campo pode não existir)
+    let session: any = null
+    try {
+      session = await prisma.session.findFirst({
+        where: { 
+          userId: payload.userId,
+          expiresAt: { gte: new Date() }
+        },
+        orderBy: { createdAt: 'desc' },
+        include: { 
+          user: {
+            include: {
+              business: {
+                orderBy: { createdAt: 'desc' }
+              },
+              userrole: true
+            }
+          }
+        }
+      })
+    } catch (error: any) {
+      // Se falhar, tentar buscar sem incluir activeBusinessId
+      if (error.message && (error.message.includes('Unknown column') || error.message.includes('does not exist'))) {
+        console.log('⚠️ Campo activeBusinessId não existe, buscando sem ele...')
+        // Buscar usuário diretamente sem tentar incluir activeBusinessId
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
           include: {
             business: {
               orderBy: { createdAt: 'desc' }
             },
             userrole: true
           }
+        })
+        
+        if (!user) {
+          return null
         }
+        
+        const sessionWithoutUser = await prisma.session.findFirst({
+          where: { 
+            userId: payload.userId,
+            expiresAt: { gte: new Date() }
+          },
+          orderBy: { createdAt: 'desc' }
+        })
+        
+        if (!sessionWithoutUser) {
+          return null
+        }
+        
+        session = {
+          ...sessionWithoutUser,
+          user
+        }
+      } else {
+        throw error
       }
-    })
+    }
 
     console.log('📊 Sessão encontrada:', !!session)
     if (session) {
@@ -103,7 +146,8 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       console.log('⏰ Data atual:', new Date())
       console.log('✅ Sessão válida:', session.expiresAt >= new Date())
       console.log('👤 Usuário da sessão:', { id: session.user.id, email: session.user.email })
-      console.log('🎭 Roles do usuário:', session.user.userrole.map(ur => ur.role))
+      console.log('🎭 Roles do usuário:', session.user.userrole.map((ur: any) => ur.role))
+      console.log('🏢 Empresas do usuário:', session.user.business?.length || 0)
     }
 
     if (!session || session.expiresAt < new Date()) {
@@ -115,7 +159,7 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
     // Tentar acessar activeBusinessId de forma segura (pode não existir ainda no banco)
     const activeBusinessId = (session.user as any).activeBusinessId || null
     const activeBusiness = activeBusinessId 
-      ? session.user.business.find(b => b.id === activeBusinessId) 
+      ? (session.user.business || []).find((b: any) => b.id === activeBusinessId) 
       : (session.user.business && session.user.business.length > 0 ? session.user.business[0] : null)
 
     const userData = {
@@ -123,10 +167,10 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       email: session.user.email,
       name: session.user.name,
       profileImage: activeBusiness?.profileImage || null,
-      roles: session.user.userrole.map(ur => ur.role),
+      roles: session.user.userrole.map((ur: any) => ur.role),
       businessId: activeBusiness?.id, // Mantém compatibilidade
       activeBusinessId: activeBusinessId || activeBusiness?.id || undefined,
-      businesses: (session.user.business || []).map(b => ({ id: b.id })),
+      businesses: (session.user.business || []).map((b: any) => ({ id: b.id })),
       createdAt: session.user.createdAt.toISOString()
     }
     
