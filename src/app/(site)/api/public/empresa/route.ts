@@ -67,41 +67,6 @@ export async function GET(req: Request) {
       },
       businessproduct: true,
     },
-      post: { 
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: {
-            select: {
-              postlike: true,
-              comment: true
-            }
-          },
-          postlike: {
-            where: {
-              userId: user?.id
-            },
-            select: {
-              id: true
-            }
-          }
-        }
-      },
-      businesscoupon: true,
-      businessreview: { 
-        take: 20, 
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
-        }
-      },
-      businessproduct: true,
-    },
   })
 
   if (!business) {
