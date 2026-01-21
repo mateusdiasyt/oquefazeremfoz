@@ -48,6 +48,23 @@ export async function GET(request: NextRequest) {
       take: 50 // Aumentado para 50 empresas
     })
 
+    // Buscar presentationVideo para todas as empresas usando SQL raw
+    const businessIds = businesses.map(b => b.id)
+    const presentationVideosMap: Record<string, string | null> = {}
+    
+    if (businessIds.length > 0) {
+      try {
+        const videoResults = await prisma.$queryRaw<Array<{ id: string; presentationVideo: string | null }>>`
+          SELECT id, "presentationVideo" FROM "business" WHERE id = ANY(${businessIds})
+        `
+        videoResults.forEach(result => {
+          presentationVideosMap[result.id] = result.presentationVideo
+        })
+      } catch {
+        // Se a coluna não existir, deixar tudo como null
+      }
+    }
+
     // Calcular followersCount dinamicamente para cada empresa e verificar se o usuário está seguindo
     const businessesWithFollowersCount = businesses.map(business => {
       const isFollowing = currentUser 
@@ -66,7 +83,7 @@ export async function GET(request: NextRequest) {
         instagram: business.instagram,
         facebook: business.facebook,
         whatsapp: business.whatsapp,
-        presentationVideo: (business as any).presentationVideo || null, // Campo opcional até migração
+        presentationVideo: presentationVideosMap[business.id] || null,
         profileImage: business.profileImage,
         coverImage: business.coverImage,
         likesCount: business.likesCount,
