@@ -373,35 +373,36 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 hero-gradient opacity-10"></div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                    <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-gradient mb-6 animate-fade-in">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6" style={{ letterSpacing: '-0.03em' }}>
               O Que Fazer em Foz
-                      </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto animate-fade-in">
+            </h1>
+            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto" style={{ letterSpacing: '-0.01em' }}>
               Conheça as melhores empresas de Foz do Iguaçu
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
-                  <button
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
                 onClick={() => router.push('/empresas')}
-                className="btn-primary text-lg px-8 py-4"
-                  >
-                <MapPin className="inline-block mr-2" size={20} />
+                className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-200 flex items-center justify-center gap-2"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <MapPin className="w-5 h-5" />
                 Explorar Empresas
-                  </button>
-                  <button
+              </button>
+              <button
                 onClick={() => router.push('/register')}
-                className="btn-secondary text-lg px-8 py-4"
-                  >
-                <Users className="inline-block mr-2" size={20} />
+                className="px-6 py-3.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <Users className="w-5 h-5" />
                 Criar Conta
-                  </button>
-              </div>
+              </button>
             </div>
+          </div>
         </div>
       </section>
 
@@ -583,12 +584,12 @@ export default function HomePage() {
           {/* Sidebar */}
           <aside className="flex flex-col gap-6">
             {/* Empresas em Destaque */}
-            <div className="card p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+              <div className="flex items-center space-x-3 mb-5">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                   <Star className="w-5 h-5 text-white" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800">Empresas em Destaque</h4>
+                <h4 className="text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Empresas em Destaque</h4>
               </div>
               
               {businesses.length === 0 ? (
@@ -597,9 +598,9 @@ export default function HomePage() {
                   <p className="text-gray-500 text-sm">Nenhuma empresa cadastrada ainda</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {businesses.slice(0, 3).map((business) => (
-                    <div key={business.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                    <div key={business.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50/50 transition-colors border border-transparent hover:border-gray-100">
                       <button
                         onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
                         className="flex items-center space-x-3 flex-1 min-w-0 text-left"
@@ -608,24 +609,26 @@ export default function HomePage() {
                           <img
                             src={business.profileImage}
                             alt={business.name}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-pink-500"
+                            className="w-11 h-11 rounded-xl object-cover border border-gray-200"
                           />
                         ) : (
-                          <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold">
+                          <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border border-gray-200">
                             {business.name.charAt(0).toUpperCase()}
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h5 className="font-semibold text-gray-800 truncate">{business.name}</h5>
+                            <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h5>
                             {business.isVerified && (
                               <VerificationBadge size="sm" />
                             )}
                           </div>
-                          <div className="flex items-center gap-3 mt-1">
-                            <p className="text-sm text-gray-500 truncate">{business.category}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-xs text-gray-500 truncate">{business.category}</p>
                             <div className="flex items-center gap-1 text-xs text-gray-400">
-                              <Heart className="w-3 h-3" fill="currentColor" />
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                              </svg>
                               <span>{business.followersCount}</span>
                             </div>
                           </div>
@@ -636,17 +639,16 @@ export default function HomePage() {
                           e.stopPropagation()
                           handleFollowBusiness(business.id)
                         }}
-                        className={`p-2 rounded-full transition-colors ${
+                        className={`p-2 rounded-lg transition-all duration-200 ${
                           business.isFollowing 
-                            ? 'bg-pink-500 text-white hover:bg-pink-600' 
-                            : 'text-pink-600 hover:bg-pink-50'
+                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                            : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
                         }`}
                         title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
                       >
-                        <Heart 
-                          size={20} 
-                          fill={business.isFollowing ? 'currentColor' : 'none'} 
-                        />
+                        <svg className="w-4 h-4" fill={business.isFollowing ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
                       </button>
                     </div>
                   ))}
@@ -655,12 +657,12 @@ export default function HomePage() {
             </div>
 
             {/* Cupons do Dia */}
-            <div className="card p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+              <div className="flex items-center space-x-3 mb-5">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                   <Gift className="w-5 h-5 text-white" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800">Cupons do Dia</h4>
+                <h4 className="text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Cupons do Dia</h4>
               </div>
               
               {coupons.length === 0 ? (
@@ -672,34 +674,41 @@ export default function HomePage() {
               ) : (
               <div className="space-y-3">
                   {coupons.map((coupon) => (
-                    <div key={coupon.id} className="p-4 bg-gradient-to-r from-blue-50 to-pink-50 rounded-xl border border-blue-200">
+                    <div key={coupon.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl border border-purple-100 hover:border-purple-200 transition-colors">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-blue-600">{coupon.code}</span>
+                        <span className="font-bold text-purple-600 text-sm" style={{ letterSpacing: '-0.01em' }}>{coupon.title}</span>
                         <div className="text-right">
                           <div className="flex items-center gap-1 justify-end">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-600">
                               {coupon.business.name}
                             </span>
                             {coupon.business.isVerified && (
                               <VerificationBadge size="sm" />
                             )}
                           </div>
-                          <span className="text-xs text-pink-500 font-medium">
+                          <span className="text-xs text-gray-500 font-medium">
                             {getTimeAgo(coupon.createdAt)}
                           </span>
                         </div>
-                            </div>
+                      </div>
                       <div className="mb-2">
-                        <h5 className="font-semibold text-gray-800 text-sm">{coupon.title}</h5>
+                        <span className="font-bold text-gray-900 text-sm">{coupon.code}</span>
                         {coupon.description && (
-                          <p className="text-sm text-gray-600 mt-1">{coupon.description}</p>
-                          )}
+                          <p className="text-xs text-gray-600 mt-1" style={{ letterSpacing: '-0.01em' }}>{coupon.description}</p>
+                        )}
+                        {coupon.discount && (
+                          <span className="inline-block mt-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium">
+                            {coupon.discount}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-pink-600">
-                          {coupon.discount || 'Desconto'}
-                        </span>
-                        <button className="text-xs bg-pink-500 text-white px-3 py-1 rounded-full hover:bg-pink-600 transition-colors">
+                        {coupon.discount && (
+                          <span className="text-sm font-bold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
+                            {coupon.discount}
+                          </span>
+                        )}
+                        <button className="text-xs bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1.5 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-sm shadow-purple-500/20">
                           Usar
                         </button>
                       </div>
