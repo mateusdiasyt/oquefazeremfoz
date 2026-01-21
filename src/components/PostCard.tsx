@@ -715,7 +715,15 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                     {/* Respostas */}
                     {replies.length > 0 && (
                       <div className="ml-11 mt-2 space-y-2 border-l-2 border-gray-200 pl-4">
-                        {replies.map((reply: any) => {
+                        {(() => {
+                          console.log(`🖼️ [RENDER] Renderizando ${replies.length} respostas para comentário ${comment.id}`)
+                          const uniqueReplies = Array.from(new Map(replies.map((r: any) => [r.id, r])).values())
+                          if (uniqueReplies.length !== replies.length) {
+                            console.log(`⚠️ [RENDER] DUPLICATAS ENCONTRADAS NA RENDERIZAÇÃO! ${replies.length} → ${uniqueReplies.length}`)
+                            console.log('   IDs originais:', replies.map((r: any) => r.id))
+                            console.log('   IDs únicos:', uniqueReplies.map((r: any) => r.id))
+                          }
+                          return uniqueReplies.map((reply: any) => {
                           const replyLikesCount = reply._count?.commentlike || 0
                           const replyIsLiked = reply.commentlike && reply.commentlike.length > 0
 
@@ -767,9 +775,6 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                     </div>
                                   ) : (
                                     <>
-                                      <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
-                                        {reply.body}
-                                      </p>
                                       {/* Ações da resposta */}
                                       <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-200">
                                         <button
@@ -819,6 +824,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                             </div>
                           )
                         })}
+                        })()}
                       </div>
                     )}
                   </div>
