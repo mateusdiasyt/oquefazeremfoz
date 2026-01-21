@@ -481,7 +481,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   }
 
   const canEditComment = (comment: any) => {
-    if (!user || comment.userId !== user.id) return false
+    if (!user) return false
+    // Verificar se o usuário é dono (como usuário ou como empresa)
+    const isOwner = comment.userId === user.id || comment.businessId === user.businessId
+    if (!isOwner) return false
     const commentAge = Date.now() - new Date(comment.createdAt).getTime()
     const fiveMinutes = 5 * 60 * 1000
     return commentAge <= fiveMinutes
