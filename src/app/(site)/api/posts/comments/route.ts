@@ -99,24 +99,13 @@ export async function POST(request: NextRequest) {
       // Se o comentário pai for uma resposta, usar o mesmo parentId para manter a estrutura
       const actualParentId = parentComment.parentId || parentId
       
-      // Formatar o conteúdo com @ mencionando o usuário respondido
-      const repliedUser = await prisma.user.findUnique({
-        where: { id: parentComment.userId || '' },
-        select: { name: true, email: true }
-      })
-      
-      const mention = repliedUser?.name || repliedUser?.email?.split('@')[0] || 'usuário'
-      const formattedContent = content.trim().startsWith('@') 
-        ? content.trim() 
-        : `@${mention} ${content.trim()}`
-      
       const comment = await prisma.comment.create({
         data: {
           id: `comment_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           postId,
           userId: user.id,
           parentId: actualParentId,
-          body: formattedContent
+          body: content.trim()
         },
         include: {
           user: {
