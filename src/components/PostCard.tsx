@@ -130,6 +130,13 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ [POSTCARD] Resposta criada com sucesso:', {
+          commentId: data.comment?.id,
+          parentId: data.comment?.parentId,
+          body: data.comment?.body?.substring(0, 30),
+          wasReplying: !!replyingTo,
+          replyingToId: replyingTo?.id
+        })
         
         // Limpar o formulário imediatamente
         setNewComment('')
@@ -137,6 +144,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         setReplyingTo(null)
         
         // Recarregar todos os comentários para garantir estrutura completa e evitar duplicações
+        console.log('🔄 [POSTCARD] Recarregando comentários após criar resposta...')
         await fetchComments()
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Erro ao comentar' }))
@@ -153,21 +161,52 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
   const fetchComments = async () => {
     try {
+      console.log('🔍 [POSTCARD] Buscando comentários para post:', post.id)
       const response = await fetch(`/api/posts/comments?postId=${post.id}`)
       if (response.ok) {
         const data = await response.json()
         const fetchedComments = data.comments || []
+        console.log('📦 [POSTCARD] Comentários recebidos da API:', fetchedComments.length)
+        
+        // Log detalhado de cada comentário e suas respostas
+        fetchedComments.forEach((comment: any, index: number) => {
+          console.log(`  📝 Comentário ${index + 1}:`, {
+            id: comment.id,
+            body: comment.body?.substring(0, 30),
+            repliesCount: comment.replies?.length || 0,
+            repliesIds: comment.replies?.map((r: any) => r.id) || []
+          })
+          
+          if (comment.replies && comment.replies.length > 0) {
+            comment.replies.forEach((reply: any, replyIndex: number) => {
+              console.log(`    ➡️ Resposta ${replyIndex + 1}:`, {
+                id: reply.id,
+                body: reply.body?.substring(0, 30),
+                parentId: reply.parentId
+              })
+            })
+          }
+        })
         
         // Deduplicar respostas em cada comentário
         const deduplicatedComments = fetchedComments.map((comment: any) => {
           if (comment.replies && comment.replies.length > 0) {
+            const originalCount = comment.replies.length
             // Usar Map para deduplicar por ID
             const uniqueReplies = new Map()
             comment.replies.forEach((reply: any) => {
               if (!uniqueReplies.has(reply.id)) {
                 uniqueReplies.set(reply.id, reply)
+              } else {
+                console.log('⚠️ [POSTCARD] Duplicata encontrada e removida:', reply.id)
               }
             })
+            
+            const deduplicatedCount = uniqueReplies.size
+            if (originalCount !== deduplicatedCount) {
+              console.log(`🔄 [POSTCARD] Deduplicação: ${originalCount} → ${deduplicatedCount} respostas no comentário ${comment.id}`)
+            }
+            
             return {
               ...comment,
               replies: Array.from(uniqueReplies.values())
@@ -176,13 +215,14 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           return comment
         })
         
+        console.log('✅ [POSTCARD] Definindo comentários no estado:', deduplicatedComments.length)
         setComments(deduplicatedComments)
         // Atualizar a contagem apenas com comentários principais (sem replies)
         const mainCommentsCount = deduplicatedComments.length
         setCommentsCount(mainCommentsCount)
       }
     } catch (error) {
-      console.error('Erro ao buscar comentários:', error)
+      console.error('❌ [POSTCARD] Erro ao buscar comentários:', error)
     }
   }
 

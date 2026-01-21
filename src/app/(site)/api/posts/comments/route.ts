@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
 
     const user = await getCurrentUser()
     
+    console.log('🔍 [API] Buscando comentários para postId:', postId)
+    
     const comments = await prisma.comment.findMany({
       where: { postId, parentId: null }, // Apenas comentários principais (sem parentId)
       include: {
@@ -35,10 +37,6 @@ export async function GET(request: NextRequest) {
           select: { id: true }
         } : false,
         replies: {
-          where: {
-            // Garantir que as respostas tenham o mesmo parentId do comentário principal
-            parentId: { not: null }
-          },
           include: {
             user: {
               select: {
@@ -57,11 +55,43 @@ export async function GET(request: NextRequest) {
               select: { id: true }
             } : false
           },
-          orderBy: { createdAt: 'asc' },
-          distinct: ['id'] // Garantir que não haja duplicados
+          orderBy: { createdAt: 'asc' }
         }
       },
       orderBy: { createdAt: 'desc' }
+    })
+
+    console.log('📦 [API] Total de comentários principais encontrados:', comments.length)
+    
+    // Log detalhado de cada comentário e suas respostas
+    comments.forEach((comment: any, index: number) => {
+      console.log(`  📝 [API] Comentário ${index + 1}:`, {
+        id: comment.id,
+        body: comment.body?.substring(0, 30),
+        repliesCount: comment.replies?.length || 0,
+        repliesIds: comment.replies?.map((r: any) => r.id) || [],
+        _countReplies: comment._count?.replies || 0
+      })
+      
+      if (comment.replies && comment.replies.length > 0) {
+        // Verificar duplicatas
+        const replyIds = comment.replies.map((r: any) => r.id)
+        const uniqueIds = new Set(replyIds)
+        if (replyIds.length !== uniqueIds.size) {
+          console.log('⚠️ [API] DUPLICATAS ENCONTRADAS no comentário:', comment.id)
+          console.log('   IDs das respostas:', replyIds)
+          const duplicates = replyIds.filter((id, idx) => replyIds.indexOf(id) !== idx)
+          console.log('   IDs duplicados:', duplicates)
+        }
+        
+        comment.replies.forEach((reply: any, replyIndex: number) => {
+          console.log(`    ➡️ [API] Resposta ${replyIndex + 1}:`, {
+            id: reply.id,
+            body: reply.body?.substring(0, 30),
+            parentId: reply.parentId
+          })
+        })
+      }
     })
 
     return NextResponse.json({ comments }, { status: 200 })
@@ -121,6 +151,14 @@ export async function POST(request: NextRequest) {
             }
           }
         }
+      })
+
+      console.log('✅ [API] Resposta criada:', {
+        id: comment.id,
+        parentId: comment.parentId,
+        actualParentId,
+        originalParentId: parentId,
+        body: comment.body?.substring(0, 30)
       })
 
       return NextResponse.json({ 
