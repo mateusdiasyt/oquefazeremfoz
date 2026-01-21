@@ -78,9 +78,9 @@ export async function GET(req: Request) {
     const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
       SELECT "presentationVideo" FROM "business" WHERE slug = ${slug}
     `
-    business.presentationVideo = videoResult[0]?.presentationVideo || null
+    ;(business as any).presentationVideo = videoResult[0]?.presentationVideo || null
   } catch {
-    business.presentationVideo = null
+    ;(business as any).presentationVideo = null
   }
 
   // Calcular a média das avaliações com mais precisão e realismo
