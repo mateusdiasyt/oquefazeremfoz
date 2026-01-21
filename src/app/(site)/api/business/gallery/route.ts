@@ -13,12 +13,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    const gallery = await prisma.businessgallery.findMany({
-      where: { businessId },
-      orderBy: { order: 'asc' }
-    })
+    try {
+      const gallery = await prisma.businessgallery.findMany({
+        where: { businessId },
+        orderBy: { order: 'asc' }
+      })
 
-    return NextResponse.json({ gallery }, { status: 200 })
+      return NextResponse.json({ gallery }, { status: 200 })
+    } catch (dbError: any) {
+      // Se a tabela não existir ainda, retornar lista vazia
+      if (dbError?.code === 'P2021' || dbError?.message?.includes('does not exist') || dbError?.message?.includes('Unknown table')) {
+        console.log('Tabela businessgallery ainda não existe, retornando lista vazia')
+        return NextResponse.json({ gallery: [] }, { status: 200 })
+      }
+      throw dbError
+    }
 
   } catch (error) {
     console.error('Erro ao buscar galeria:', error)
@@ -69,9 +78,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Contar quantas fotos já existem para definir a ordem
-    const existingCount = await prisma.businessgallery.count({
-      where: { businessId }
-    })
+    let existingCount = 0
+    try {
+      existingCount = await prisma.businessgallery.count({
+        where: { businessId }
+      })
+    } catch (dbError: any) {
+      // Se a tabela não existir ainda, começar do zero
+      if (dbError?.code === 'P2021' || dbError?.message?.includes('does not exist') || dbError?.message?.includes('Unknown table')) {
+        console.log('Tabela businessgallery ainda não existe, começando do zero')
+        existingCount = 0
+      } else {
+        throw dbError
+      }
+    }
 
     // Upload para Vercel Blob Storage
     const bytes = await file.arrayBuffer()
