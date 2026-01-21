@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           updatedAt: true,
           userId: true,
-          presentationVideo: true, // Tentar buscar se existir
+          // presentationVideo será buscado separadamente usando SQL raw
           post: {
             orderBy: { createdAt: 'desc' },
             include: {
@@ -124,9 +124,16 @@ export async function GET(request: NextRequest) {
             }
           }
         })
-        // Adicionar presentationVideo como null se não existir
+        // Tentar buscar presentationVideo usando SQL raw se a coluna existir
         if (business) {
-          business.presentationVideo = null
+          try {
+            const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+              SELECT "presentationVideo" FROM "business" WHERE id = ${businessId}
+            `
+            business.presentationVideo = videoResult[0]?.presentationVideo || null
+          } catch {
+            business.presentationVideo = null
+          }
         }
       } else {
         throw error
@@ -135,6 +142,16 @@ export async function GET(request: NextRequest) {
 
     if (!business) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    // Tentar buscar presentationVideo usando SQL raw se a coluna existir
+    try {
+      const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+        SELECT "presentationVideo" FROM "business" WHERE id = ${businessId}
+      `
+      business.presentationVideo = videoResult[0]?.presentationVideo || null
+    } catch {
+      business.presentationVideo = null
     }
 
     return NextResponse.json({ business }, { status: 200 })
