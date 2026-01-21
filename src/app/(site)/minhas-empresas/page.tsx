@@ -180,9 +180,9 @@ export default function MinhasEmpresasPage() {
                       Aprovada
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full" title="Aguardando aprovação da administração">
                       <Settings className="w-3 h-3" />
-                      Pendente
+                      Aguardando aprovação
                     </span>
                   )}
                   
