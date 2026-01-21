@@ -26,6 +26,14 @@ export async function GET(request: NextRequest) {
             email: true
           }
         },
+        business: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+            isVerified: true
+          }
+        },
         _count: {
           select: {
             commentlike: true,
@@ -43,6 +51,14 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 email: true
+              }
+            },
+            business: {
+              select: {
+                id: true,
+                name: true,
+                profileImage: true,
+                isVerified: true
               }
             },
             _count: {
@@ -115,12 +131,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    const { postId, content, parentId } = await request.json()
-    console.log('📝 Dados recebidos:', { postId, parentId, content: content?.substring(0, 50) + '...' })
+    const { postId, content, parentId, businessId } = await request.json()
+    console.log('📝 Dados recebidos:', { postId, parentId, businessId, content: content?.substring(0, 50) + '...' })
 
     if (!postId || !content?.trim()) {
       console.log('❌ Dados obrigatórios faltando:', { postId: !!postId, content: !!content?.trim() })
       return NextResponse.json({ message: 'ID do post e conteúdo são obrigatórios' }, { status: 400 })
+    }
+
+    // Verificar se businessId pertence ao usuário (segurança)
+    let finalBusinessId: string | null = null
+    if (businessId) {
+      const userBusiness = await prisma.business.findFirst({
+        where: { id: businessId, userId: user.id }
+      })
+      if (!userBusiness) {
+        return NextResponse.json({ message: 'Empresa não encontrada ou não pertence ao usuário' }, { status: 403 })
+      }
+      finalBusinessId = businessId
     }
 
     // Se parentId for fornecido, verificar se o comentário pai existe
@@ -139,6 +167,7 @@ export async function POST(request: NextRequest) {
           id: `comment_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           postId,
           userId: user.id,
+          businessId: finalBusinessId,
           parentId: actualParentId,
           body: content.trim()
         },
@@ -148,6 +177,14 @@ export async function POST(request: NextRequest) {
               id: true,
               name: true,
               email: true
+            }
+          },
+          business: {
+            select: {
+              id: true,
+              name: true,
+              profileImage: true,
+              isVerified: true
             }
           }
         }
@@ -186,6 +223,7 @@ export async function POST(request: NextRequest) {
         id: `comment_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         postId,
         userId: user.id,
+        businessId: finalBusinessId,
         body: content.trim()
       },
       include: {
@@ -194,6 +232,14 @@ export async function POST(request: NextRequest) {
             id: true,
             name: true,
             email: true
+          }
+        },
+        business: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+            isVerified: true
           }
         }
       }
@@ -303,8 +349,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: 'Comentário não encontrado' }, { status: 404 })
     }
 
-    // Verificar se o usuário é o dono do comentário
-    if (comment.userId !== user.id) {
+    // Verificar se o usuário é o dono do comentário (como usuário ou como empresa)
+    const isOwner = comment.userId === user.id || (comment.businessId && comment.businessId === user.businessId)
+    if (!isOwner) {
       return NextResponse.json({ message: 'Você só pode deletar seus próprios comentários' }, { status: 403 })
     }
 

@@ -64,11 +64,36 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null)
   const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
   const [editCommentText, setEditCommentText] = useState('')
+  const [commentAsBusiness, setCommentAsBusiness] = useState(false) // false = pessoal, true = empresa
+  const [userBusiness, setUserBusiness] = useState<{ id: string; name: string; profileImage: string | null } | null>(null)
 
   useEffect(() => {
     // Verificar se o usuário curtiu o post
     checkIfLiked()
-  }, [])
+    
+    // Buscar informações da empresa do usuário
+    if (user?.businessId) {
+      fetchUserBusiness()
+    }
+    
+    // Pré-carregar comentários em background para reduzir delay ao abrir
+    if (post._count?.comment && post._count.comment > 0) {
+      setTimeout(() => {
+        if (comments.length === 0) {
+          fetchComments()
+        }
+      }, 100)
+    }
+  }, [user])
+
+  useEffect(() => {
+    // Definir padrão: se o post é da própria empresa, comentar como empresa
+    if (user?.businessId && post.business?.id === user.businessId) {
+      setCommentAsBusiness(true)
+    } else {
+      setCommentAsBusiness(false)
+    }
+  }, [user?.businessId, post.business?.id])
 
   const checkIfLiked = async () => {
     try {
@@ -124,7 +149,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         body: JSON.stringify({ 
           postId: post.id,
           content: newComment.trim(),
-          parentId: replyingTo?.id || null
+          parentId: replyingTo?.id || null,
+          businessId: commentAsBusiness && user?.businessId ? user.businessId : null
         }),
       })
 
@@ -156,6 +182,46 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       alert('Erro ao comentar. Tente novamente.')
     } finally {
       setCommentLoading(false)
+    }
+  }
+
+  const fetchUserBusiness = async () => {
+    if (!user?.businessId) return
+    
+    try {
+      const response = await fetch(`/api/business/profile`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.business) {
+          setUserBusiness({
+            id: data.business.id,
+            name: data.business.name,
+            profileImage: data.business.profileImage
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar empresa do usuário:', error)
+    }
+  }
+
+  const fetchUserBusiness = async () => {
+    if (!user?.businessId) return
+    
+    try {
+      const response = await fetch(`/api/business/profile`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.business) {
+          setUserBusiness({
+            id: data.business.id,
+            name: data.business.name,
+            profileImage: data.business.profileImage
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar empresa do usuário:', error)
     }
   }
 
@@ -586,6 +652,39 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                       </button>
                     </div>
                   )}
+                  {/* Seletor de identidade - apenas se usuário tem empresa */}
+                  {user?.businessId && userBusiness && (
+                    <div className="mb-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCommentAsBusiness(!commentAsBusiness)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors text-sm"
+                      >
+                        {commentAsBusiness ? (
+                          <>
+                            {userBusiness.profileImage ? (
+                              <img src={userBusiness.profileImage} alt={userBusiness.name} className="w-5 h-5 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                {userBusiness.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="text-gray-700 font-medium">Comentar como {userBusiness.name}</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                              {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <span className="text-gray-700 font-medium">Comentar como {user?.name || 'Usuário'}</span>
+                          </>
+                        )}
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
@@ -634,16 +733,30 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                   <div key={comment.id}>
                     <div className="flex space-x-3 group">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
-                          {comment.user?.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
-                        </div>
+                        {/* Avatar: mostrar empresa se businessId estiver presente, senão usuário */}
+                        {comment.business ? (
+                          comment.business.profileImage ? (
+                            <img src={comment.business.profileImage} alt={comment.business.name} className="w-8 h-8 rounded-lg object-cover border border-gray-100" />
+                          ) : (
+                            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                              {comment.business.name.charAt(0).toUpperCase()}
+                            </div>
+                          )
+                        ) : (
+                          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                            {comment.user?.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="bg-gray-50 rounded-2xl px-4 py-2.5 group-hover:bg-gray-100 transition-colors duration-200 border border-transparent group-hover:border-gray-200">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
-                          {comment.user?.name || comment.user?.email || 'Usuário'}
+                          {comment.business?.name || comment.user?.name || comment.user?.email || 'Usuário'}
                         </span>
+                        {comment.business?.isVerified && (
+                          <img src="/icons/verificado.png" alt="Verificado" className="w-4 h-4 object-contain" />
+                        )}
                         <span className="text-xs text-gray-400">
                           {formatDate(comment.createdAt)}
                         </span>
@@ -743,16 +856,30 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                           return (
                             <div key={reply.id} className="flex space-x-3 group">
                               <div className="flex-shrink-0">
-                                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
-                                  {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'U'}
-                                </div>
+                                {/* Avatar: mostrar empresa se businessId estiver presente, senão usuário */}
+                                {reply.business ? (
+                                  reply.business.profileImage ? (
+                                    <img src={reply.business.profileImage} alt={reply.business.name} className="w-6 h-6 rounded-lg object-cover border border-gray-100" />
+                                  ) : (
+                                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                      {reply.business.name.charAt(0).toUpperCase()}
+                                    </div>
+                                  )
+                                ) : (
+                                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                    {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'U'}
+                                  </div>
+                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="bg-gray-50 rounded-xl px-3 py-2 group-hover:bg-gray-100 transition-colors duration-200 border border-transparent group-hover:border-gray-200">
                                   <div className="flex items-center space-x-2 mb-1">
                                     <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
-                                      {reply.user?.name || reply.user?.email || 'Usuário'}
+                                      {reply.business?.name || reply.user?.name || reply.user?.email || 'Usuário'}
                                     </span>
+                                    {reply.business?.isVerified && (
+                                      <img src="/icons/verificado.png" alt="Verificado" className="w-3.5 h-3.5 object-contain" />
+                                    )}
                                     <span className="text-xs text-gray-400">
                                       {formatDate(reply.createdAt)}
                                     </span>
@@ -808,8 +935,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                           </svg>
                                           <span>Responder</span>
                                         </button>
-                                        {/* Botões de editar/excluir apenas para o dono da resposta */}
-                                        {user && reply.userId === user.id && (
+                                        {/* Botões de editar/excluir apenas para o dono da resposta (usuário ou empresa) */}
+                                        {user && ((reply.userId === user.id) || (reply.businessId === user.businessId)) && (
                                           <>
                                             {canEditComment(reply) && (
                                               <button
