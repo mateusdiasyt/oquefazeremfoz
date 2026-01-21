@@ -39,12 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [hasChecked])
 
   const checkAuth = async () => {
-    // Se já temos um usuário em memória, não fazer chamada adicional
-    if (user) {
-      setLoading(false)
-      return
-    }
-
     try {
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
