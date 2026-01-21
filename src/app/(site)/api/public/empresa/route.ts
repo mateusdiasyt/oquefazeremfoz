@@ -9,7 +9,64 @@ export async function GET(req: Request) {
   
   const business = await prisma.business.findUnique({
     where: { slug },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      category: true,
+      address: true,
+      phone: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      whatsapp: true,
+      profileImage: true,
+      coverImage: true,
+      isApproved: true,
+      isVerified: true,
+      likesCount: true,
+      followersCount: true,
+      followingCount: true,
+      createdAt: true,
+      updatedAt: true,
+      userId: true,
+      // presentationVideo não incluído até migração ser executada
+      post: { 
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: {
+              postlike: true,
+              comment: true
+            }
+          },
+          postlike: {
+            where: {
+              userId: user?.id
+            },
+            select: {
+              id: true
+            }
+          }
+        }
+      },
+      businesscoupon: true,
+      businessreview: { 
+        take: 20, 
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      },
+      businessproduct: true,
+    },
       post: { 
         orderBy: { createdAt: 'desc' },
         include: {
