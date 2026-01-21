@@ -33,10 +33,17 @@ export async function POST(
     
     // Por enquanto, sempre verificar por userId até a migração ser executada
     // Após a migração, poderemos verificar por businessId também
+    // Usar select para evitar erro quando businessId não existe no banco
     existingLike = await prisma.postlike.findFirst({
       where: {
         userId: user.id,
         postId: postId
+      },
+      select: {
+        id: true,
+        userId: true,
+        postId: true
+        // businessId não incluído até migração ser executada
       }
     })
 
@@ -118,10 +125,17 @@ export async function GET(
     // Verificar se curtiu (como empresa ou usuário)
     // Por enquanto, sempre verificar por userId até a migração ser executada
     // Após a migração, poderemos verificar por businessId também
+    // Usar select para evitar erro quando businessId não existe no banco
     const existingLike = await prisma.postlike.findFirst({
       where: {
         userId: user.id,
         postId: postId
+      },
+      select: {
+        id: true,
+        userId: true,
+        postId: true
+        // businessId não incluído até migração ser executada
       }
     })
 
