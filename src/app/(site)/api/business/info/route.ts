@@ -64,14 +64,19 @@ export async function PATCH(request: NextRequest) {
     if (instagram !== undefined) updateData.instagram = instagram?.trim() || null
     if (facebook !== undefined) updateData.facebook = facebook?.trim() || null
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp?.trim() || null
-    if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
+    
+    // Separar presentationVideo para tratamento especial
+    const presentationVideoValue = presentationVideo !== undefined ? presentationVideo?.trim() || null : undefined
+    if (presentationVideoValue !== undefined) {
+      updateData.presentationVideo = presentationVideoValue
+    }
 
     // Atualizar as informações
     // Tentar atualizar com presentationVideo usando SQL raw se necessário
     let updatedBusiness: any = null
     
     // Primeiro, atualizar todos os campos exceto presentationVideo
-    const { presentationVideo, ...updateDataWithoutVideo } = updateData
+    const { presentationVideo: _, ...updateDataWithoutVideo } = updateData
     
     // Atualizar campos normais
     updatedBusiness = await prisma.business.update({
@@ -103,7 +108,7 @@ export async function PATCH(request: NextRequest) {
     })
     
     // Se presentationVideo foi fornecido, tentar atualizar usando SQL raw
-    if (presentationVideo !== undefined) {
+    if (presentationVideoValue !== undefined) {
       try {
         // Primeiro, verificar se a coluna existe e criá-la se necessário
         await prisma.$executeRaw`
@@ -121,7 +126,7 @@ export async function PATCH(request: NextRequest) {
         // Agora atualizar o valor
         await prisma.$executeRaw`
           UPDATE "business" 
-          SET "presentationVideo" = ${presentationVideo?.trim() || null}
+          SET "presentationVideo" = ${presentationVideoValue || null}
           WHERE id = ${business.id}
         `
         
