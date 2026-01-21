@@ -254,16 +254,17 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
         </div>
         
         <div className="flex-1 min-w-0">
-          {/* Seletor de Empresa (se tiver múltiplas) */}
+          {/* Seletor de Empresa (se tiver múltiplas) - Design moderno e minimalista */}
           {businesses.length > 1 && (
             <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Publicar como:
-              </label>
               <select
                 value={selectedBusinessId || ''}
                 onChange={(e) => setSelectedBusinessId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                className="w-full px-0 py-1.5 bg-transparent border-0 border-b border-gray-200 text-sm font-medium text-gray-900 focus:outline-none focus:border-purple-500 focus:ring-0 transition-colors cursor-pointer hover:border-gray-300 appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-right pr-6"
+                style={{
+                  backgroundSize: '16px',
+                  backgroundPosition: 'right 0 center'
+                }}
               >
                 {businesses
                   .filter((b: any) => b.isApproved) // Apenas empresas aprovadas
@@ -274,7 +275,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
                   ))}
               </select>
               {businesses.filter((b: any) => b.isApproved).length === 0 && (
-                <p className="text-xs text-yellow-600 mt-1">
+                <p className="text-xs text-amber-500 mt-1.5 font-normal">
                   Nenhuma empresa aprovada. Aguarde a aprovação para publicar.
                 </p>
               )}
