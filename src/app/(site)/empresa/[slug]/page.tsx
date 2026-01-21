@@ -1138,7 +1138,28 @@ export default function BusinessProfilePage() {
                     <p className="text-gray-500 text-sm text-center py-4">Nenhum cupom disponível.</p>
                   ) : (
                     coupons.slice(0, 3).map((coupon) => (
-                      <div key={coupon.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-2xl hover:border-purple-200 transition-colors">
+                      <div key={coupon.id} className="relative p-4 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-2xl hover:border-purple-200 transition-colors group">
+                        {isOwner && (
+                          <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setEditingCoupon(coupon)
+                                setShowCouponForm(true)
+                              }}
+                              className="p-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                              title="Editar cupom"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                              className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                              title="Excluir cupom"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-bold text-purple-800 text-sm" style={{ letterSpacing: '-0.01em' }}>{coupon.code}</span>
                           {coupon.discount && (
@@ -1287,6 +1308,7 @@ export default function BusinessProfilePage() {
       {showCouponForm && (
         <CouponForm
           businessId={business?.id || ''}
+          editCoupon={editingCoupon || undefined}
           onClose={() => {
             setShowCouponForm(false)
             setEditingCoupon(null)
