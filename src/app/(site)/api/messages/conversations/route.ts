@@ -37,8 +37,14 @@ export async function GET(request: NextRequest) {
       },
       include: {
         user: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            }
           }
         },
         message: {
@@ -48,13 +54,25 @@ export async function GET(request: NextRequest) {
           take: 1,
           include: {
             user_message_senderIdTouser: {
-              include: {
-                business: true
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                activeBusinessId: true,
+                business: {
+                  orderBy: { createdAt: 'desc' }
+                }
               }
             },
             user_message_receiverIdTouser: {
-              include: {
-                business: true
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                activeBusinessId: true,
+                business: {
+                  orderBy: { createdAt: 'desc' }
+                }
               }
             }
           }
@@ -75,15 +93,30 @@ export async function GET(request: NextRequest) {
       const otherParticipant = conv.user.find(p => p.id !== user.id)
       const lastMessage = conv.message[0]
 
+      // Buscar empresa ativa do outro participante
+      const otherParticipantActiveBusiness = otherParticipant?.activeBusinessId 
+        ? otherParticipant.business.find(b => b.id === otherParticipant.activeBusinessId)
+        : otherParticipant?.business[0]
+
+      // Buscar empresa ativa do remetente da última mensagem
+      const senderActiveBusiness = lastMessage?.user_message_senderIdTouser.activeBusinessId 
+        ? lastMessage.user_message_senderIdTouser.business.find(b => b.id === lastMessage.user_message_senderIdTouser.activeBusinessId)
+        : lastMessage?.user_message_senderIdTouser.business[0]
+
+      // Buscar empresa ativa do receptor da última mensagem
+      const receiverActiveBusiness = lastMessage?.user_message_receiverIdTouser?.activeBusinessId 
+        ? lastMessage.user_message_receiverIdTouser.business?.find(b => b.id === lastMessage.user_message_receiverIdTouser.activeBusinessId)
+        : lastMessage?.user_message_receiverIdTouser?.business?.[0]
+
       allConversations.push({
         id: conv.id,
-        business: otherParticipant?.business ? {
-          id: otherParticipant.business.id,
-          name: otherParticipant.business.name,
-          slug: otherParticipant.business.slug,
-          profileImage: otherParticipant.business.profileImage,
-          isVerified: otherParticipant.business.isVerified,
-          category: otherParticipant.business.category,
+        business: otherParticipantActiveBusiness ? {
+          id: otherParticipantActiveBusiness.id,
+          name: otherParticipantActiveBusiness.name,
+          slug: otherParticipantActiveBusiness.slug,
+          profileImage: otherParticipantActiveBusiness.profileImage,
+          isVerified: otherParticipantActiveBusiness.isVerified,
+          category: otherParticipantActiveBusiness.category,
           followedAt: new Date().toISOString(),
           userId: otherParticipant.id
         } : null,
@@ -93,19 +126,19 @@ export async function GET(request: NextRequest) {
           sender: {
             id: lastMessage.user_message_senderIdTouser.id,
             name: lastMessage.user_message_senderIdTouser.name || lastMessage.user_message_senderIdTouser.email,
-            business: lastMessage.user_message_senderIdTouser.business ? {
-              id: lastMessage.user_message_senderIdTouser.business.id,
-              name: lastMessage.user_message_senderIdTouser.business.name,
-              profileImage: lastMessage.user_message_senderIdTouser.business.profileImage
+            business: senderActiveBusiness ? {
+              id: senderActiveBusiness.id,
+              name: senderActiveBusiness.name,
+              profileImage: senderActiveBusiness.profileImage
             } : undefined
           },
           receiver: {
             id: lastMessage.user_message_receiverIdTouser?.id,
             name: lastMessage.user_message_receiverIdTouser?.name || lastMessage.user_message_receiverIdTouser?.email,
-            business: lastMessage.user_message_receiverIdTouser?.business ? {
-              id: lastMessage.user_message_receiverIdTouser.business.id,
-              name: lastMessage.user_message_receiverIdTouser.business.name,
-              profileImage: lastMessage.user_message_receiverIdTouser.business.profileImage
+            business: receiverActiveBusiness ? {
+              id: receiverActiveBusiness.id,
+              name: receiverActiveBusiness.name,
+              profileImage: receiverActiveBusiness.profileImage
             } : undefined
           },
           createdAt: lastMessage.createdAt.toISOString(),
