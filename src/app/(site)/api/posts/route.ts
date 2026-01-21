@@ -54,15 +54,20 @@ export async function GET(request: NextRequest) {
           }
         },
         postlike: {
-          include: {
-            business: {
-              select: {
-                id: true,
-                name: true,
-                profileImage: true,
-                isVerified: true
-              }
-            },
+          select: {
+            id: true,
+            userId: true,
+            // businessId e business só estarão disponíveis após a migração
+            // Por enquanto, comentamos para evitar erro
+            // businessId: true,
+            // business: {
+            //   select: {
+            //     id: true,
+            //     name: true,
+            //     profileImage: true,
+            //     isVerified: true
+            //   }
+            // },
             user: {
               select: {
                 id: true,
@@ -90,18 +95,22 @@ export async function GET(request: NextRequest) {
       // Verificar se o usuário atual curtiu
       let isLiked = false
       if (user) {
-        if (isCompanyUser && activeBusinessId) {
-          isLiked = post.postlike.some(like => like.businessId === activeBusinessId)
-        } else {
-          isLiked = post.postlike.some(like => like.userId === user.id)
-        }
+        // Por enquanto, verificar apenas por userId até a migração ser executada
+        // Após a migração, poderemos verificar por businessId também
+        isLiked = post.postlike.some(like => like.userId === user.id)
+        // TODO: Após migração, adicionar verificação por businessId:
+        // if (isCompanyUser && activeBusinessId) {
+        //   isLiked = post.postlike.some(like => (like as any).businessId === activeBusinessId)
+        // }
       }
 
-      // Listar empresas que curtiram
-      const businessesLiked = post.postlike
-        .filter(like => like.businessId && like.business)
-        .map(like => like.business)
-        .filter(b => b !== null)
+      // Listar empresas que curtiram (será implementado após migração)
+      const businessesLiked: any[] = []
+      // TODO: Após migração, descomentar:
+      // const businessesLiked = post.postlike
+      //   .filter(like => (like as any).businessId && (like as any).business)
+      //   .map(like => (like as any).business)
+      //   .filter((b: any) => b !== null)
 
       return {
         ...post,
