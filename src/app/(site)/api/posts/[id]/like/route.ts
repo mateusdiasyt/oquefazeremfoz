@@ -38,41 +38,15 @@ export async function POST(
     
     let existingLike = null
     
-    if (isCompanyUser && activeBusinessId) {
-      // Se for empresa, verificar se a empresa já curtiu
-      // Tentar buscar com businessId, mas se a coluna não existir, usar userId como fallback
-      try {
-        existingLike = await prisma.postlike.findFirst({
-          where: {
-            businessId: activeBusinessId,
-            postId: postId
-          }
-        })
-        console.log('❤️ Like existente (como empresa):', existingLike ? 'Sim' : 'Não')
-      } catch (error: any) {
-        // Se businessId não existir ainda (P2022), usar userId como fallback
-        if (error.code === 'P2022' || error.message?.includes('does not exist')) {
-          console.log('⚠️ businessId não existe ainda, usando userId como fallback')
-          existingLike = await prisma.postlike.findFirst({
-            where: {
-              userId: user.id,
-              postId: postId
-            }
-          })
-        } else {
-          throw error
-        }
+    // Por enquanto, sempre verificar por userId até a migração ser executada
+    // Após a migração, poderemos verificar por businessId também
+    existingLike = await prisma.postlike.findFirst({
+      where: {
+        userId: user.id,
+        postId: postId
       }
-    } else {
-      // Se for usuário normal, verificar se o usuário curtiu
-      existingLike = await prisma.postlike.findFirst({
-        where: {
-          userId: user.id,
-          postId: postId
-        }
-      })
-      console.log('❤️ Like existente (como usuário):', existingLike ? 'Sim' : 'Não')
-    }
+    })
+    console.log('❤️ Like existente:', existingLike ? 'Sim' : 'Não')
 
     if (existingLike) {
       console.log('🗑️ Descurtindo post...')
@@ -107,34 +81,13 @@ export async function POST(
         postId: postId
       }
       
-      if (isCompanyUser && activeBusinessId) {
-        // Tentar criar com businessId, mas usar userId como fallback se a coluna não existir
-        try {
-          likeData.businessId = activeBusinessId
-          console.log('👍 Curtindo como empresa:', activeBusinessId)
-          await prisma.postlike.create({
-            data: likeData
-          })
-        } catch (error: any) {
-          // Se businessId não existir ainda (P2022), usar userId como fallback
-          if (error.code === 'P2022' || error.message?.includes('does not exist')) {
-            console.log('⚠️ businessId não existe ainda, usando userId como fallback')
-            delete likeData.businessId
-            likeData.userId = user.id
-            await prisma.postlike.create({
-              data: likeData
-            })
-          } else {
-            throw error
-          }
-        }
-      } else {
-        likeData.userId = user.id
-        console.log('👍 Curtindo como usuário:', user.id)
-        await prisma.postlike.create({
-          data: likeData
-        })
-      }
+      // Por enquanto, sempre usar userId até a migração ser executada
+      // Após a migração, poderemos usar businessId também
+      likeData.userId = user.id
+      console.log('👍 Curtindo como usuário:', user.id)
+      await prisma.postlike.create({
+        data: likeData
+      })
 
       // Atualizar contador de likes
       const updatedPost = await prisma.post.update({
