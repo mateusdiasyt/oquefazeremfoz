@@ -348,18 +348,25 @@ export default function BusinessProfilePage() {
 
   const handleDescriptionUpdate = async () => {
     try {
-      const response = await fetch(`/api/business/${business?.id}/description`, {
-        method: 'PATCH',
+      const response = await fetch('/api/business/description', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: newDescription })
       })
 
       if (response.ok) {
+        const data = await response.json()
         setBusiness(prev => prev ? { ...prev, description: newDescription } : null)
         setEditingDescription(false)
         showNotification('Descrição atualizada com sucesso!', 'success')
+        // Recarregar dados da empresa
+        fetchBusinessData()
+      } else {
+        const errorData = await response.json()
+        showNotification(errorData.message || 'Erro ao atualizar descrição', 'error')
       }
     } catch (error) {
+      console.error('Erro ao atualizar descrição:', error)
       showNotification('Erro ao atualizar descrição', 'error')
     }
   }
