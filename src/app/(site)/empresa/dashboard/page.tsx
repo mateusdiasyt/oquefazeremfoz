@@ -53,6 +53,8 @@ interface Post {
   postLikes: Array<{
     userId: string
   }>
+  likesCount?: number
+  commentsCount?: number
 }
 
 export default function EmpresaDashboard() {
