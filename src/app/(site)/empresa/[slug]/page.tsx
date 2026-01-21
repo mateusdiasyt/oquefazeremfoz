@@ -141,6 +141,13 @@ export default function BusinessProfilePage() {
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [editingDescription, setEditingDescription] = useState(false)
   const [newDescription, setNewDescription] = useState('')
+  const [editingInfo, setEditingInfo] = useState(false)
+  const [editAddress, setEditAddress] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editWebsite, setEditWebsite] = useState('')
+  const [editInstagram, setEditInstagram] = useState('')
+  const [editFacebook, setEditFacebook] = useState('')
+  const [editWhatsapp, setEditWhatsapp] = useState('')
 
   useEffect(() => {
     fetchBusinessData()
@@ -357,6 +364,47 @@ export default function BusinessProfilePage() {
     }
   }
 
+  const handleInfoUpdate = async () => {
+    try {
+      const response = await fetch('/api/business/info', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: editAddress,
+          phone: editPhone,
+          website: editWebsite,
+          instagram: editInstagram,
+          facebook: editFacebook,
+          whatsapp: editWhatsapp
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setBusiness(prev => prev ? { ...prev, ...data.business } : null)
+        setEditingInfo(false)
+        showNotification('Informações atualizadas com sucesso!', 'success')
+        // Recarregar dados da empresa
+        fetchBusinessData()
+      } else {
+        const errorData = await response.json()
+        showNotification(errorData.message || 'Erro ao atualizar informações', 'error')
+      }
+    } catch (error) {
+      showNotification('Erro ao atualizar informações', 'error')
+    }
+  }
+
+  const startEditingInfo = () => {
+    setEditAddress(business?.address || '')
+    setEditPhone(business?.phone || '')
+    setEditWebsite(business?.website || '')
+    setEditInstagram(business?.instagram || '')
+    setEditFacebook(business?.facebook || '')
+    setEditWhatsapp(business?.whatsapp || '')
+    setEditingInfo(true)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center">
@@ -522,65 +570,169 @@ export default function BusinessProfilePage() {
               </div>
 
                 {/* Contact Info */}
-                <div className="flex flex-wrap gap-4 mb-4">
-                  {business.address && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{business.address}</span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-700">Informações de Contato</h3>
+                    {isOwner && !editingInfo && (
+                      <button
+                        onClick={startEditingInfo}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
+                        title="Editar informações"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {editingInfo ? (
+                    <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Endereço</label>
+                        <input
+                          type="text"
+                          value={editAddress}
+                          onChange={(e) => setEditAddress(e.target.value)}
+                          placeholder="Ex: Avenida República Argentina, 1000"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
                       </div>
-                  )}
-                  {business.phone && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      <span className="text-sm">{business.phone}</span>
-              </div>
-                  )}
-                  {business.website && (
-                    <a
-                      href={business.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
-                    >
-                      <Globe className="w-4 h-4" />
-                      <span className="text-sm">Website</span>
-                    </a>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
+                        <input
+                          type="text"
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          placeholder="Ex: (45) 99999-9999"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Website</label>
+                        <input
+                          type="url"
+                          value={editWebsite}
+                          onChange={(e) => setEditWebsite(e.target.value)}
+                          placeholder="Ex: https://www.example.com"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Instagram</label>
+                        <input
+                          type="text"
+                          value={editInstagram}
+                          onChange={(e) => setEditInstagram(e.target.value)}
+                          placeholder="Ex: @empresa ou empresa"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Facebook</label>
+                        <input
+                          type="text"
+                          value={editFacebook}
+                          onChange={(e) => setEditFacebook(e.target.value)}
+                          placeholder="Ex: empresa"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">WhatsApp</label>
+                        <input
+                          type="text"
+                          value={editWhatsapp}
+                          onChange={(e) => setEditWhatsapp(e.target.value)}
+                          placeholder="Ex: 5545999999999 (com código do país e DDD)"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleInfoUpdate}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingInfo(false)
+                            setEditAddress('')
+                            setEditPhone('')
+                            setEditWebsite('')
+                            setEditInstagram('')
+                            setEditFacebook('')
+                            setEditWhatsapp('')
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap gap-4 mb-4">
+                        {business.address && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span className="text-sm">{business.address}</span>
+                          </div>
+                        )}
+                        {business.phone && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Phone className="w-4 h-4" />
+                            <span className="text-sm">{business.phone}</span>
+                          </div>
+                        )}
+                        {business.website && (
+                          <a
+                            href={business.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                          >
+                            <Globe className="w-4 h-4" />
+                            <span className="text-sm">Website</span>
+                          </a>
+                        )}
+                      </div>
+
+                      {/* Social Links */}
+                      <div className="flex gap-3">
+                        {business.instagram && (
+                          <a
+                            href={`https://instagram.com/${business.instagram}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-pink-100 text-pink-600 rounded-lg hover:bg-pink-200 transition-colors"
+                          >
+                            <Instagram className="w-5 h-5" />
+                          </a>
+                        )}
+                        {business.facebook && (
+                          <a
+                            href={`https://facebook.com/${business.facebook}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                          >
+                            <Facebook className="w-5 h-5" />
+                          </a>
+                        )}
+                        {business.whatsapp && (
+                          <a
+                            href={`https://wa.me/${business.whatsapp}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                          >
+                            <WhatsAppIcon size={20} />
+                          </a>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
-
-                {/* Social Links */}
-                <div className="flex gap-3">
-                  {business.instagram && (
-                    <a
-                      href={`https://instagram.com/${business.instagram}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-pink-100 text-pink-600 rounded-lg hover:bg-pink-200 transition-colors"
-                    >
-                      <Instagram className="w-5 h-5" />
-                    </a>
-                  )}
-                  {business.facebook && (
-                    <a
-                      href={`https://facebook.com/${business.facebook}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                    >
-                      <Facebook className="w-5 h-5" />
-                    </a>
-                  )}
-                  {business.whatsapp && (
-                    <a
-                      href={`https://wa.me/${business.whatsapp}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                    >
-                      <WhatsAppIcon size={20} />
-                    </a>
-                  )}
-          </div>
         </div>
 
               {/* Action Buttons */}
