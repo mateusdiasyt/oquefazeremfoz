@@ -5,8 +5,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Banner {
   id: string
-  title: string
-  subtitle: string
+  title: string | null
+  subtitle: string | null
+  link: string | null
   imageUrl: string | null
   isActive: boolean
   order: number
@@ -85,48 +86,48 @@ export default function Footer() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="relative">
               {/* Banner Atual */}
-              <div
-                className="transition-all duration-500 ease-in-out"
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-              >
-                {currentBanner.imageUrl ? (
-                <div
-                  className="relative h-48 md:h-64 rounded-xl overflow-hidden shadow-lg"
-                  style={{
-                    backgroundImage: `url(${currentBanner.imageUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
+              {currentBanner.link ? (
+                <a
+                  href={currentBanner.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block transition-all duration-500 ease-in-out cursor-pointer"
+                  onMouseEnter={() => setIsPaused(true)}
+                  onMouseLeave={() => setIsPaused(false)}
                 >
-                  {/* Overlay escuro para melhorar legibilidade */}
-                  <div className="absolute inset-0 bg-black/40"></div>
-                  
-                  {/* Conteúdo do banner */}
-                  <div className="relative h-full flex flex-col justify-center items-center text-center px-4">
-                    <h3 className="text-2xl md:text-3xl font-bold mb-2 drop-shadow-lg">
-                      {currentBanner.title}
-                    </h3>
-                    {currentBanner.subtitle && (
-                      <p className="text-sm md:text-base text-gray-200 drop-shadow-md max-w-2xl">
-                        {currentBanner.subtitle}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  {currentBanner.imageUrl ? (
+                    <div
+                      className="relative h-48 md:h-64 rounded-xl overflow-hidden shadow-lg hover:opacity-90 transition-opacity"
+                      style={{
+                        backgroundImage: `url(${currentBanner.imageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                  ) : (
+                    <div className="bg-gradient-to-r from-pink-600 to-blue-600 h-48 md:h-64 rounded-xl shadow-lg hover:opacity-90 transition-opacity" />
+                  )}
+                </a>
               ) : (
-                <div className="bg-gradient-to-r from-pink-600 to-blue-600 h-48 md:h-64 rounded-xl flex flex-col justify-center items-center text-center px-4 shadow-lg">
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2">
-                    {currentBanner.title}
-                  </h3>
-                  {currentBanner.subtitle && (
-                    <p className="text-sm md:text-base text-gray-100 max-w-2xl">
-                      {currentBanner.subtitle}
-                    </p>
+                <div
+                  className="transition-all duration-500 ease-in-out"
+                  onMouseEnter={() => setIsPaused(true)}
+                  onMouseLeave={() => setIsPaused(false)}
+                >
+                  {currentBanner.imageUrl ? (
+                    <div
+                      className="relative h-48 md:h-64 rounded-xl overflow-hidden shadow-lg"
+                      style={{
+                        backgroundImage: `url(${currentBanner.imageUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                  ) : (
+                    <div className="bg-gradient-to-r from-pink-600 to-blue-600 h-48 md:h-64 rounded-xl shadow-lg" />
                   )}
                 </div>
-                )}
-              </div>
+              )}
 
               {/* Botões de navegação */}
               {banners.length > 1 && (

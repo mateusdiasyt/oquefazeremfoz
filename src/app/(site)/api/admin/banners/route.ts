@@ -35,17 +35,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    const { title, subtitle, imageUrl, isActive, order } = await request.json()
-
-    if (!title || !subtitle) {
-      return NextResponse.json({ message: 'Título e subtítulo são obrigatórios' }, { status: 400 })
-    }
+    const { imageUrl, link, isActive, order } = await request.json()
 
     const banner = await prisma.banner.create({
       data: {
         id: `banner_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        title,
-        subtitle,
+        title: '',
+        subtitle: '',
+        link: link || null,
         imageUrl: imageUrl || null,
         isActive: isActive !== undefined ? isActive : true,
         order: order || 0,

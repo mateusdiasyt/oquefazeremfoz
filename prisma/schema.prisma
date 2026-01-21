@@ -9,8 +9,9 @@ datasource db {
 
 model banner {
   id        String   @id
-  title     String
-  subtitle  String
+  title     String?  @default("")
+  subtitle  String?  @default("")
+  link      String?
   imageUrl  String?
   isActive  Boolean  @default(true)
   order     Int      @default(0)

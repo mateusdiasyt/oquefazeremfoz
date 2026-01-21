@@ -12,17 +12,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const bannerId = params.id
-    const { title, subtitle, imageUrl, isActive, order } = await request.json()
-
-    if (!title || !subtitle) {
-      return NextResponse.json({ message: 'Título e subtítulo são obrigatórios' }, { status: 400 })
-    }
+    const { imageUrl, link, isActive, order } = await request.json()
 
     const banner = await prisma.banner.update({
       where: { id: bannerId },
       data: {
-        title,
-        subtitle,
+        link: link || null,
         imageUrl: imageUrl || null,
         isActive: isActive !== undefined ? isActive : true,
         order: order || 0,

@@ -5,8 +5,9 @@ import { useNotification } from '../../../contexts/NotificationContext'
 
 interface Banner {
   id: string
-  title: string
-  subtitle: string
+  title: string | null
+  subtitle: string | null
+  link: string | null
   imageUrl: string | null
   isActive: boolean
   order: number
@@ -21,9 +22,8 @@ export default function AdminBanners() {
   const [showForm, setShowForm] = useState(false)
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
     imageUrl: '',
+    link: '',
     isActive: true,
     order: 0
   })
@@ -70,7 +70,7 @@ export default function AdminBanners() {
         )
         setShowForm(false)
         setEditingBanner(null)
-        setFormData({ title: '', subtitle: '', imageUrl: '', isActive: true, order: 0 })
+        setFormData({ imageUrl: '', link: '', isActive: true, order: 0 })
         fetchBanners()
       } else {
         const data = await response.json()
@@ -85,9 +85,8 @@ export default function AdminBanners() {
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner)
     setFormData({
-      title: banner.title,
-      subtitle: banner.subtitle,
       imageUrl: banner.imageUrl || '',
+      link: banner.link || '',
       isActive: banner.isActive,
       order: banner.order
     })
@@ -148,7 +147,7 @@ export default function AdminBanners() {
   const handleCancel = () => {
     setShowForm(false)
     setEditingBanner(null)
-    setFormData({ title: '', subtitle: '', imageUrl: '', isActive: true, order: 0 })
+    setFormData({ imageUrl: '', link: '', isActive: true, order: 0 })
   }
 
   if (loading) {
@@ -195,30 +194,16 @@ export default function AdminBanners() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-dark-200 mb-2">
-                    Título
+                    Link de Redirecionamento
                   </label>
                   <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    type="url"
+                    value={formData.link}
+                    onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
                     className="input"
-                    placeholder="Ex: OQFOZ"
-                    required
+                    placeholder="https://example.com"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-dark-200 mb-2">
-                    Subtítulo
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.subtitle}
-                    onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-                    className="input"
-                    placeholder="Ex: Descubra os melhores hotéis, restaurantes e atrações em Foz do Iguaçu"
-                    required
-                  />
+                  <p className="mt-1 text-xs text-dark-400">URL para onde o banner redirecionará ao ser clicado</p>
                 </div>
 
                 <div>
@@ -307,7 +292,6 @@ export default function AdminBanners() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-2">
-                      <h3 className="text-lg font-semibold text-dark-100">{banner.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         banner.isActive 
                           ? 'bg-green-100 text-green-800' 
@@ -316,12 +300,14 @@ export default function AdminBanners() {
                         {banner.isActive ? 'Ativo' : 'Inativo'}
                       </span>
                       <span className="text-sm text-dark-400">Ordem: {banner.order}</span>
+                      {banner.link && (
+                        <span className="text-xs text-primary-400">Link: {banner.link}</span>
+                      )}
                     </div>
-                    <p className="text-dark-300 mb-2">{banner.subtitle}</p>
                     {banner.imageUrl && (
                       <img
                         src={banner.imageUrl}
-                        alt={banner.title}
+                        alt="Banner"
                         className="w-32 h-20 object-cover rounded-lg"
                       />
                     )}
