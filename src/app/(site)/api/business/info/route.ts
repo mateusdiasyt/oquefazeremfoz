@@ -38,7 +38,7 @@ export async function PATCH(request: NextRequest) {
     
     // Se não foi fornecido ou não pertence ao usuário, usar empresa ativa
     if (!businessId) {
-      businessId = user.activeBusinessId || user.businessId
+      businessId = user.activeBusinessId || user.businessId || null
       if (!businessId) {
         return NextResponse.json({ message: 'Nenhuma empresa encontrada' }, { status: 404 })
       }
