@@ -11,12 +11,12 @@ export default function SiteLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="pb-20 md:pb-0">{children}</main>
+      <main className="flex-1 pb-20 md:pb-0">{children}</main>
       <Footer />
       <FloatingChat />
       <MobileNavigation />
-    </>
+    </div>
   )
 }

@@ -42,50 +42,55 @@ export default function Footer() {
       const response = await fetch('/api/banners')
       if (response.ok) {
         const data = await response.json()
-        setBanners(data.banners || [])
+        const activeBanners = (data.banners || []).filter((b: Banner) => b.isActive)
+        console.log('🎯 Banners carregados:', activeBanners.length)
+        setBanners(activeBanners)
+      } else {
+        console.error('❌ Erro ao buscar banners:', response.status)
       }
     } catch (error) {
-      console.error('Erro ao buscar banners:', error)
+      console.error('❌ Erro ao buscar banners:', error)
     }
   }
 
   const goToPrevious = () => {
+    if (banners.length === 0) return
     setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length)
     setIsPaused(true)
     setTimeout(() => setIsPaused(false), 10000) // Retomar auto-rotacao após 10s
   }
 
   const goToNext = () => {
+    if (banners.length === 0) return
     setCurrentIndex((prev) => (prev + 1) % banners.length)
     setIsPaused(true)
     setTimeout(() => setIsPaused(false), 10000) // Retomar auto-rotacao após 10s
   }
 
   const goToSlide = (index: number) => {
+    if (banners.length === 0) return
     setCurrentIndex(index)
     setIsPaused(true)
     setTimeout(() => setIsPaused(false), 10000) // Retomar auto-rotacao após 10s
   }
 
-  if (banners.length === 0) {
-    return null // Não mostrar footer se não houver banners
-  }
-
-  const currentBanner = banners[currentIndex]
+  // Sempre mostrar o footer, mesmo sem banners
+  const currentBanner = banners.length > 0 ? banners[currentIndex] : null
 
   return (
-    <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white mt-16">
+    <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white w-full relative z-10">
       {/* Carrossel de Banners */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="relative">
-            {/* Banner Atual */}
-            <div
-              className="transition-all duration-500 ease-in-out"
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
-            >
-              {currentBanner.imageUrl ? (
+      {banners.length > 0 && currentBanner && (
+        <div className="relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="relative">
+              {/* Banner Atual */}
+              <div
+                className="transition-all duration-500 ease-in-out"
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+              >
+                {currentBanner.imageUrl ? (
                 <div
                   className="relative h-48 md:h-64 rounded-xl overflow-hidden shadow-lg"
                   style={{
@@ -120,11 +125,11 @@ export default function Footer() {
                     </p>
                   )}
                 </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            {/* Botões de navegação */}
-            {banners.length > 1 && (
+              {/* Botões de navegação */}
+              {banners.length > 1 && (
               <>
                 <button
                   onClick={goToPrevious}
@@ -140,29 +145,30 @@ export default function Footer() {
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
-              </>
-            )}
+                </>
+              )}
 
-            {/* Indicadores de slide */}
-            {banners.length > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
-                {banners.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToSlide(index)}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      index === currentIndex
-                        ? 'bg-white w-8'
-                        : 'bg-white/40 w-2 hover:bg-white/60'
-                    }`}
-                    aria-label={`Ir para banner ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
+              {/* Indicadores de slide */}
+              {banners.length > 1 && (
+                <div className="flex justify-center gap-2 mt-4">
+                  {banners.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSlide(index)}
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        index === currentIndex
+                          ? 'bg-white w-8'
+                          : 'bg-white/40 w-2 hover:bg-white/60'
+                      }`}
+                      aria-label={`Ir para banner ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Informações do rodapé */}
       <div className="border-t border-gray-700">
