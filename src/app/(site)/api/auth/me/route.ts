@@ -50,26 +50,52 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar usuário no banco
-    const user = await prisma.user.findUnique({
-      where: { id: session.userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        activeBusinessId: true,
-        userrole: {
-          select: {
-            role: true
-          }
-        },
-        business: {
-          select: {
-            id: true
+    // Primeiro tentar buscar com activeBusinessId, se falhar, buscar sem
+    let user: any = null
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          activeBusinessId: true,
+          userrole: {
+            select: {
+              role: true
+            }
           },
-          orderBy: { createdAt: 'desc' }
+          business: {
+            select: {
+              id: true
+            },
+            orderBy: { createdAt: 'desc' }
+          }
         }
-      }
-    })
+      })
+    } catch (error) {
+      // Se falhar (campo não existe), buscar sem activeBusinessId
+      console.log('⚠️ Campo activeBusinessId não existe, buscando sem ele...')
+      user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          userrole: {
+            select: {
+              role: true
+            }
+          },
+          business: {
+            select: {
+              id: true
+            },
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      })
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -79,17 +105,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Determinar businessId ativo (usa activeBusinessId ou primeira empresa)
-    const activeBusinessId = user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined
+    const activeBusinessId = (user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined) as string | undefined
 
     // Retornar dados do usuário
     const userData = {
       id: user.id,
       email: user.email,
       name: user.name,
-      roles: user.userrole.map(ur => ur.role),
+      roles: user.userrole.map((ur: any) => ur.role),
       businessId: activeBusinessId, // Mantém compatibilidade
       activeBusinessId: activeBusinessId,
-      businesses: (user.business || []).map(b => ({ id: b.id }))
+      businesses: (user.business || []).map((b: any) => ({ id: b.id }))
     }
 
     return NextResponse.json({

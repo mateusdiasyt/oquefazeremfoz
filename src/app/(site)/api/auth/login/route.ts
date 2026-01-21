@@ -44,27 +44,54 @@ export async function POST(request: NextRequest) {
     })
 
     // Buscar usuário no banco
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        password: true,
-        name: true,
-        activeBusinessId: true,
-        userrole: {
-          select: {
-            role: true
-          }
-        },
-        business: {
-          select: {
-            id: true
+    // Primeiro tentar buscar com activeBusinessId, se falhar, buscar sem
+    let user: any = null
+    try {
+      user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          password: true,
+          name: true,
+          activeBusinessId: true,
+          userrole: {
+            select: {
+              role: true
+            }
           },
-          orderBy: { createdAt: 'desc' }
+          business: {
+            select: {
+              id: true
+            },
+            orderBy: { createdAt: 'desc' }
+          }
         }
-      }
-    })
+      })
+    } catch (error) {
+      // Se falhar (campo não existe), buscar sem activeBusinessId
+      console.log('⚠️ Campo activeBusinessId não existe, buscando sem ele...')
+      user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          password: true,
+          name: true,
+          userrole: {
+            select: {
+              role: true
+            }
+          },
+          business: {
+            select: {
+              id: true
+            },
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      })
+    }
 
     console.log('🔍 DEBUG USER:', {
       found: !!user,
@@ -151,7 +178,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determinar empresa ativa (usa activeBusinessId ou primeira empresa)
-    const activeBusinessId = user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined
+    const activeBusinessId = (user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined) as string | undefined
 
     // Configurar cookie
     const response = NextResponse.json({
@@ -164,7 +191,7 @@ export async function POST(request: NextRequest) {
         roles,
         businessId: activeBusinessId, // Mantém compatibilidade
         activeBusinessId: activeBusinessId,
-        businesses: (user.business || []).map(b => ({ id: b.id }))
+        businesses: (user.business || []).map((b: any) => ({ id: b.id }))
       }
     })
 
