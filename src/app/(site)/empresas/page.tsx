@@ -50,6 +50,7 @@ interface Business {
   instagram: string | null
   facebook: string | null
   whatsapp: string | null
+  presentationVideo?: string | null
   likesCount: number
   followersCount: number
   isFollowing: boolean
@@ -69,6 +70,7 @@ export default function EmpresasPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [businessToUnfollow, setBusinessToUnfollow] = useState<Business | null>(null)
+  const [hoveredBusinessId, setHoveredBusinessId] = useState<string | null>(null)
 
   const categories = [
     'Restaurante',
@@ -318,13 +320,31 @@ export default function EmpresasPage() {
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
             : "space-y-4"
           }>
-            {filteredAndSortedBusinesses.map((business) => (
+            {filteredAndSortedBusinesses.map((business) => {
+              const videoEmbedUrl = getYouTubeEmbedUrl(business.presentationVideo)
+              
+              return (
               <div 
                 key={business.id} 
-                className={`bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group ${
+                className={`bg-white rounded-2xl shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden group relative ${
                   viewMode === 'list' ? 'flex' : ''
                 }`}
+                onMouseEnter={() => videoEmbedUrl && setHoveredBusinessId(business.id)}
+                onMouseLeave={() => setHoveredBusinessId(null)}
               >
+                {/* Popup de vídeo no hover */}
+                {hoveredBusinessId === business.id && videoEmbedUrl && (
+                  <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm rounded-2xl flex items-center justify-center p-4">
+                    <div className="w-full max-w-2xl aspect-video rounded-lg overflow-hidden shadow-2xl">
+                      <iframe
+                        src={`${videoEmbedUrl}?autoplay=1&mute=1`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                )}
                 {/* Imagem/Logo */}
                 <div className={`${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : 'h-48'} relative`}>
                   {business.profileImage ? (
@@ -466,7 +486,8 @@ export default function EmpresasPage() {
                   </div>
                 </div>
               </div>
-            ))}
+            )
+            })}
           </div>
         )}
       </div>
