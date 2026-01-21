@@ -64,9 +64,6 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null)
   const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
   const [editCommentText, setEditCommentText] = useState('')
-  const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
-  const [editCommentText, setEditCommentText] = useState('')
-  const { user } = useAuth()
 
   useEffect(() => {
     // Verificar se o usuário curtiu o post
