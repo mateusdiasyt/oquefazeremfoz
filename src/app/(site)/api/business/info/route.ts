@@ -59,7 +59,8 @@ export async function PATCH(request: NextRequest) {
     if (instagram !== undefined) updateData.instagram = instagram?.trim() || null
     if (facebook !== undefined) updateData.facebook = facebook?.trim() || null
     if (whatsapp !== undefined) updateData.whatsapp = whatsapp?.trim() || null
-    if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
+    // Temporariamente comentado até migração ser executada
+    // if (presentationVideo !== undefined) updateData.presentationVideo = presentationVideo?.trim() || null
 
     // Atualizar as informações
     const updatedBusiness = await prisma.business.update({
