@@ -366,16 +366,19 @@ export default function BusinessProfilePage() {
 
   const handleInfoUpdate = async () => {
     try {
+      // Limpar e formatar número do WhatsApp (remover caracteres não numéricos)
+      const cleanWhatsapp = editWhatsapp.replace(/\D/g, '')
+      
       const response = await fetch('/api/business/info', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           address: editAddress,
-          phone: editPhone,
+          phone: null, // Remover telefone, usar só WhatsApp
           website: editWebsite,
           instagram: editInstagram,
           facebook: editFacebook,
-          whatsapp: editWhatsapp
+          whatsapp: cleanWhatsapp || null
         })
       })
 
@@ -397,7 +400,6 @@ export default function BusinessProfilePage() {
 
   const startEditingInfo = () => {
     setEditAddress(business?.address || '')
-    setEditPhone(business?.phone || '')
     setEditWebsite(business?.website || '')
     setEditInstagram(business?.instagram || '')
     setEditFacebook(business?.facebook || '')
@@ -490,17 +492,17 @@ export default function BusinessProfilePage() {
         <div className="max-w-6xl mx-auto">
           <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-              {/* Profile Image */}
-              <div className="relative group">
+              {/* Profile Image - agora na mesma linha do título */}
+              <div className="relative group flex-shrink-0">
                 {business.profileImage ? (
                   <img
                     src={business.profileImage}
                     alt={business.name}
-                  className="w-28 h-28 rounded-2xl border-4 border-white shadow-md object-cover"
+                  className="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-4 border-white shadow-md object-cover"
                   />
                 ) : (
-                  <div className="w-28 h-28 rounded-2xl border-4 border-white shadow-md bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-purple-600" style={{ letterSpacing: '-0.02em' }}>
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl border-4 border-white shadow-md bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <span className="text-2xl md:text-3xl font-bold text-purple-600" style={{ letterSpacing: '-0.02em' }}>
                       {business.name?.charAt(0)?.toUpperCase()}
                     </span>
                   </div>
@@ -537,17 +539,22 @@ export default function BusinessProfilePage() {
                         }
                       }}
                     />
-                    <Camera className="w-6 h-6 text-white" />
+                    <Camera className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   </label>
                 )}
               </div>
 
-              {/* Business Info */}
+              {/* Business Info - foto e título na mesma linha */}
               <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>{business.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>{business.name}</h1>
                   {business.isVerified && (
-                    <VerificationBadge size="lg" />
+                    <img 
+                      src="/icons/verificado.png" 
+                      alt="Verificado" 
+                      className="w-6 h-6 md:w-7 md:h-7 object-contain"
+                      title="Empresa verificada"
+                    />
                   )}
                 </div>
                 <p className="text-base text-gray-600 mb-5" style={{ letterSpacing: '-0.01em' }}>{business.category}</p>
@@ -597,16 +604,6 @@ export default function BusinessProfilePage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">Telefone</label>
-                        <input
-                          type="text"
-                          value={editPhone}
-                          onChange={(e) => setEditPhone(e.target.value)}
-                          placeholder="Ex: (45) 99999-9999"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                        />
-                      </div>
-                      <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Website</label>
                         <input
                           type="url"
@@ -642,9 +639,10 @@ export default function BusinessProfilePage() {
                           type="text"
                           value={editWhatsapp}
                           onChange={(e) => setEditWhatsapp(e.target.value)}
-                          placeholder="Ex: 5545999999999 (com código do país e DDD)"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                          placeholder="Ex: 5545999999999 ou (45) 99999-9999 (será convertido automaticamente)"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-300 text-sm"
                         />
+                        <p className="text-xs text-gray-500 mt-1">O número será usado para criar um link direto do WhatsApp</p>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -657,7 +655,6 @@ export default function BusinessProfilePage() {
                           onClick={() => {
                             setEditingInfo(false)
                             setEditAddress('')
-                            setEditPhone('')
                             setEditWebsite('')
                             setEditInstagram('')
                             setEditFacebook('')
@@ -678,27 +675,21 @@ export default function BusinessProfilePage() {
                             <span className="text-sm" style={{ letterSpacing: '-0.01em' }}>{business.address}</span>
                           </div>
                         )}
-                        {business.phone && (
-                          <div className="flex items-center gap-2 text-gray-700 px-3 py-2 bg-gray-50 rounded-xl border border-gray-100">
-                            <Phone className="w-4 h-4 text-purple-600" />
-                            <span className="text-sm" style={{ letterSpacing: '-0.01em' }}>{business.phone}</span>
-                          </div>
-                        )}
+                      </div>
+
+                      {/* Social Links - Website, Instagram e WhatsApp */}
+                      <div className="flex gap-2">
                         {business.website && (
                           <a
                             href={business.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 px-3 py-2 bg-purple-50 rounded-xl border border-purple-100 hover:border-purple-200 transition-colors"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-purple-300 hover:bg-purple-50 transition-all duration-200"
+                            title="Website"
                           >
-                            <Globe className="w-4 h-4" />
-                            <span className="text-sm">Website</span>
+                            <Globe className="w-5 h-5 text-purple-600" />
                           </a>
                         )}
-                      </div>
-
-                      {/* Social Links */}
-                      <div className="flex gap-2">
                         {business.instagram && (
                           <a
                             href={`https://instagram.com/${business.instagram.replace('@', '')}`}
@@ -707,7 +698,6 @@ export default function BusinessProfilePage() {
                             className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-pink-300 hover:bg-pink-50 transition-all duration-200 group relative"
                             title="Instagram"
                           >
-                            {/* Quando você enviar as imagens, coloque-as em public/icons/instagram-icon.png e whatsapp-icon.png */}
                             <img 
                               src="/icons/instagram-icon.png" 
                               alt="Instagram" 
@@ -715,9 +705,11 @@ export default function BusinessProfilePage() {
                               onError={(e) => {
                                 // Fallback para ícone SVG se a imagem não existir
                                 e.currentTarget.style.display = 'none'
+                                const fallback = e.currentTarget.parentElement?.querySelector('.instagram-fallback') as HTMLElement
+                                if (fallback) fallback.style.display = 'block'
                               }}
                             />
-                            <Instagram className="w-5 h-5 text-pink-600 absolute top-2.5 left-2.5" style={{ display: 'none' }} />
+                            <Instagram className="w-5 h-5 text-pink-600 absolute top-2.5 left-2.5 instagram-fallback hidden" />
                           </a>
                         )}
                         {business.facebook && (
@@ -733,13 +725,12 @@ export default function BusinessProfilePage() {
                         )}
                         {business.whatsapp && (
                           <a
-                            href={`https://wa.me/${business.whatsapp}`}
+                            href={`https://wa.me/${business.whatsapp.replace(/\D/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2.5 bg-white border border-gray-200 rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 group relative"
                             title="WhatsApp"
                           >
-                            {/* Quando você enviar as imagens, coloque-as em public/icons/whatsapp-icon.png */}
                             <img 
                               src="/icons/whatsapp-icon.png" 
                               alt="WhatsApp" 
