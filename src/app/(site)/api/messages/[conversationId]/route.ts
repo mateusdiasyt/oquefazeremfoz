@@ -57,13 +57,25 @@ export async function GET(
       },
       include: {
         user_message_senderIdTouser: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            }
           }
         },
         user_message_receiverIdTouser: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            }
           }
         }
       },
@@ -113,9 +125,9 @@ export async function GET(
           name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
           business: receiverActiveBusiness ? {
             id: receiverActiveBusiness.id,
-          name: message.user_message_receiverIdTouser.business.name,
-          profileImage: message.user_message_receiverIdTouser.business.profileImage
-        } : undefined
+            name: receiverActiveBusiness.name,
+            profileImage: receiverActiveBusiness.profileImage
+          } : undefined
       },
       createdAt: message.createdAt.toISOString(),
       isRead: message.isRead
@@ -245,13 +257,25 @@ export async function POST(
       },
       include: {
         user_message_senderIdTouser: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            }
           }
         },
         user_message_receiverIdTouser: {
-          include: {
-            business: true
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            activeBusinessId: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            }
           }
         }
       }
@@ -265,6 +289,16 @@ export async function POST(
       data: { updatedAt: new Date() }
     })
 
+    // Buscar empresa ativa do remetente
+    const senderActiveBusiness = message.user_message_senderIdTouser.activeBusinessId 
+      ? message.user_message_senderIdTouser.business.find(b => b.id === message.user_message_senderIdTouser.activeBusinessId)
+      : message.user_message_senderIdTouser.business[0]
+    
+    // Buscar empresa ativa do receptor
+    const receiverActiveBusiness = message.user_message_receiverIdTouser?.activeBusinessId 
+      ? message.user_message_receiverIdTouser.business?.find(b => b.id === message.user_message_receiverIdTouser.activeBusinessId)
+      : message.user_message_receiverIdTouser?.business?.[0]
+
     // Transformar dados para o formato esperado pelo componente
     const formattedMessage = {
       id: message.id,
@@ -273,10 +307,10 @@ export async function POST(
       sender: {
         id: message.user_message_senderIdTouser.id,
         name: message.user_message_senderIdTouser.name || message.user_message_senderIdTouser.email,
-        business: message.user_message_senderIdTouser.business ? {
-          id: message.user_message_senderIdTouser.business.id,
-          name: message.user_message_senderIdTouser.business.name,
-          profileImage: message.user_message_senderIdTouser.business.profileImage
+        business: senderActiveBusiness ? {
+          id: senderActiveBusiness.id,
+          name: senderActiveBusiness.name,
+          profileImage: senderActiveBusiness.profileImage
         } : undefined
       },
         receiver: {
