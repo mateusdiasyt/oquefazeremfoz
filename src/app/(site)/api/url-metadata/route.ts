@@ -79,17 +79,6 @@ export async function GET(request: NextRequest) {
       extractMeta('og:site_name', html) ||
       extractMeta('twitter:site', html)
 
-    // Processar URL da imagem se for relativa
-    let processedImage = image
-    if (image && !image.startsWith('http')) {
-      try {
-        const baseUrl = new URL(url)
-        processedImage = new URL(image, baseUrl.origin).href
-      } catch {
-        processedImage = null
-      }
-    }
-
     return NextResponse.json({
       title: title || 'Link',
       description: description || 'Clique para acessar',
