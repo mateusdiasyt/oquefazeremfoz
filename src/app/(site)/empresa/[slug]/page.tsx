@@ -60,6 +60,7 @@ interface Business {
   id: string
   name: string
   category: string
+  presentationVideo?: string | null
   description?: string
   coverImage?: string
   profileImage?: string
