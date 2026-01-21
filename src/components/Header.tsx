@@ -1,12 +1,37 @@
 'use client'
 
 import { useAuth } from '../contexts/AuthContext'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+
+interface Business {
+  id: string
+  name: string
+  slug: string
+}
 
 export default function Header() {
   const { user, logout, isCompany, isAdmin } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
+  const [userBusinesses, setUserBusinesses] = useState<Business[]>([])
+
+  useEffect(() => {
+    const fetchUserBusinesses = async () => {
+      if (isCompany() && user) {
+        try {
+          const response = await fetch('/api/business/my-businesses')
+          if (response.ok) {
+            const data = await response.json()
+            setUserBusinesses(data.businesses || [])
+          }
+        } catch (error) {
+          console.error('Erro ao buscar empresas do usuário:', error)
+        }
+      }
+    }
+
+    fetchUserBusinesses()
+  }, [user, isCompany])
 
   const handleLogout = async () => {
     await logout()
@@ -99,6 +124,26 @@ export default function Header() {
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-lg py-2 z-50 animate-slide-up border border-gray-100">
                     {isCompany() && (
                       <>
+                        {/* Links para cada empresa */}
+                        {userBusinesses.length > 0 && (
+                          <>
+                            {userBusinesses.map((business) => (
+                              <a
+                                key={business.id}
+                                href={`/empresa/${business.slug}`}
+                                className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
+                                onClick={() => setShowDropdown(false)}
+                                style={{ letterSpacing: '-0.01em' }}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                <span className="truncate">{business.name}</span>
+                              </a>
+                            ))}
+                            <div className="border-t border-gray-100 my-1"></div>
+                          </>
+                        )}
                         <a
                           href="/minhas-empresas"
                           className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
