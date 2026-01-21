@@ -24,11 +24,21 @@ export async function POST(request: NextRequest) {
     // Verificar se o usuário alvo existe e tem uma empresa
     const targetUser = await prisma.user.findUnique({
       where: { id: targetUserId },
-      include: { business: true }
+      include: { 
+        business: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
     })
 
-    if (!targetUser || !targetUser.business) {
+    if (!targetUser || !targetUser.business || targetUser.business.length === 0) {
       return NextResponse.json({ message: 'Usuário ou empresa não encontrada' }, { status: 404 })
+    }
+
+    // Usar empresa ativa ou primeira empresa
+    const activeBusinessId = targetUser.activeBusinessId || targetUser.business[0]?.id
+    if (!activeBusinessId) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
     if (action === 'follow') {
@@ -53,9 +63,9 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Atualizar contadores
+      // Atualizar contadores da empresa ativa
       await prisma.business.update({
-        where: { userId: targetUserId },
+        where: { id: activeBusinessId },
         data: {
           followersCount: {
             increment: 1
@@ -87,15 +97,30 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Atualizar contadores
-      await prisma.business.update({
-        where: { userId: targetUserId },
-        data: {
-          followersCount: {
-            decrement: 1
+      // Atualizar contadores da empresa ativa
+      // Buscar empresa ativa do usuário alvo
+      const targetUserForUnfollow = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        include: { 
+          business: {
+            orderBy: { createdAt: 'desc' }
           }
         }
       })
+
+      if (targetUserForUnfollow) {
+        const activeBusinessIdForUnfollow = targetUserForUnfollow.activeBusinessId || targetUserForUnfollow.business[0]?.id
+        if (activeBusinessIdForUnfollow) {
+          await prisma.business.update({
+            where: { id: activeBusinessIdForUnfollow },
+            data: {
+              followersCount: {
+                decrement: 1
+              }
+            }
+          })
+        }
+      }
 
       // Nota: followingCount removido do schema Business
 
