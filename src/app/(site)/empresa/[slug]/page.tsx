@@ -115,6 +115,9 @@ interface Coupon {
   discount: string
   description: string
   title: string
+  isActive?: boolean
+  link?: string
+  validUntil?: string
 }
 
 interface GalleryItem {
