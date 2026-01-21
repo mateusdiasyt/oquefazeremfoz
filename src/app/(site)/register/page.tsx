@@ -87,6 +87,7 @@ export default function RegisterPage() {
       }
 
       // Se for empresa, cadastrar dados da empresa
+      let businessName = businessData.businessName
       if (accountType === 'COMPANY') {
         const businessResponse = await fetch('/api/business/register', {
           method: 'POST',
@@ -106,12 +107,23 @@ export default function RegisterPage() {
           setLoading(false)
           return
         }
+
+        // Obter nome da empresa da resposta
+        try {
+          const businessResponseData = await businessResponse.json()
+          businessName = businessResponseData?.business?.name || businessData.businessName
+        } catch {
+          // Usar nome do formulário se não conseguir parsear
+          businessName = businessData.businessName
+        }
       }
 
       // Redirecionar baseado no tipo de conta
       if (accountType === 'COMPANY') {
-        router.push('/empresa/dashboard')
+        // Redirecionar para página de sucesso com nome da empresa
+        router.push(`/empresa/cadastro-sucesso?nome=${encodeURIComponent(businessName)}`)
       } else {
+        // Usuário turista vai para página inicial
         router.push('/')
       }
 

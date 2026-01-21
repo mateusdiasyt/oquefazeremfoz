@@ -109,9 +109,7 @@ export default function CadastrarEmpresaPage() {
       const data = await response.json()
 
       if (response.ok) {
-        showNotification('Empresa cadastrada com sucesso!', 'success')
-        
-        // Perguntar se quer definir como ativa
+        // Perguntar se quer definir como ativa (se não foi definida automaticamente)
         if (currentBusinessCount > 0 && data.setAsActive === false) {
           const setAsActive = confirm('Deseja definir esta empresa como ativa?')
           if (setAsActive) {
@@ -123,7 +121,9 @@ export default function CadastrarEmpresaPage() {
           }
         }
         
-        router.push('/minhas-empresas')
+        // Redirecionar para página de sucesso
+        const businessName = data.business?.name || formData.businessName
+        router.push(`/empresa/cadastro-sucesso?nome=${encodeURIComponent(businessName)}`)
       } else {
         showNotification(data.message || 'Erro ao cadastrar empresa', 'error')
       }
