@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'ID do post é obrigatório' }, { status: 400 })
     }
 
+    const user = await getCurrentUser()
+    
     const comments = await prisma.comment.findMany({
-      where: { postId },
+      where: { postId, parentId: null }, // Apenas comentários principais (sem parentId)
       include: {
         user: {
           select: {
@@ -21,6 +23,37 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true
           }
+        },
+        _count: {
+          select: {
+            commentlike: true,
+            replies: true
+          }
+        },
+        commentlike: user ? {
+          where: { userId: user.id },
+          select: { id: true }
+        } : false,
+        replies: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            },
+            _count: {
+              select: {
+                commentlike: true
+              }
+            },
+            commentlike: user ? {
+              where: { userId: user.id },
+              select: { id: true }
+            } : false
+          },
+          orderBy: { createdAt: 'asc' }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -47,12 +80,59 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
-    const { postId, content } = await request.json()
-    console.log('📝 Dados recebidos:', { postId, content: content?.substring(0, 50) + '...' })
+    const { postId, content, parentId } = await request.json()
+    console.log('📝 Dados recebidos:', { postId, parentId, content: content?.substring(0, 50) + '...' })
 
     if (!postId || !content?.trim()) {
       console.log('❌ Dados obrigatórios faltando:', { postId: !!postId, content: !!content?.trim() })
       return NextResponse.json({ message: 'ID do post e conteúdo são obrigatórios' }, { status: 400 })
+    }
+
+    // Se parentId for fornecido, verificar se o comentário pai existe
+    if (parentId) {
+      const parentComment = await prisma.comment.findUnique({
+        where: { id: parentId }
+      })
+      if (!parentComment) {
+        return NextResponse.json({ message: 'Comentário pai não encontrado' }, { status: 404 })
+      }
+      // Se o comentário pai for uma resposta, usar o mesmo parentId para manter a estrutura
+      const actualParentId = parentComment.parentId || parentId
+      
+      // Formatar o conteúdo com @ mencionando o usuário respondido
+      const repliedUser = await prisma.user.findUnique({
+        where: { id: parentComment.userId || '' },
+        select: { name: true, email: true }
+      })
+      
+      const mention = repliedUser?.name || repliedUser?.email?.split('@')[0] || 'usuário'
+      const formattedContent = content.trim().startsWith('@') 
+        ? content.trim() 
+        : `@${mention} ${content.trim()}`
+      
+      const comment = await prisma.comment.create({
+        data: {
+          id: `comment_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          postId,
+          userId: user.id,
+          parentId: actualParentId,
+          body: formattedContent
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      })
+
+      return NextResponse.json({ 
+        message: 'Resposta criada com sucesso!', 
+        comment 
+      }, { status: 201 })
     }
 
     // Verificar se o post existe
@@ -67,7 +147,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Post não encontrado' }, { status: 404 })
     }
 
-    // Criar comentário
+    // Criar comentário principal
     console.log('➕ Criando comentário...')
     const comment = await prisma.comment.create({
       data: {

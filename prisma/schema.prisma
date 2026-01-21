@@ -130,13 +130,30 @@ model comment {
   id        String   @id
   postId    String
   userId    String?
+  parentId  String?  // Para respostas de comentários
   body      String
   createdAt DateTime @default(now())
   post      post     @relation(fields: [postId], references: [id], map: "Comment_postId_fkey")
   user      user?    @relation(fields: [userId], references: [id], map: "Comment_userId_fkey")
+  parent    comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   comment[] @relation("CommentReplies")
+  commentlike commentlike[]
 
   @@index([postId], map: "Comment_postId_idx")
   @@index([userId], map: "Comment_userId_idx")
+  @@index([parentId], map: "Comment_parentId_idx")
+}
+
+model commentlike {
+  id        String   @id
+  commentId String
+  userId    String?
+  createdAt DateTime @default(now())
+  comment   comment  @relation(fields: [commentId], references: [id], onDelete: Cascade, map: "CommentLike_commentId_fkey")
+  user      user?    @relation(fields: [userId], references: [id], map: "CommentLike_userId_fkey")
+
+  @@unique([commentId, userId], map: "CommentLike_commentId_userId_key")
+  @@index([userId], map: "CommentLike_userId_idx")
 }
 
 model company {
@@ -376,6 +393,7 @@ model user {
   session                          session[]
   userrole                         userrole[]
   conversation                     conversation[]   @relation("conversationparticipants")
+  commentlike                      commentlike[]
 }
 
 model userrole {

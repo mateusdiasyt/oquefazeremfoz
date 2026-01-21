@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Heart } from 'lucide-react'
 import UrlPreview from './UrlPreview'
 import ShareModal from './ShareModal'
 import { extractUrlsFromText } from '../utils/urlDetector'
@@ -53,12 +53,13 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [likesCount, setLikesCount] = useState(post.likes)
   const [showComments, setShowComments] = useState(false)
   const [newComment, setNewComment] = useState('')
-  const [comments, setComments] = useState(post.comments)
+  const [comments, setComments] = useState<any[]>(post.comments || [])
   const [commentsCount, setCommentsCount] = useState(
     post._count?.comment ?? post.commentsCount ?? post.comments?.length ?? 0
   )
   const [commentLoading, setCommentLoading] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null)
 
   useEffect(() => {
     // Verificar se o usuário curtiu o post
@@ -118,7 +119,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         },
         body: JSON.stringify({ 
           postId: post.id,
-          content: newComment.trim()
+          content: newComment.trim(),
+          parentId: replyingTo?.id || null
         }),
       })
 
@@ -126,13 +128,34 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         const data = await response.json()
         // Adicionar o novo comentário no início da lista
         if (data.comment) {
-          setComments(prev => [data.comment, ...prev])
-          setCommentsCount(prev => prev + 1)
+          if (replyingTo) {
+            // Se for uma resposta, adicionar à lista de replies do comentário pai
+            setComments(prev => prev.map(comment => {
+              const parentId = data.comment.parentId || replyingTo.id
+              if (comment.id === parentId) {
+                return {
+                  ...comment,
+                  replies: [...(comment.replies || []), data.comment],
+                  _count: {
+                    ...comment._count,
+                    replies: (comment._count?.replies || 0) + 1
+                  }
+                }
+              }
+              return comment
+            }))
+          } else {
+            // Se for um comentário principal, adicionar no início
+            setComments(prev => [data.comment, ...prev])
+            setCommentsCount(prev => prev + 1)
+          }
           setNewComment('')
+          setReplyingTo(null)
         } else {
           // Se não veio no formato esperado, recarregar os comentários
           await fetchComments()
           setNewComment('')
+          setReplyingTo(null)
         }
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Erro ao comentar' }))
@@ -154,12 +177,67 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         const data = await response.json()
         const fetchedComments = data.comments || []
         setComments(fetchedComments)
-        // Atualizar a contagem com o valor real quando os comentários são carregados
-        setCommentsCount(fetchedComments.length)
+        // Atualizar a contagem apenas com comentários principais (sem replies)
+        const mainCommentsCount = fetchedComments.length
+        setCommentsCount(mainCommentsCount)
       }
     } catch (error) {
       console.error('Erro ao buscar comentários:', error)
     }
+  }
+
+  const handleCommentLike = async (commentId: string, currentLikes: number, isCurrentlyLiked: boolean) => {
+    try {
+      const response = await fetch(`/api/posts/comments/${commentId}/like`, {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Atualizar o comentário na lista
+        setComments(prev => prev.map(comment => {
+          if (comment.id === commentId) {
+            return {
+              ...comment,
+              _count: { ...comment._count, commentlike: data.likesCount },
+              commentlike: data.liked ? [{ id: 'temp' }] : [],
+              isLiked: data.liked
+            }
+          }
+          // Atualizar também nas respostas
+          if (comment.replies) {
+            return {
+              ...comment,
+              replies: comment.replies.map((reply: any) => {
+                if (reply.id === commentId) {
+                  return {
+                    ...reply,
+                    _count: { ...reply._count, commentlike: data.likesCount },
+                    commentlike: data.liked ? [{ id: 'temp' }] : [],
+                    isLiked: data.liked
+                  }
+                }
+                return reply
+              })
+            }
+          }
+          return comment
+        }))
+      }
+    } catch (error) {
+      console.error('Erro ao curtir comentário:', error)
+    }
+  }
+
+  const handleReply = (comment: any) => {
+    const userName = comment.user?.name || comment.user?.email?.split('@')[0] || 'usuário'
+    setReplyingTo({ id: comment.id, userName })
+    setNewComment(`@${userName} `)
+  }
+
+  const cancelReply = () => {
+    setReplyingTo(null)
+    setNewComment('')
   }
 
   useEffect(() => {
@@ -300,10 +378,24 @@ export default function PostCard({ post, onLike }: PostCardProps) {
             <div className="flex items-end space-x-3">
               <div className="flex-1">
                 <div className="relative">
+                  {replyingTo && (
+                    <div className="mb-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
+                      <span className="text-sm text-purple-700">
+                        Respondendo a <strong>{replyingTo.userName}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={cancelReply}
+                        className="text-purple-600 hover:text-purple-800 text-sm"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Adicione um comentário..."
+                    placeholder={replyingTo ? `Responder ${replyingTo.userName}...` : "Adicione um comentário..."}
                     className="w-full px-4 py-3 pr-12 border border-gray-200 bg-gray-50 rounded-2xl resize-none focus:ring-2 focus:ring-purple-200 focus:bg-white focus:border-purple-300 transition-all duration-200 text-sm placeholder-gray-400"
                     rows={2}
                     disabled={commentLoading}
@@ -339,30 +431,115 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                 <p className="text-gray-500 text-sm" style={{ letterSpacing: '-0.01em' }}>Seja o primeiro a comentar!</p>
               </div>
             ) : (
-              comments.map((comment) => (
-                <div key={comment.id} className="flex space-x-3 group">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
-                      {comment.user.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="bg-gray-50 rounded-2xl px-4 py-2.5 group-hover:bg-gray-100 transition-colors duration-200 border border-transparent group-hover:border-gray-200">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
-                          {comment.user.name || 'Usuário'}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {formatDate(comment.createdAt)}
-                        </span>
+              comments.map((comment) => {
+                const likesCount = comment._count?.commentlike || 0
+                const isLiked = comment.commentlike && comment.commentlike.length > 0
+                const replies = comment.replies || []
+
+                return (
+                  <div key={comment.id}>
+                    <div className="flex space-x-3 group">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                          {comment.user?.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
                       </div>
-                      <p className="text-gray-700 text-sm leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
-                        {comment.body}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="bg-gray-50 rounded-2xl px-4 py-2.5 group-hover:bg-gray-100 transition-colors duration-200 border border-transparent group-hover:border-gray-200">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
+                              {comment.user?.name || comment.user?.email || 'Usuário'}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {formatDate(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-gray-700 text-sm leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
+                            {comment.body}
+                          </p>
+                          {/* Ações do comentário */}
+                          <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-200">
+                            <button
+                              onClick={() => handleCommentLike(comment.id, likesCount, isLiked)}
+                              className={`flex items-center gap-1.5 text-xs transition-colors ${
+                                isLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
+                              }`}
+                            >
+                              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                              <span>{likesCount}</span>
+                            </button>
+                            <button
+                              onClick={() => handleReply(comment)}
+                              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                              </svg>
+                              <span>Responder</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Respostas */}
+                    {replies.length > 0 && (
+                      <div className="ml-11 mt-2 space-y-2 border-l-2 border-gray-200 pl-4">
+                        {replies.map((reply: any) => {
+                          const replyLikesCount = reply._count?.commentlike || 0
+                          const replyIsLiked = reply.commentlike && reply.commentlike.length > 0
+
+                          return (
+                            <div key={reply.id} className="flex space-x-3 group">
+                              <div className="flex-shrink-0">
+                                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                  {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="bg-gray-50 rounded-xl px-3 py-2 group-hover:bg-gray-100 transition-colors duration-200 border border-transparent group-hover:border-gray-200">
+                                  <div className="flex items-center space-x-2 mb-1">
+                                    <span className="font-medium text-gray-900 text-xs" style={{ letterSpacing: '-0.01em' }}>
+                                      {reply.user?.name || reply.user?.email || 'Usuário'}
+                                    </span>
+                                    <span className="text-xs text-gray-400">
+                                      {formatDate(reply.createdAt)}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
+                                    {reply.body}
+                                  </p>
+                                  {/* Ações da resposta */}
+                                  <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-200">
+                                    <button
+                                      onClick={() => handleCommentLike(reply.id, replyLikesCount, replyIsLiked)}
+                                      className={`flex items-center gap-1.5 text-xs transition-colors ${
+                                        replyIsLiked ? 'text-purple-600' : 'text-gray-500 hover:text-purple-600'
+                                      }`}
+                                    >
+                                      <Heart className={`w-3.5 h-3.5 ${replyIsLiked ? 'fill-current' : ''}`} />
+                                      <span>{replyLikesCount}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => handleReply(reply)}
+                                      className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
+                                    >
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                      </svg>
+                                      <span>Responder</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>
