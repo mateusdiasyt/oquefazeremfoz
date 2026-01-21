@@ -29,7 +29,8 @@ export default function MinhasEmpresasPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/login')
+      // Preservar a URL atual ao redirecionar para login
+      router.push(`/login?redirect=${encodeURIComponent('/minhas-empresas')}`)
       return
     }
 

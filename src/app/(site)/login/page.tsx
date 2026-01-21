@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
 
 export default function LoginPage() {
@@ -11,11 +11,19 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const { login, user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Redirecionar se o usuário já estiver logado
   useEffect(() => {
     if (!authLoading && user) {
-      // Redirecionar baseado no tipo de usuário
+      // Verificar se há uma URL de retorno (redirect)
+      const redirect = searchParams.get('redirect')
+      if (redirect) {
+        router.push(redirect)
+        return
+      }
+
+      // Redirecionar baseado no tipo de usuário (comportamento padrão)
       if (user.roles?.includes('ADMIN')) {
         router.push('/admin')
       } else if (user.roles?.includes('COMPANY')) {
@@ -24,7 +32,7 @@ export default function LoginPage() {
         router.push('/')
       }
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
