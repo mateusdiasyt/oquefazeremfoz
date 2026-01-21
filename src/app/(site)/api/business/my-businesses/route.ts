@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
+    console.log(`🔍 Buscando empresas para usuário: ${user.id} (${user.email})`)
+
     // Buscar todas as empresas do usuário
     const businesses = await prisma.business.findMany({
       where: { userId: user.id },
@@ -29,20 +31,32 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    console.log(`📊 Empresas encontradas: ${businesses.length}`)
+    businesses.forEach((b, i) => {
+      console.log(`   ${i + 1}. ${b.name} (ID: ${b.id})`)
+    })
+
     // Se usuário tem empresas mas não tem activeBusinessId, definir a primeira como ativa
     let activeBusinessId = user.activeBusinessId || businesses[0]?.id || null
+    
+    console.log(`🏢 ActiveBusinessId atual: ${activeBusinessId}`)
+    
     if (businesses.length > 0 && !user.activeBusinessId) {
       // Definir a primeira empresa como ativa automaticamente
       try {
+        console.log(`🔧 Tentando definir empresa ativa: ${businesses[0].id}`)
         await prisma.user.update({
           where: { id: user.id },
           data: { activeBusinessId: businesses[0].id }
         })
         activeBusinessId = businesses[0].id
         console.log(`✅ Empresa ativa definida automaticamente para usuário ${user.id}`)
-      } catch (error) {
-        console.error('Erro ao definir empresa ativa:', error)
+      } catch (error: any) {
+        console.error('⚠️ Erro ao definir empresa ativa:', error.message)
         // Continuar mesmo se falhar (pode ser que activeBusinessId não existe ainda no banco)
+        if (error.message.includes('Unknown column') || error.message.includes('does not exist')) {
+          console.log('💡 Dica: Execute a migration: npx prisma migrate dev')
+        }
       }
     }
 

@@ -112,9 +112,11 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
     }
 
     // Determinar empresa ativa (usa activeBusinessId ou primeira empresa)
-    const activeBusiness = session.user.activeBusinessId 
-      ? session.user.business.find(b => b.id === session.user.activeBusinessId) 
-      : session.user.business[0]
+    // Tentar acessar activeBusinessId de forma segura (pode não existir ainda no banco)
+    const activeBusinessId = (session.user as any).activeBusinessId || null
+    const activeBusiness = activeBusinessId 
+      ? session.user.business.find(b => b.id === activeBusinessId) 
+      : (session.user.business && session.user.business.length > 0 ? session.user.business[0] : null)
 
     const userData = {
       id: session.user.id,
@@ -123,8 +125,8 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       profileImage: activeBusiness?.profileImage || null,
       roles: session.user.userrole.map(ur => ur.role),
       businessId: activeBusiness?.id, // Mantém compatibilidade
-      activeBusinessId: session.user.activeBusinessId || activeBusiness?.id || undefined,
-      businesses: session.user.business.map(b => ({ id: b.id })),
+      activeBusinessId: activeBusinessId || activeBusiness?.id || undefined,
+      businesses: (session.user.business || []).map(b => ({ id: b.id })),
       createdAt: session.user.createdAt.toISOString()
     }
     
