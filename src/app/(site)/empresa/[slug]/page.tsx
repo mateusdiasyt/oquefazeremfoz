@@ -261,7 +261,7 @@ export default function BusinessProfilePage() {
           isFollowing: result.isFollowing, 
           followersCount: result.followersCount 
         } : null)
-    setShowUnfollowModal(false)
+        setShowUnfollowModal(false)
         showNotification('Você parou de seguir esta empresa', 'success')
       }
     } catch (error) {
