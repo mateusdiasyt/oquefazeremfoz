@@ -9,14 +9,14 @@ interface Post {
   body: string
   imageUrl: string | null
   videoUrl: string | null
-  createdAt: string
-  business: {
+  createdAt?: string
+  business?: {
     id: string
     name: string
     profileImage: string | null
   }
-  likesCount: number
-  isLiked: boolean
+  likesCount?: number
+  isLiked?: boolean
 }
 
 interface PostFormProps {
