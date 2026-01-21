@@ -431,7 +431,7 @@ export default function BusinessProfilePage() {
       // Limpar e formatar número do WhatsApp (remover caracteres não numéricos)
       const cleanWhatsapp = editWhatsapp.replace(/\D/g, '')
       
-      const response = await fetch('/api/business/info', {
+      const response = await fetch(`/api/business/info?id=${business?.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

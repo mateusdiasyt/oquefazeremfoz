@@ -16,15 +16,37 @@ export async function PATCH(request: NextRequest) {
 
     const { address, phone, website, instagram, facebook, whatsapp, presentationVideo } = await request.json()
 
-    // Buscar empresa ativa do usuário
-    const activeBusinessId = user.activeBusinessId || user.businessId
-    if (!activeBusinessId) {
-      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    // Verificar se foi fornecido um ID específico na query string
+    const { searchParams } = new URL(request.url)
+    const requestedBusinessId = searchParams.get('id')
+
+    // Determinar qual empresa atualizar
+    let businessId: string | null = null
+    if (requestedBusinessId) {
+      // Verificar se a empresa solicitada pertence ao usuário
+      const requestedBusiness = await prisma.business.findFirst({
+        where: { 
+          id: requestedBusinessId,
+          userId: user.id
+        },
+        select: { id: true }
+      })
+      if (requestedBusiness) {
+        businessId = requestedBusinessId
+      }
+    }
+    
+    // Se não foi fornecido ou não pertence ao usuário, usar empresa ativa
+    if (!businessId) {
+      businessId = user.activeBusinessId || user.businessId
+      if (!businessId) {
+        return NextResponse.json({ message: 'Nenhuma empresa encontrada' }, { status: 404 })
+      }
     }
 
     const business = await prisma.business.findFirst({
       where: { 
-        id: activeBusinessId,
+        id: businessId,
         userId: user.id
       },
       select: {
