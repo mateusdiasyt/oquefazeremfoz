@@ -73,6 +73,16 @@ export async function GET(req: Request) {
     return NextResponse.json(null)
   }
 
+  // Tentar buscar presentationVideo usando SQL raw se a coluna existir
+  try {
+    const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+      SELECT "presentationVideo" FROM "business" WHERE slug = ${slug}
+    `
+    business.presentationVideo = videoResult[0]?.presentationVideo || null
+  } catch {
+    business.presentationVideo = null
+  }
+
   // Calcular a média das avaliações com mais precisão e realismo
   let averageRating = 0
   if (business.businessreview.length > 0) {
