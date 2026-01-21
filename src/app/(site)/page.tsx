@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
 import FloatingChat from '@/components/FloatingChat'
-import VerificationBadge from '@/components/VerificationBadge'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle } from 'lucide-react'
 
 interface Post {
@@ -462,7 +461,12 @@ export default function HomePage() {
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium text-gray-900 truncate">{business.name}</h4>
                             {business.isVerified && (
-                              <VerificationBadge size="sm" />
+                              <img 
+                                src="/icons/verificado.png" 
+                                alt="Verificado" 
+                                className="w-4 h-4 object-contain"
+                                title="Empresa verificada"
+                              />
                             )}
                           </div>
                           <div className="flex items-center gap-3 mt-1">
@@ -620,7 +624,12 @@ export default function HomePage() {
                           <div className="flex items-center gap-2">
                             <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h5>
                             {business.isVerified && (
-                              <VerificationBadge size="sm" />
+                              <img 
+                                src="/icons/verificado.png" 
+                                alt="Verificado" 
+                                className="w-4 h-4 object-contain"
+                                title="Empresa verificada"
+                              />
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
@@ -683,7 +692,12 @@ export default function HomePage() {
                               {coupon.business.name}
                             </span>
                             {coupon.business.isVerified && (
-                              <VerificationBadge size="sm" />
+                              <img 
+                                src="/icons/verificado.png" 
+                                alt="Verificado" 
+                                className="w-4 h-4 object-contain"
+                                title="Empresa verificada"
+                              />
                             )}
                           </div>
                           <span className="text-xs text-gray-500 font-medium">

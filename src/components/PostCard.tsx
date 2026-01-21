@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { CheckCircle } from 'lucide-react'
 import UrlPreview from './UrlPreview'
 import ShareModal from './ShareModal'
-import VerificationBadge from './VerificationBadge'
 import { extractUrlsFromText } from '../utils/urlDetector'
 
 interface Post {
@@ -207,7 +206,12 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               {post.business.name}
             </a>
             {post.business.isVerified && (
-              <VerificationBadge size="md" />
+              <img 
+                src="/icons/verificado.png" 
+                alt="Verificado" 
+                className="w-5 h-5 object-contain"
+                title="Empresa verificada"
+              />
             )}
           </div>
           <p className="text-xs text-gray-500 mt-0.5">{formatDate(post.createdAt)}</p>
