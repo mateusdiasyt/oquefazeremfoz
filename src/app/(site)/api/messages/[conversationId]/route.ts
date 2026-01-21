@@ -85,23 +85,34 @@ export async function GET(
     })
 
     // Transformar dados para o formato esperado pelo componente
-    const formattedMessages = messages.map(message => ({
-      id: message.id,
-      content: message.content,
-      sender: {
-        id: message.user_message_senderIdTouser.id,
-        name: message.user_message_senderIdTouser.name || message.user_message_senderIdTouser.email,
-        business: message.user_message_senderIdTouser.business ? {
-          id: message.user_message_senderIdTouser.business.id,
-          name: message.user_message_senderIdTouser.business.name,
-          profileImage: message.user_message_senderIdTouser.business.profileImage
-        } : undefined
-      },
-      receiver: {
-        id: message.user_message_receiverIdTouser?.id,
-        name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
-        business: message.user_message_receiverIdTouser?.business ? {
-          id: message.user_message_receiverIdTouser.business.id,
+    const formattedMessages = messages.map(message => {
+      // Buscar empresa ativa do remetente
+      const senderActiveBusiness = message.user_message_senderIdTouser.activeBusinessId 
+        ? message.user_message_senderIdTouser.business.find(b => b.id === message.user_message_senderIdTouser.activeBusinessId)
+        : message.user_message_senderIdTouser.business[0]
+      
+      // Buscar empresa ativa do receptor
+      const receiverActiveBusiness = message.user_message_receiverIdTouser?.activeBusinessId 
+        ? message.user_message_receiverIdTouser.business?.find(b => b.id === message.user_message_receiverIdTouser.activeBusinessId)
+        : message.user_message_receiverIdTouser?.business?.[0]
+
+      return {
+        id: message.id,
+        content: message.content,
+        sender: {
+          id: message.user_message_senderIdTouser.id,
+          name: message.user_message_senderIdTouser.name || message.user_message_senderIdTouser.email,
+          business: senderActiveBusiness ? {
+            id: senderActiveBusiness.id,
+            name: senderActiveBusiness.name,
+            profileImage: senderActiveBusiness.profileImage
+          } : undefined
+        },
+        receiver: {
+          id: message.user_message_receiverIdTouser?.id,
+          name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
+          business: receiverActiveBusiness ? {
+            id: receiverActiveBusiness.id,
           name: message.user_message_receiverIdTouser.business.name,
           profileImage: message.user_message_receiverIdTouser.business.profileImage
         } : undefined
@@ -268,15 +279,15 @@ export async function POST(
           profileImage: message.user_message_senderIdTouser.business.profileImage
         } : undefined
       },
-      receiver: {
-        id: message.user_message_receiverIdTouser?.id,
-        name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
-        business: message.user_message_receiverIdTouser?.business ? {
-          id: message.user_message_receiverIdTouser.business.id,
-          name: message.user_message_receiverIdTouser.business.name,
-          profileImage: message.user_message_receiverIdTouser.business.profileImage
-        } : undefined
-      },
+        receiver: {
+          id: message.user_message_receiverIdTouser?.id,
+          name: message.user_message_receiverIdTouser?.name || message.user_message_receiverIdTouser?.email,
+          business: receiverActiveBusiness ? {
+            id: receiverActiveBusiness.id,
+            name: receiverActiveBusiness.name,
+            profileImage: receiverActiveBusiness.profileImage
+          } : undefined
+        },
       createdAt: message.createdAt.toISOString(),
       isRead: message.isRead
     }
