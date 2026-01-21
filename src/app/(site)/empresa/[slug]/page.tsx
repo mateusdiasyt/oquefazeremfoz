@@ -149,6 +149,8 @@ export default function BusinessProfilePage() {
   const [uploadingGallery, setUploadingGallery] = useState(false)
   const [showGalleryPreview, setShowGalleryPreview] = useState(false)
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
   
   // Edit states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -481,6 +483,10 @@ export default function BusinessProfilePage() {
       if (response.ok) {
         setGallery(prev => prev.filter(item => item.id !== galleryId))
         showNotification('Foto removida da galeria com sucesso!', 'success')
+        // Se estava visualizando a foto removida, ajustar o índice
+        if (showGalleryPreview && selectedGalleryIndex >= gallery.length - 1) {
+          setSelectedGalleryIndex(Math.max(0, gallery.length - 2))
+        }
       } else {
         const errorData = await response.json()
         showNotification(errorData.message || 'Erro ao remover foto', 'error')
@@ -488,6 +494,34 @@ export default function BusinessProfilePage() {
     } catch (error) {
       console.error('Erro ao remover foto da galeria:', error)
       showNotification('Erro ao remover foto da galeria', 'error')
+    }
+  }
+
+  // Funções para navegação por arraste
+  const minSwipeDistance = 50
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe && gallery.length > 1) {
+      // Swipe para a esquerda = próxima foto
+      setSelectedGalleryIndex((prev) => (prev + 1) % gallery.length)
+    }
+    if (isRightSwipe && gallery.length > 1) {
+      // Swipe para a direita = foto anterior
+      setSelectedGalleryIndex((prev) => (prev - 1 + gallery.length) % gallery.length)
     }
   }
 
@@ -1377,11 +1411,16 @@ export default function BusinessProfilePage() {
             )}
 
             {/* Image */}
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div 
+              className="relative w-full h-full flex items-center justify-center"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <img
                 src={gallery[selectedGalleryIndex].imageUrl}
                 alt={`Galeria ${selectedGalleryIndex + 1}`}
-                className="max-w-full max-h-full object-contain rounded-lg"
+                className="max-w-full max-h-full object-contain rounded-lg select-none"
                 draggable={false}
               />
             </div>
