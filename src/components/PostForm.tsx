@@ -40,14 +40,7 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
 
   // Atualizar estados quando editPost mudar
   useEffect(() => {
-    console.log('🔍 PostForm - editPost mudou:', editPost)
     if (editPost) {
-      console.log('🔍 Preenchendo campos com dados do post:', {
-        title: editPost.title,
-        body: editPost.body,
-        imageUrl: editPost.imageUrl,
-        videoUrl: editPost.videoUrl
-      })
       setTitle(editPost.title || '')
       setContent(editPost.body || '')
       setImageUrl(editPost.imageUrl || '')
@@ -56,7 +49,6 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
       setShowImageInput(!!editPost.imageUrl)
       setShowVideoInput(!!editPost.videoUrl)
     } else {
-      console.log('🔍 Limpando campos - criando novo post')
       setTitle('')
       setContent('')
       setImageUrl('')
@@ -250,8 +242,6 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
       setLoading(false)
     }
   }
-
-  console.log('🔍 PostForm renderizado:', { editPost: !!editPost, title, content: content?.substring(0, 30) })
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
