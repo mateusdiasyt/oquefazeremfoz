@@ -67,17 +67,6 @@ interface Business {
   isVerified: boolean
 }
 
-interface Banner {
-  id: string
-  title: string
-  description: string | null
-  imageUrl: string
-  linkUrl: string | null
-  isActive: boolean
-  order: number
-  createdAt: string
-}
-
 interface Coupon {
   id: string
   code: string
@@ -121,7 +110,6 @@ export default function HomePage() {
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
-  const [banners, setBanners] = useState<Banner[]>([])
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [weather, setWeather] = useState<Weather | null>(null)
   const [loading, setLoading] = useState(true)
@@ -141,7 +129,6 @@ export default function HomePage() {
     const diffInDays = Math.floor(diffInHours / 24)
     return `há ${diffInDays} dia${diffInDays > 1 ? 's' : ''}`
   }
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [businessToUnfollow, setBusinessToUnfollow] = useState<Business | null>(null)
   
@@ -227,7 +214,6 @@ export default function HomePage() {
     fetchUser()
     fetchPosts()
     fetchBusinesses()
-    fetchBanners()
     fetchCoupons()
     fetchWeather()
   }, [])
@@ -244,15 +230,6 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [currentPage, hasMorePosts, loadingMore])
 
-  // Auto-rotate banners
-  useEffect(() => {
-    if (banners.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentBannerIndex((prev) => (prev + 1) % banners.length)
-      }, 5000)
-      return () => clearInterval(interval)
-    }
-  }, [banners])
 
   const fetchUser = async () => {
     try {
@@ -311,18 +288,6 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Erro ao buscar empresas:', error)
-    }
-  }
-
-  const fetchBanners = async () => {
-    try {
-      const response = await fetch('/api/banners')
-      if (response.ok) {
-        const data = await response.json()
-        setBanners(data.banners || [])
-      }
-    } catch (error) {
-      console.error('Erro ao buscar banners:', error)
     }
   }
 
@@ -557,68 +522,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Banners Section */}
-      {banners.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="relative">
-            <div className="overflow-hidden rounded-2xl shadow-soft">
-              <div className="relative h-64 md:h-80">
-                {banners.map((banner, index) => (
-                  <div
-                    key={banner.id}
-                    className={`absolute inset-0 transition-opacity duration-500 ${
-                      index === currentBannerIndex ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <img
-                      src={banner.imageUrl}
-                      alt={banner.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    
-                    {/* Botão Patrocine aqui */}
-                    <div className="absolute top-4 right-4">
-                      <a
-                        href="https://wa.me/5545999287669?text=Olá! Tenho interesse em patrocinar no banner da página inicial."
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-black/40 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full hover:bg-black/60 transition-all duration-300 border border-white/20 hover:border-white/40 opacity-75 hover:opacity-100"
-                      >
-                        Patrocine aqui
-                      </a>
-                    </div>
-                    
-                    <div className="absolute bottom-6 left-6 text-white">
-                      <h3 className="text-2xl md:text-3xl font-bold mb-2 text-white">{banner.title}</h3>
-                      {banner.description && (
-                        <p className="text-lg text-white opacity-90">{banner.description}</p>
-                      )}
-                    </div>
-                </div>
-                ))}
-                </div>
-              
-              {/* Banner indicators */}
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                {banners.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentBannerIndex(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      index === currentBannerIndex 
-                        ? 'bg-white' 
-                        : 'bg-white/50 hover:bg-white/70'
-                    }`}
-                    aria-label={`Ir para banner ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-        </div>
-      </section>
-      )}
 
       {/* Main Content */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
