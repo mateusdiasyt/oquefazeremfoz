@@ -812,8 +812,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                               </svg>
                               <span>Responder</span>
                             </button>
-                            {/* Botões de editar/excluir apenas para o dono do comentário */}
-                            {user && comment.userId === user.id && (
+                            {/* Botões de editar/excluir apenas para o dono do comentário (usuário ou empresa) */}
+                            {user && ((comment.userId === user.id) || (comment.businessId === user.businessId)) && (
                               <>
                                 {canEditComment(comment) && (
                                   <button
