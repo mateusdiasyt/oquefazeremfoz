@@ -41,8 +41,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    const business = await prisma.business.findUnique({
-      where: { userId: user.id }
+    // Buscar empresa ativa do usuário
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    }
+
+    const business = await prisma.business.findFirst({
+      where: { 
+        id: activeBusinessId,
+        userId: user.id // Verificar se pertence ao usuário
+      }
     })
 
     if (!business) {
@@ -135,8 +144,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    const business = await prisma.business.findUnique({
-      where: { userId: user.id }
+    // Buscar empresa ativa do usuário
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    }
+
+    const business = await prisma.business.findFirst({
+      where: { 
+        id: activeBusinessId,
+        userId: user.id // Verificar se pertence ao usuário
+      }
     })
 
     if (!business) {
@@ -212,8 +230,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    const business = await prisma.business.findUnique({
-      where: { userId: user.id }
+    // Buscar empresa ativa do usuário
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    }
+
+    const business = await prisma.business.findFirst({
+      where: { 
+        id: activeBusinessId,
+        userId: user.id // Verificar se pertence ao usuário
+      }
     })
 
     if (!business) {

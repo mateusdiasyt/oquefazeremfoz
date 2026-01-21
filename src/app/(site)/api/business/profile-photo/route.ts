@@ -15,9 +15,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    // Buscar a empresa do usuário
-    const business = await prisma.business.findUnique({
-      where: { userId: user.id }
+    // Buscar empresa ativa do usuário
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    }
+
+    const business = await prisma.business.findFirst({
+      where: { 
+        id: activeBusinessId,
+        userId: user.id
+      }
     })
 
     if (!business) {

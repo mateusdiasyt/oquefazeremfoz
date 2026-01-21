@@ -58,7 +58,7 @@ export async function createSession(userId: string): Promise<string> {
   return token
 }
 
-export async function getCurrentUser(): Promise<{ id: string; email: string; name: string | null; profileImage: string | null; roles: string[]; businessId?: string; createdAt?: string } | null> {
+export async function getCurrentUser(): Promise<{ id: string; email: string; name: string | null; profileImage: string | null; roles: string[]; businessId?: string; activeBusinessId?: string; businesses?: Array<{ id: string }>; createdAt?: string } | null> {
   try {
     console.log('🔍 getCurrentUser: Iniciando verificação')
     
@@ -88,7 +88,9 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       include: { 
         user: {
           include: {
-            business: true,
+            business: {
+              orderBy: { createdAt: 'desc' }
+            },
             userrole: true
           }
         }
@@ -109,13 +111,20 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       return null
     }
 
+    // Determinar empresa ativa (usa activeBusinessId ou primeira empresa)
+    const activeBusiness = session.user.activeBusinessId 
+      ? session.user.business.find(b => b.id === session.user.activeBusinessId) 
+      : session.user.business[0]
+
     const userData = {
       id: session.user.id,
       email: session.user.email,
       name: session.user.name,
-      profileImage: session.user.business?.profileImage || null,
+      profileImage: activeBusiness?.profileImage || null,
       roles: session.user.userrole.map(ur => ur.role),
-      businessId: session.user.business?.id,
+      businessId: activeBusiness?.id, // Mantém compatibilidade
+      activeBusinessId: session.user.activeBusinessId || activeBusiness?.id || undefined,
+      businesses: session.user.business.map(b => ({ id: b.id })),
       createdAt: session.user.createdAt.toISOString()
     }
     

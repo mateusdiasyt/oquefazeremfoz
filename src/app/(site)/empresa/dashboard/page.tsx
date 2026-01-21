@@ -166,16 +166,26 @@ export default function EmpresaDashboard() {
 
   if (!business) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Empresa Não Encontrada</h1>
-          <p className="text-gray-600 mb-4">Você ainda não cadastrou sua empresa.</p>
-          <button
-            onClick={() => router.push('/register')}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-          >
-            Cadastrar Empresa
-          </button>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Nenhuma Empresa Ativa</h1>
+          <p className="text-gray-600 mb-6">
+            Você precisa selecionar uma empresa ativa para acessar o dashboard.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push('/minhas-empresas')}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all font-medium"
+            >
+              Minhas Empresas
+            </button>
+            <button
+              onClick={() => router.push('/cadastrar-empresa')}
+              className="px-6 py-3 border border-purple-300 text-purple-600 rounded-xl hover:bg-purple-50 transition-colors font-medium"
+            >
+              Cadastrar Nova Empresa
+            </button>
+          </div>
         </div>
       </div>
     )

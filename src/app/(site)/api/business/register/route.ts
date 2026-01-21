@@ -52,13 +52,15 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Verificar se o usuário já tem uma empresa cadastrada
-    const existingBusiness = await prisma.business.findUnique({
+    // Verificar quantas empresas o usuário já possui (limite de 3)
+    const userBusinesses = await prisma.business.findMany({
       where: { userId: user.id }
     })
 
-    if (existingBusiness) {
-      return NextResponse.json({ message: 'Você já possui uma empresa cadastrada' }, { status: 400 })
+    if (userBusinesses.length >= 3) {
+      return NextResponse.json({ 
+        message: 'Você já possui o número máximo de empresas cadastradas (3 empresas)' 
+      }, { status: 400 })
     }
 
     // Gerar slug único
@@ -92,6 +94,10 @@ export async function POST(request: NextRequest) {
     // Gerar ID único para a empresa
     const businessId = 'business_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
 
+    // Se for a primeira empresa, definir como ativa
+    const isFirstBusiness = userBusinesses.length === 0
+    const shouldSetAsActive = isFirstBusiness || !user.activeBusinessId
+
     // Criar a empresa
     const business = await prisma.business.create({
       data: {
@@ -112,9 +118,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Se for a primeira empresa ou não tiver empresa ativa, definir como ativa
+    if (shouldSetAsActive) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { activeBusinessId: businessId }
+      })
+    }
+
     return NextResponse.json({ 
       message: 'Empresa cadastrada com sucesso',
-      business 
+      business,
+      setAsActive: shouldSetAsActive
     }, { status: 201 })
 
   } catch (error) {

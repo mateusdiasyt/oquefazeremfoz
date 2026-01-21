@@ -572,7 +572,8 @@ export default function BusinessProfilePage() {
     )
   }
 
-  const isOwner = user?.businessId === business?.id;
+  // Verificar se o usuário é dono da empresa (verifica se está na lista de empresas do usuário)
+  const isOwner = user?.businesses?.some(b => b.id === business?.id) || user?.businessId === business?.id || false;
   const userHasReviewed = reviews.some(review => review.userId === user?.id);
 
   return (

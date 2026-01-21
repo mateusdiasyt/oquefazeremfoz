@@ -9,6 +9,8 @@ interface User {
   profileImage: string | null
   roles: string[]
   businessId?: string
+  activeBusinessId?: string
+  businesses?: Array<{ id: string }>
 }
 
 interface AuthContextType {

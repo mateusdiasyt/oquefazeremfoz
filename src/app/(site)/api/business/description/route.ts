@@ -20,9 +20,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: 'Descrição é obrigatória' }, { status: 400 })
     }
 
-    // Buscar a empresa do usuário
+    // Buscar empresa ativa do usuário
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    if (!activeBusinessId) {
+      return NextResponse.json({ message: 'Nenhuma empresa ativa encontrada' }, { status: 404 })
+    }
+
     const business = await prisma.business.findFirst({
-      where: { userId: user.id }
+      where: { 
+        id: activeBusinessId,
+        userId: user.id
+      }
     })
 
     if (!business) {

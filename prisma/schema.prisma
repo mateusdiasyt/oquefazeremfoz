@@ -21,7 +21,7 @@ model banner {
 
 model business {
   id              String            @id
-  userId          String            @unique(map: "Business_userId_key")
+  userId          String
   name            String
   description     String?
   category        String
@@ -51,6 +51,8 @@ model business {
   businessreview  businessreview[]
   post            post[]
   comment         comment[]
+
+  @@index([userId], map: "Business_userId_idx")
 }
 
 model businesscoupon {
@@ -381,9 +383,10 @@ model user {
   email                            String           @unique(map: "User_email_key")
   password                         String
   name                             String?
+  activeBusinessId                 String?
   createdAt                        DateTime         @default(now())
   updatedAt                        DateTime
-  business                         business?
+  business                         business[]
   businesslike                     businesslike[]
   businessreview                   businessreview[]
   comment                          comment[]
