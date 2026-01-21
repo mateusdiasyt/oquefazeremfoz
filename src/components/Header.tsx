@@ -20,10 +20,10 @@ export default function Header() {
           {/* Logo */}
           <div className="flex-shrink-0">
             <a href="/" className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-sm shadow-blue-500/20 group-hover:shadow-md transition-all duration-200">
+              <div className="w-9 h-9 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-sm shadow-purple-500/20 group-hover:shadow-md transition-all duration-200">
                 <span className="text-white font-bold text-lg" style={{ letterSpacing: '-0.02em' }}>O</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
+              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" style={{ letterSpacing: '-0.02em' }}>
                 OQFOZ
               </span>
             </a>
@@ -33,35 +33,35 @@ export default function Header() {
           <nav className="hidden md:flex space-x-1">
             <a 
               href="/" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
               style={{ letterSpacing: '-0.01em' }}
             >
               Início
             </a>
             <a 
               href="/empresas" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
               style={{ letterSpacing: '-0.01em' }}
             >
               Descubra
             </a>
             <a 
               href="/cupons" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
               style={{ letterSpacing: '-0.01em' }}
             >
               Cupons
             </a>
             <a 
               href="/mapa-turistico" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
               style={{ letterSpacing: '-0.01em' }}
             >
               Mapa Turístico
             </a>
             <a 
               href="/selo-verificado" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-200"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
               style={{ letterSpacing: '-0.01em' }}
             >
               Selo Verificado
@@ -77,7 +77,7 @@ export default function Header() {
                   className="flex items-center space-x-2.5 bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded-xl text-gray-700 hover:text-gray-900 transition-all duration-200 border border-gray-200 hover:border-gray-300"
                   style={{ letterSpacing: '-0.01em' }}
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
                     <span className="text-white font-medium text-xs" style={{ letterSpacing: '-0.01em' }}>
                       {(user.name || user.email)?.charAt(0).toUpperCase()}
                     </span>
@@ -101,7 +101,7 @@ export default function Header() {
                       <>
                         <a
                           href="/profile"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
+                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
                           onClick={() => setShowDropdown(false)}
                           style={{ letterSpacing: '-0.01em' }}
                         >
@@ -112,7 +112,7 @@ export default function Header() {
                         </a>
                         <a
                           href="/empresa/dashboard"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
+                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
                           onClick={() => setShowDropdown(false)}
                           style={{ letterSpacing: '-0.01em' }}
                         >
@@ -123,7 +123,7 @@ export default function Header() {
                         </a>
                         <a
                           href="/messages"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
+                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
                           onClick={() => setShowDropdown(false)}
                           style={{ letterSpacing: '-0.01em' }}
                         >
@@ -182,14 +182,14 @@ export default function Header() {
               <div className="flex space-x-2">
                 <a
                   href="/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-200"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
                   style={{ letterSpacing: '-0.01em' }}
                 >
                   Entrar
                 </a>
                 <a
                   href="/register"
-                  className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl transition-all duration-200 shadow-md shadow-blue-500/20"
+                  className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-200 shadow-md shadow-purple-500/20"
                   style={{ letterSpacing: '-0.01em' }}
                 >
                   Cadastrar
