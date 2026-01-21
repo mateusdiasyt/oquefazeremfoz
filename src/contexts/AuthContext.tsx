@@ -28,26 +28,42 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasChecked, setHasChecked] = useState(false)
 
-  // Verificar se o usuário está logado ao carregar a página
+  // Verificar se o usuário está logado apenas uma vez ao inicializar
   useEffect(() => {
-    checkAuth()
-  }, [])
+    if (!hasChecked) {
+      checkAuth()
+      setHasChecked(true)
+    }
+  }, [hasChecked])
 
   const checkAuth = async () => {
+    // Se já temos um usuário em memória, não fazer chamada adicional
+    if (user) {
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await fetch('/api/auth/me', {
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store' // Evitar cache do navegador
       })
       
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.user) {
           setUser(data.user)
+        } else {
+          setUser(null)
         }
+      } else {
+        setUser(null)
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error)
+      setUser(null)
     } finally {
       setLoading(false)
     }
@@ -68,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok && data.success) {
         setUser(data.user)
+        setHasChecked(true) // Marcar como verificado após login bem-sucedido
         return { success: true }
       } else {
         return { success: false, error: data.error || 'Erro no login' }
@@ -88,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Erro no logout:', error)
     } finally {
       setUser(null)
+      setHasChecked(false) // Resetar para verificar novamente se necessário
     }
   }
 

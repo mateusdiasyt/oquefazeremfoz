@@ -309,17 +309,7 @@ export default function HomePage() {
   }, [currentPage, hasMorePosts, loadingMore])
 
 
-  const fetchUser = async () => {
-    try {
-      const response = await fetch('/api/auth/me')
-      if (response.ok) {
-        const userData = await response.json()
-        // User is already available from useAuth context
-      }
-    } catch (error) {
-      console.error('Erro ao buscar usuário:', error)
-    }
-  }
+  // Usuário já está disponível via useAuth context, não precisa buscar novamente
 
   const fetchPosts = async (page = 1, append = false) => {
     try {

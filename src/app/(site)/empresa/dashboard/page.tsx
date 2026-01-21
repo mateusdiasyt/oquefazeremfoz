@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../../../../contexts/AuthContext'
 import CreatePost from '../../../../components/CreatePost'
 import PostCard from '../../../../components/PostCard'
 
@@ -53,40 +54,15 @@ interface Post {
 
 export default function EmpresaDashboard() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useAuth() // Usar contexto ao invés de buscar novamente
   const [business, setBusiness] = useState<Business | null>(null)
   const [businessLoading, setBusinessLoading] = useState(true)
   const [posts, setPosts] = useState<Post[]>([])
   const [postsLoading, setPostsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'info' | 'posts'>('info')
 
-  // Buscar usuário logado
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/auth/me')
-        if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
-        } else {
-          router.push('/login')
-          return
-        }
-      } catch (error) {
-        console.error('Erro ao buscar usuário:', error)
-        router.push('/login')
-        return
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchUser()
-  }, [router])
-
-  useEffect(() => {
-    if (!loading && user && user.roles.includes('COMPANY')) {
+    if (!loading && user && user.roles?.includes('COMPANY')) {
       fetchBusiness()
     }
   }, [user, loading])
