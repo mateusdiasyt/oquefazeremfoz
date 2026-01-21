@@ -35,6 +35,10 @@ export async function GET(request: NextRequest) {
           select: { id: true }
         } : false,
         replies: {
+          where: {
+            // Garantir que as respostas tenham o mesmo parentId do comentário principal
+            parentId: { not: null }
+          },
           include: {
             user: {
               select: {
@@ -53,7 +57,8 @@ export async function GET(request: NextRequest) {
               select: { id: true }
             } : false
           },
-          orderBy: { createdAt: 'asc' }
+          orderBy: { createdAt: 'asc' },
+          distinct: ['id'] // Garantir que não haja duplicados
         }
       },
       orderBy: { createdAt: 'desc' }

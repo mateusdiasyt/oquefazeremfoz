@@ -157,9 +157,28 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       if (response.ok) {
         const data = await response.json()
         const fetchedComments = data.comments || []
-        setComments(fetchedComments)
+        
+        // Deduplicar respostas em cada comentário
+        const deduplicatedComments = fetchedComments.map((comment: any) => {
+          if (comment.replies && comment.replies.length > 0) {
+            // Usar Map para deduplicar por ID
+            const uniqueReplies = new Map()
+            comment.replies.forEach((reply: any) => {
+              if (!uniqueReplies.has(reply.id)) {
+                uniqueReplies.set(reply.id, reply)
+              }
+            })
+            return {
+              ...comment,
+              replies: Array.from(uniqueReplies.values())
+            }
+          }
+          return comment
+        })
+        
+        setComments(deduplicatedComments)
         // Atualizar a contagem apenas com comentários principais (sem replies)
-        const mainCommentsCount = fetchedComments.length
+        const mainCommentsCount = deduplicatedComments.length
         setCommentsCount(mainCommentsCount)
       }
     } catch (error) {
