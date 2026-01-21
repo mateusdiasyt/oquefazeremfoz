@@ -51,17 +51,37 @@ export async function DELETE(
         })
 
         // Deletar produtos da empresa
-        await tx.product.deleteMany({
+        await tx.businessproduct.deleteMany({
           where: { businessId: business.id }
         })
 
         // Deletar cupons da empresa
-        await tx.coupon.deleteMany({
+        await tx.businesscoupon.deleteMany({
+          where: { businessId: business.id }
+        })
+
+        // Deletar galeria da empresa
+        await tx.businessgallery.deleteMany({
+          where: { businessId: business.id }
+        })
+
+        // Deletar comentários da empresa
+        await tx.comment.deleteMany({
           where: { businessId: business.id }
         })
 
         // Deletar likes da empresa
         await tx.businesslike.deleteMany({
+          where: { businessId: business.id }
+        })
+
+        // Deletar reviews da empresa
+        await tx.businessreview.deleteMany({
+          where: { businessId: business.id }
+        })
+
+        // Deletar postlikes da empresa
+        await tx.postlike.deleteMany({
           where: { businessId: business.id }
         })
 
@@ -87,7 +107,12 @@ export async function DELETE(
       })
 
       // Deletar comentários do usuário
-      await tx.postcomment.deleteMany({
+      await tx.comment.deleteMany({
+        where: { userId: userId }
+      })
+
+      // Deletar likes de comentários do usuário
+      await tx.commentlike.deleteMany({
         where: { userId: userId }
       })
 
@@ -101,25 +126,40 @@ export async function DELETE(
         }
       })
 
-      // Deletar mensagens do usuário
-      await tx.message.deleteMany({
+      // Buscar conversas do usuário antes de deletar mensagens
+      const userConversations = await tx.conversation.findMany({
         where: {
-          OR: [
-            { senderId: userId },
-            { receiverId: userId }
-          ]
-        }
+          user: {
+            some: {
+              id: userId
+            }
+          }
+        },
+        select: { id: true }
       })
 
+      // Deletar mensagens das conversas
+      const conversationIds = userConversations.map(c => c.id)
+      if (conversationIds.length > 0) {
+        await tx.message.deleteMany({
+          where: {
+            conversationId: {
+              in: conversationIds
+            }
+          }
+        })
+      }
+
       // Deletar conversas do usuário
-      await tx.conversation.deleteMany({
-        where: {
-          OR: [
-            { user1Id: userId },
-            { user2Id: userId }
-          ]
-        }
-      })
+      if (conversationIds.length > 0) {
+        await tx.conversation.deleteMany({
+          where: {
+            id: {
+              in: conversationIds
+            }
+          }
+        })
+      }
 
       // Deletar sessões do usuário
       await tx.session.deleteMany({
