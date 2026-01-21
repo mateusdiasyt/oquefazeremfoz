@@ -273,21 +273,48 @@ export default function MapaTuristico() {
 
   const geocodeAddressNominatim = async (address: string): Promise<[number, number] | null> => {
     try {
-      const query = encodeURIComponent(`${address}, Foz do Iguaçu, Paraná, Brasil`)
+      // Garantir que o endereço completo seja usado, incluindo número
+      // O Nominatim funciona melhor quando o endereço está completo
+      const fullAddress = address.trim()
+      const query = encodeURIComponent(`${fullAddress}, Foz do Iguaçu, Paraná, Brasil`)
+      
+      console.log('🔍 Geocodificando endereço completo:', `${fullAddress}, Foz do Iguaçu, Paraná, Brasil`)
+      
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=5&addressdetails=1&extratags=1`,
+        {
+          headers: {
+            'User-Agent': 'OQueFazerEmFoz/1.0' // Nominatim requer User-Agent
+          }
+        }
       )
+      
       const data = await response.json()
       
       if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat)
-        const lng = parseFloat(data[0].lon)
+        // Priorizar resultados que têm número na rua (display_name contém o número)
+        let bestMatch = data[0]
+        
+        // Verificar se há algum resultado que parece mais específico (contém número)
+        for (const result of data) {
+          const displayName = result.display_name || ''
+          // Procurar por padrões de número no endereço
+          if (/\d+/.test(displayName) && (displayName.toLowerCase().includes('foz') || displayName.toLowerCase().includes('foz do iguaçu'))) {
+            bestMatch = result
+            break
+          }
+        }
+        
+        const lat = parseFloat(bestMatch.lat)
+        const lng = parseFloat(bestMatch.lon)
+        console.log('✅ Coordenadas encontradas:', [lat, lng], '- Endereço:', bestMatch.display_name)
         return [lat, lng]
       }
       
+      console.warn('⚠️ Nenhum resultado encontrado para:', address)
       return null
     } catch (error) {
-      console.error('Erro na geocodificação:', error)
+      console.error('❌ Erro na geocodificação:', error)
       return null
     }
   }
