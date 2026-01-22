@@ -59,6 +59,7 @@ export default function FloatingChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isInitialLoading, setIsInitialLoading] = useState(false)
+  const [isLoadingConversations, setIsLoadingConversations] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const lastMessageCountRef = useRef<number>(0)
@@ -67,8 +68,12 @@ export default function FloatingChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (showLoading: boolean = false) => {
     try {
+      if (showLoading) {
+        setIsLoadingConversations(true)
+      }
+      
       const response = await fetch('/api/messages/conversations')
       
       if (response.ok) {
@@ -90,6 +95,10 @@ export default function FloatingChat() {
       }
     } catch (error) {
       console.error('Erro ao buscar conversas:', error)
+    } finally {
+      if (showLoading) {
+        setIsLoadingConversations(false)
+      }
     }
   }, [conversations])
 
@@ -644,7 +653,12 @@ export default function FloatingChat() {
                     </div>
                     
                     <div className="flex-1 overflow-y-auto">
-                      {conversations.length === 0 ? (
+                      {isLoadingConversations ? (
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                          <p className="text-sm text-gray-500">Carregando conversas...</p>
+                        </div>
+                      ) : conversations.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-gray-500">
                           <MessageCircle size={48} className="mb-4 opacity-50" />
                           <p className="text-sm">Nenhuma conversa ainda</p>

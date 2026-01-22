@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🏢 Empresas seguidas:', businessLikes.length)
 
-    // Buscar conversas existentes do usuário
+    // ✅ OTIMIZAÇÃO: Buscar conversas com select mínimo e apenas empresa ativa
     const existingConversations = await prisma.conversation.findMany({
       where: {
         user: {
@@ -43,7 +43,16 @@ export async function GET(request: NextRequest) {
             email: true,
             activeBusinessId: true,
             business: {
-              orderBy: { createdAt: 'desc' }
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                profileImage: true,
+                isVerified: true,
+                category: true
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 1 // ✅ Apenas empresa ativa
             }
           }
         },
@@ -60,7 +69,13 @@ export async function GET(request: NextRequest) {
                 email: true,
                 activeBusinessId: true,
                 business: {
-                  orderBy: { createdAt: 'desc' }
+                  select: {
+                    id: true,
+                    name: true,
+                    profileImage: true
+                  },
+                  orderBy: { createdAt: 'desc' },
+                  take: 1 // ✅ Apenas empresa ativa
                 }
               }
             },
@@ -71,7 +86,13 @@ export async function GET(request: NextRequest) {
                 email: true,
                 activeBusinessId: true,
                 business: {
-                  orderBy: { createdAt: 'desc' }
+                  select: {
+                    id: true,
+                    name: true,
+                    profileImage: true
+                  },
+                  orderBy: { createdAt: 'desc' },
+                  take: 1 // ✅ Apenas empresa ativa
                 }
               }
             }
