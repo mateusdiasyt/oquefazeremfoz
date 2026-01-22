@@ -170,17 +170,16 @@ export default function FloatingChat() {
     }
   }, [user, playMessageSound, messages])
 
-  useEffect(() => {
-    if (isOpen && user) {
-      fetchConversations()
-    }
-  }, [isOpen, user, fetchConversations])
-
+  // ✅ CORREÇÃO: Unificar carregamento inicial e polling em um único useEffect
   // Polling para lista de conversas (mesmo sem conversa selecionada)
   useEffect(() => {
     if (!isOpen || !user) return
 
     let interval: NodeJS.Timeout | null = null
+    let isInitialLoad = true
+
+    // ✅ Carregar imediatamente na primeira vez (com loading)
+    fetchConversations(true)
 
     const startConversationsPolling = () => {
       if (interval) clearInterval(interval)
@@ -216,13 +215,22 @@ export default function FloatingChat() {
     window.addEventListener('blur', handleBlur)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    startConversationsPolling()
+    // ✅ Iniciar polling após delay (evitar requisição duplicada logo após carregamento inicial)
+    const pollingTimeout = setTimeout(() => {
+      startConversationsPolling()
+    }, 10000) // Iniciar polling após 10s (após carregamento inicial)
 
     return () => {
+      clearTimeout(pollingTimeout)
       stopConversationsPolling()
       window.removeEventListener('focus', handleFocus)
       window.removeEventListener('blur', handleBlur)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      // ✅ Cancelar requisição pendente ao desmontar
+      if (fetchConversationsAbortControllerRef.current) {
+        fetchConversationsAbortControllerRef.current.abort()
+        fetchConversationsAbortControllerRef.current = null
+      }
     }
   }, [isOpen, user, fetchConversations])
 
