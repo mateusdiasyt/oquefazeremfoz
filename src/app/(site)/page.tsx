@@ -601,10 +601,10 @@ export default function HomePage() {
       </section>
 
       {/* Main Content */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <section className="w-full pt-8 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto px-0 md:px-4 lg:px-8">
           {/* Feed */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className="lg:col-span-2 flex flex-col gap-4 md:gap-6 px-0 md:px-0">
             {/* Criar Post - apenas para empresas (admins não precisam criar posts) */}
             {user && user.roles.includes('COMPANY') && (
               <CreatePost onPostCreated={handlePostCreated} />
