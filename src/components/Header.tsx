@@ -107,15 +107,15 @@ export default function Header() {
   // Limpar timeout ao desmontar componente
   useEffect(() => {
     return () => {
-      if (dropdownTimeoutRef.current) {
-        clearTimeout(dropdownTimeoutRef.current)
+      if (dropdownTimeoutRef.current !== null) {
+        window.clearTimeout(dropdownTimeoutRef.current)
       }
     }
   }, [])
 
   const handleLogout = async () => {
-    if (dropdownTimeoutRef.current) {
-      clearTimeout(dropdownTimeoutRef.current)
+    if (dropdownTimeoutRef.current !== null) {
+      window.clearTimeout(dropdownTimeoutRef.current)
       dropdownTimeoutRef.current = null
     }
     await logout()
@@ -294,14 +294,14 @@ export default function Header() {
               <div 
                 className="relative"
                 onMouseEnter={() => {
-                  if (dropdownTimeoutRef.current) {
-                    clearTimeout(dropdownTimeoutRef.current)
+                  if (dropdownTimeoutRef.current !== null) {
+                    window.clearTimeout(dropdownTimeoutRef.current)
                     dropdownTimeoutRef.current = null
                   }
                   setShowDropdown(true)
                 }}
                 onMouseLeave={() => {
-                  dropdownTimeoutRef.current = setTimeout(() => {
+                  dropdownTimeoutRef.current = window.setTimeout(() => {
                     setShowDropdown(false)
                   }, 150) // Pequeno delay para permitir movimento do mouse
                 }}
