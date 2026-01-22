@@ -36,7 +36,7 @@ function AuthForm() {
   const [registerEmail, setRegisterEmail] = useState('')
   const [registerPassword, setRegisterPassword] = useState('')
   const [registerName, setName] = useState('')
-  const [accountType, setAccountType] = useState<'TOURIST' | 'COMPANY'>('TOURIST')
+  const [accountType, setAccountType] = useState<'TOURIST' | 'COMPANY' | 'GUIDE'>('TOURIST')
   const [registerLoading, setRegisterLoading] = useState(false)
   const [registerError, setRegisterError] = useState('')
   
@@ -51,6 +51,20 @@ function AuthForm() {
     instagram: '',
     facebook: '',
     whatsapp: ''
+  })
+
+  // Campos do guia
+  const [guideData, setGuideData] = useState({
+    guideName: '',
+    description: '',
+    specialties: '',
+    languages: '',
+    phone: '',
+    whatsapp: '',
+    email: '',
+    instagram: '',
+    facebook: '',
+    website: ''
   })
 
   // Redirecionar se o usuário já estiver logado
@@ -109,6 +123,14 @@ function AuthForm() {
     }))
   }
 
+  const handleGuideChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setGuideData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setRegisterLoading(true)
@@ -119,6 +141,15 @@ function AuthForm() {
       if (accountType === 'COMPANY') {
         if (!businessData.businessName || !businessData.category || !businessData.address) {
           setRegisterError('Preencha todos os campos obrigatórios da empresa')
+          setRegisterLoading(false)
+          return
+        }
+      }
+
+      // Validar campos obrigatórios do guia se for GUIDE
+      if (accountType === 'GUIDE') {
+        if (!guideData.guideName) {
+          setRegisterError('Preencha o nome do guia')
           setRegisterLoading(false)
           return
         }
@@ -162,6 +193,24 @@ function AuthForm() {
         if (!businessResponse.ok) {
           const errorData = await businessResponse.json()
           setRegisterError(errorData.error || 'Erro ao cadastrar empresa')
+          setRegisterLoading(false)
+          return
+        }
+      }
+
+      // Se for guia, cadastrar dados do guia
+      if (accountType === 'GUIDE') {
+        const guideResponse = await fetch('/api/guide/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(guideData),
+        })
+
+        if (!guideResponse.ok) {
+          const errorData = await guideResponse.json()
+          setRegisterError(errorData.error || 'Erro ao cadastrar guia')
           setRegisterLoading(false)
           return
         }
@@ -265,30 +314,30 @@ function AuthForm() {
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div>
                   <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
-                  </label>
-                  <input
+                Email
+              </label>
+              <input
                     id="login-email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
                     placeholder="seu@email.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                  />
-                </div>
-                <div>
+              />
+            </div>
+            <div>
                   <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-2">
-                    Senha
-                  </label>
-                  <input
+                Senha
+              </label>
+              <input
                     id="login-password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
                     placeholder="••••••••"
                     value={loginPassword}
@@ -362,13 +411,24 @@ function AuthForm() {
                     >
                       Empresa
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountType('GUIDE')}
+                      className={`flex-1 py-2.5 px-4 rounded-xl font-medium transition-all duration-200 ${
+                        accountType === 'GUIDE'
+                          ? 'bg-purple-100 text-purple-700 border-2 border-purple-500'
+                          : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200'
+                      }`}
+                    >
+                      Guia
+                    </button>
                   </div>
                 </div>
 
                 {/* Campos básicos */}
                 <div>
                   <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Nome {accountType === 'COMPANY' ? 'do responsável' : ''}
+                    Nome {accountType === 'COMPANY' ? 'do responsável' : accountType === 'GUIDE' ? 'do guia' : ''}
                   </label>
                   <input
                     id="register-name"
@@ -531,7 +591,7 @@ function AuthForm() {
                           onChange={handleBusinessChange}
                         />
                       </div>
-                      <div>
+          <div>
                         <label htmlFor="business-instagram" className="block text-sm font-medium text-gray-700 mb-2">
                           Instagram
                         </label>
@@ -549,14 +609,174 @@ function AuthForm() {
                   </>
                 )}
 
+                {/* Campos do guia (apenas se for GUIDE) */}
+                {accountType === 'GUIDE' && (
+                  <>
+                    <div>
+                      <label htmlFor="guide-name" className="block text-sm font-medium text-gray-700 mb-2">
+                        Nome do guia <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="guide-name"
+                        name="guideName"
+                        type="text"
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        placeholder="Seu nome como guia"
+                        value={guideData.guideName}
+                        onChange={handleGuideChange}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="guide-description" className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição
+                      </label>
+                      <textarea
+                        id="guide-description"
+                        name="description"
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 resize-none"
+                        placeholder="Conte um pouco sobre você e sua experiência como guia..."
+                        value={guideData.description}
+                        onChange={handleGuideChange}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="guide-specialties" className="block text-sm font-medium text-gray-700 mb-2">
+                        Especialidades
+                      </label>
+                      <input
+                        id="guide-specialties"
+                        name="specialties"
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        placeholder="Ex: Cataratas, Aventura, História, Natureza"
+                        value={guideData.specialties}
+                        onChange={handleGuideChange}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="guide-languages" className="block text-sm font-medium text-gray-700 mb-2">
+                        Idiomas
+                      </label>
+                      <input
+                        id="guide-languages"
+                        name="languages"
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        placeholder="Ex: Português, Inglês, Espanhol"
+                        value={guideData.languages}
+                        onChange={handleGuideChange}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="guide-phone" className="block text-sm font-medium text-gray-700 mb-2">
+                          Telefone
+                        </label>
+                        <input
+                          id="guide-phone"
+                          name="phone"
+                          type="tel"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          placeholder="(45) 99999-9999"
+                          value={guideData.phone}
+                          onChange={handleGuideChange}
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="guide-whatsapp" className="block text-sm font-medium text-gray-700 mb-2">
+                          WhatsApp
+                        </label>
+                        <input
+                          id="guide-whatsapp"
+                          name="whatsapp"
+                          type="tel"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          placeholder="(45) 99999-9999"
+                          value={guideData.whatsapp}
+                          onChange={handleGuideChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="guide-email" className="block text-sm font-medium text-gray-700 mb-2">
+                        Email profissional
+                      </label>
+                      <input
+                        id="guide-email"
+                        name="email"
+                        type="email"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        placeholder="contato@seuguia.com"
+                        value={guideData.email}
+                        onChange={handleGuideChange}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="guide-instagram" className="block text-sm font-medium text-gray-700 mb-2">
+                          Instagram
+                        </label>
+                        <input
+                          id="guide-instagram"
+                          name="instagram"
+                          type="text"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          placeholder="@seuinstagram"
+                          value={guideData.instagram}
+                          onChange={handleGuideChange}
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="guide-facebook" className="block text-sm font-medium text-gray-700 mb-2">
+                          Facebook
+                        </label>
+                        <input
+                          id="guide-facebook"
+                          name="facebook"
+                          type="text"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                          placeholder="facebook.com/seuperfil"
+                          value={guideData.facebook}
+                          onChange={handleGuideChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="guide-website" className="block text-sm font-medium text-gray-700 mb-2">
+                        Website
+                      </label>
+                      <input
+                        id="guide-website"
+                        name="website"
+                        type="url"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+                        placeholder="https://seuwebsite.com"
+                        value={guideData.website}
+                        onChange={handleGuideChange}
+                      />
+                    </div>
+                  </>
+                )}
+
                 {registerError && (
                   <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 text-center">
                     {registerError}
                   </div>
                 )}
 
-                <button
-                  type="submit"
+            <button
+              type="submit"
                   disabled={registerLoading}
                   className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40"
                 >
@@ -571,11 +791,11 @@ function AuthForm() {
                   ) : (
                     'Criar conta'
                   )}
-                </button>
+            </button>
               </form>
             </div>
           )}
-        </div>
+          </div>
       </div>
     </div>
   )

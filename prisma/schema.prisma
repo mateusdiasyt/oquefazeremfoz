@@ -60,6 +60,40 @@ model business {
   @@index([userId], map: "Business_userId_idx")
 }
 
+model guide {
+  id              String            @id
+  userId          String
+  name            String
+  description     String?
+  specialties     String?           // Especialidades (ex: "Cataratas, Aventura, História")
+  languages       String?           // Idiomas falados (ex: "Português, Inglês, Espanhol")
+  phone           String?
+  whatsapp        String?
+  email           String?
+  instagram       String?
+  facebook        String?
+  website         String?
+  presentationVideo String?         // Vídeo de apresentação do YouTube
+  isApproved      Boolean           @default(false)
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  coverImage      String?
+  profileImage    String?
+  likesCount      Int               @default(0)
+  slug            String            @unique(map: "Guide_slug_key") @default("")
+  isVerified      Boolean           @default(false)
+  followersCount  Int               @default(0)
+  ratingAvg       Float             @default(0)
+  ratingCount     Int               @default(0)
+  user            user              @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Guide_userId_fkey")
+
+  @@index([userId], map: "Guide_userId_idx")
+  @@index([isApproved], map: "Guide_isApproved_idx")
+  @@index([slug], map: "Guide_slug_idx")
+}
+
 model businesscoupon {
   id          String    @id
   businessId  String
@@ -436,6 +470,7 @@ model user {
   conversation                     conversation[]   @relation("conversationparticipants")
   commentlike                      commentlike[]
   notification                     notification[]
+  guide                            guide[]
 }
 
 model userrole {
@@ -451,6 +486,7 @@ enum userrole_role {
   ADMIN
   COMPANY
   TOURIST
+  GUIDE
 }
 
 enum subscription_status {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Gift, MapPin, ShieldCheck } from 'lucide-react'
+import { Home, Search, Gift, MapPin, ShieldCheck, UserCircle } from 'lucide-react'
 
 export default function MobileNavigation() {
   const pathname = usePathname()
@@ -18,6 +18,8 @@ export default function MobileNavigation() {
       setActiveTab('cupons')
     } else if (pathname === '/mapa-turistico') {
       setActiveTab('mapa')
+    } else if (pathname === '/guias') {
+      setActiveTab('guias')
     } else if (pathname === '/selo-verificado') {
       setActiveTab('selo')
     }
@@ -47,6 +49,12 @@ export default function MobileNavigation() {
       icon: MapPin,
       label: 'Mapa Turístico',
       href: '/mapa-turistico'
+    },
+    {
+      id: 'guias',
+      icon: UserCircle,
+      label: 'Guias',
+      href: '/guias'
     },
     {
       id: 'selo',

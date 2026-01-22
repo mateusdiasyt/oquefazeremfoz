@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar role
-    if (!['TOURIST', 'COMPANY', 'ADMIN'].includes(role)) {
+    if (!['TOURIST', 'COMPANY', 'ADMIN', 'GUIDE'].includes(role)) {
       return NextResponse.json(
         { error: 'Tipo de conta inválido' },
         { status: 400 }
@@ -45,11 +45,13 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hashPassword(password)
     
     // Mapear role para o enum correto
-    let userRole: 'TOURIST' | 'COMPANY' | 'ADMIN' = 'TOURIST'
+    let userRole: 'TOURIST' | 'COMPANY' | 'ADMIN' | 'GUIDE' = 'TOURIST'
     if (role === 'COMPANY') {
       userRole = 'COMPANY'
     } else if (role === 'ADMIN') {
       userRole = 'ADMIN'
+    } else if (role === 'GUIDE') {
+      userRole = 'GUIDE'
     }
     
     // Gerar ID único para o usuário
