@@ -277,7 +277,7 @@ export default function FloatingChat() {
       fetchMessages(selectedConversation.id, true)
       // Atualizar lista de conversas após marcar como lidas
       setTimeout(() => {
-        fetchConversations()
+        fetchConversations(false) // ✅ Sem loading (atualização em background)
       }, 500)
     }
   }, [selectedConversation, fetchMessages, fetchConversations])
@@ -413,7 +413,7 @@ export default function FloatingChat() {
       fetchMessages(selectedConversation.id, true)
       // Atualizar lista de conversas após marcar como lidas
       setTimeout(() => {
-        fetchConversations()
+        fetchConversations(false) // ✅ Sem loading (atualização em background)
       }, 500)
     }
   }, [selectedConversation, fetchMessages, fetchConversations])
