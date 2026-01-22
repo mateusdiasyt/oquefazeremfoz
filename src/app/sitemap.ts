@@ -8,11 +8,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const businesses = await prisma.business.findMany({
     where: {
       isApproved: true,
-      slug: {
-        not: {
-          equals: null,
-        },
-      },
     },
     select: {
       slug: true,
@@ -21,13 +16,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     take: 1000, // Limitar a 1000 empresas
   })
 
-  // Gerar URLs das empresas
-  const businessUrls: MetadataRoute.Sitemap = businesses.map((business) => ({
-    url: `${baseUrl}/empresa/${business.slug}`,
-    lastModified: business.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }))
+  // Filtrar apenas empresas com slug válido e gerar URLs
+  const businessUrls: MetadataRoute.Sitemap = businesses
+    .filter((business) => business.slug !== null)
+    .map((business) => ({
+      url: `${baseUrl}/empresa/${business.slug}`,
+      lastModified: business.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
 
   // URLs estáticas principais
   const staticUrls: MetadataRoute.Sitemap = [
