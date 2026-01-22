@@ -51,6 +51,11 @@ async function verifyJWT(token: string, secret: string) {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
+  // Permitir acesso público a sitemap.xml e robots.txt (importante para SEO)
+  if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
+    return NextResponse.next()
+  }
+  
   // Rotas públicas (acessíveis sem login) - IMPORTANTE PARA SEO
   const publicRoutes = [
     '/login', 
