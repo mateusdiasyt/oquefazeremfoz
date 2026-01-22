@@ -5,6 +5,30 @@ import { Bell } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 
+// Função para tocar som de notificação
+const playNotificationSound = () => {
+  try {
+    // Criar um contexto de áudio
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+    
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+    
+    oscillator.frequency.value = 800
+    oscillator.type = 'sine'
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3)
+    
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + 0.3)
+  } catch (error) {
+    console.error('Erro ao tocar som de notificação:', error)
+  }
+}
+
 interface Notification {
   id: string
   type: string
@@ -28,6 +52,7 @@ export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const previousUnreadCountRef = useRef(0)
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -47,21 +72,30 @@ export default function NotificationBell() {
   }, [isOpen])
 
   // Buscar notificações
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (silent = false) => {
     if (!user || !isCompany()) return
 
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const response = await fetch('/api/notifications?limit=10')
       if (response.ok) {
         const data = await response.json()
+        const newUnreadCount = data.unreadCount || 0
+        
+        // Verificar se há novas notificações não lidas
+        if (newUnreadCount > previousUnreadCountRef.current && previousUnreadCountRef.current > 0) {
+          // Tocar som apenas se o número aumentou (não na primeira carga)
+          playNotificationSound()
+        }
+        
         setNotifications(data.notifications || [])
-        setUnreadCount(data.unreadCount || 0)
+        setUnreadCount(newUnreadCount)
+        previousUnreadCountRef.current = newUnreadCount
       }
     } catch (error) {
       console.error('Erro ao buscar notificações:', error)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -69,8 +103,8 @@ export default function NotificationBell() {
   useEffect(() => {
     if (user && isCompany()) {
       fetchNotifications()
-      // Polling a cada 30 segundos
-      const interval = setInterval(fetchNotifications, 30000)
+      // Polling a cada 5 segundos para atualização em tempo real
+      const interval = setInterval(() => fetchNotifications(true), 5000)
       return () => clearInterval(interval)
     }
   }, [user])
@@ -149,10 +183,16 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => {
+        onClick={async () => {
+          const wasClosed = !isOpen
           setIsOpen(!isOpen)
-          if (!isOpen) {
-            fetchNotifications()
+          
+          if (wasClosed) {
+            // Ao abrir, buscar notificações e marcar todas como lidas
+            await fetchNotifications()
+            if (unreadCount > 0) {
+              await markAllAsRead()
+            }
           }
         }}
         className="relative p-2.5 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-600 hover:bg-purple-50/50"
@@ -160,7 +200,7 @@ export default function NotificationBell() {
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
