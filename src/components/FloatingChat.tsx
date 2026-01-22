@@ -255,7 +255,7 @@ export default function FloatingChat() {
 
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation.id)
+      fetchMessages(selectedConversation.id, true)
       // Atualizar lista de conversas após marcar como lidas
       setTimeout(() => {
         fetchConversations()
@@ -392,7 +392,7 @@ export default function FloatingChat() {
 
   useEffect(() => {
     if (selectedConversation) {
-      fetchMessages(selectedConversation.id)
+      fetchMessages(selectedConversation.id, true)
       // Atualizar lista de conversas após marcar como lidas
       setTimeout(() => {
         fetchConversations()
