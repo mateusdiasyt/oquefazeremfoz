@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, Heart, Edit3, Trash2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -339,7 +339,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     
     // Regex para encontrar @mentions (permite espaços e caracteres especiais comuns)
     const mentionRegex = /@([^\s@,\.!?\n]+(?:\s+[^\s@,\.!?\n]+)*)/g
-    const parts: (string | JSX.Element)[] = []
+    const parts: (string | React.ReactElement)[] = []
     let lastIndex = 0
     let match
     let keyCounter = 0
