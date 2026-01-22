@@ -101,6 +101,23 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     }
   }, [userBusinesses, post.business?.id])
 
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (commentIdentityDropdownRef.current && !commentIdentityDropdownRef.current.contains(event.target as Node)) {
+        setShowCommentIdentityDropdown(false)
+      }
+    }
+
+    if (showCommentIdentityDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showCommentIdentityDropdown])
+
   const checkIfLiked = async () => {
     try {
       const response = await fetch(`/api/posts/${post.id}/like`)
