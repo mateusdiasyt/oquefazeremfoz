@@ -21,8 +21,11 @@ export async function GET() {
     })
     console.log('📋 Todas as empresas:', todasEmpresas)
     
-    // Buscar empresas (removendo filtro isApproved temporariamente)
+    // ✅ CORREÇÃO: Buscar apenas empresas aprovadas e com usuário válido
     const empresas = await prisma.business.findMany({
+      where: {
+        isApproved: true
+      },
       select: {
         id: true,
         name: true,
@@ -32,15 +35,22 @@ export async function GET() {
         followersCount: true,
         profileImage: true,
         isVerified: true,
-        isApproved: true
+        isApproved: true,
+        userId: true,
+        user: {
+          select: {
+            id: true // ✅ Verificar se usuário existe
+          }
+        }
       },
       take: 20
     })
     
     console.log('🏢 Empresas encontradas:', empresas.length)
 
-    // Filtrar apenas empresas com endereço
-    const empresasComEndereco = empresas.filter(emp => emp.address && emp.address.trim() !== '')
+    // ✅ Filtrar empresas com usuário válido e endereço
+    const empresasValidas = empresas.filter(emp => emp.user && emp.user.id)
+    const empresasComEndereco = empresasValidas.filter(emp => emp.address && emp.address.trim() !== '')
     console.log('📍 Empresas com endereço:', empresasComEndereco.length)
     console.log('📋 Empresas com endereço:', empresasComEndereco.map(e => ({name: e.name, address: e.address, isApproved: e.isApproved})))
 

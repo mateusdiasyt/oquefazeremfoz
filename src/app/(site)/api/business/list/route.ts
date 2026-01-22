@@ -12,9 +12,11 @@ export async function GET(request: NextRequest) {
       // Usuário não logado, continuar sem erro
     }
 
-    // Buscar todas as empresas (removendo filtro isApproved temporariamente para que apareçam)
-    // TODO: Implementar sistema de aprovação via admin se necessário
+    // ✅ CORREÇÃO: Filtrar apenas empresas com usuário válido e aprovadas
     const businesses = await prisma.business.findMany({
+      where: {
+        isApproved: true
+      },
       select: {
         id: true,
         name: true,
@@ -35,6 +37,12 @@ export async function GET(request: NextRequest) {
         isApproved: true,
         createdAt: true,
         updatedAt: true,
+        userId: true, // ✅ Incluir userId para validação
+        user: {
+          select: {
+            id: true // ✅ Verificar se usuário existe
+          }
+        },
         businesslike: {
           select: {
             id: true,
@@ -48,8 +56,11 @@ export async function GET(request: NextRequest) {
       take: 50 // Aumentado para 50 empresas
     })
 
+    // ✅ Filtrar empresas que realmente têm usuário válido (double check)
+    const validBusinesses = businesses.filter(b => b.user && b.user.id)
+
     // Buscar presentationVideo para todas as empresas usando SQL raw
-    const businessIds = businesses.map(b => b.id)
+    const businessIds = validBusinesses.map(b => b.id)
     const presentationVideosMap: Record<string, string | null> = {}
     
     if (businessIds.length > 0) {
