@@ -677,7 +677,7 @@ export default function HomePage() {
                     .sort((a, b) => {
                       // 1. Empresas verificadas primeiro
                       if (a.isVerified !== b.isVerified) {
-                        return b.isVerified ? 1 : -1
+                        return b.isVerified ? -1 : 1 // Verificadas vêm primeiro
                       }
                       // 2. Mais seguidores
                       const followersDiff = (b.followersCount || 0) - (a.followersCount || 0)
