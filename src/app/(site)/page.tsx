@@ -672,7 +672,24 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {businesses.slice(0, 3).map((business) => (
+                  {businesses
+                    .filter(b => b.isApproved) // Garantir que está aprovada
+                    .sort((a, b) => {
+                      // 1. Empresas verificadas primeiro
+                      if (a.isVerified !== b.isVerified) {
+                        return b.isVerified ? 1 : -1
+                      }
+                      // 2. Mais seguidores
+                      const followersDiff = (b.followersCount || 0) - (a.followersCount || 0)
+                      if (followersDiff !== 0) return followersDiff
+                      // 3. Mais likes
+                      const likesDiff = (b.likesCount || 0) - (a.likesCount || 0)
+                      if (likesDiff !== 0) return likesDiff
+                      // 4. Mais recentes (desempate)
+                      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                    })
+                    .slice(0, 3)
+                    .map((business) => (
                     <div key={business.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50/50 transition-colors border border-transparent hover:border-gray-100">
                       <button
                         onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
