@@ -66,6 +66,22 @@ function AuthForm() {
     facebook: '',
     website: ''
   })
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([])
+
+  const availableLanguages = [
+    'Português',
+    'Inglês',
+    'Espanhol',
+    'Francês',
+    'Alemão',
+    'Italiano',
+    'Japonês',
+    'Chinês',
+    'Coreano',
+    'Russo',
+    'Árabe',
+    'Outro'
+  ]
 
   // Redirecionar se o usuário já estiver logado
   useEffect(() => {
@@ -129,6 +145,23 @@ function AuthForm() {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguages(prev => {
+      const isSelected = prev.includes(language)
+      const newSelection = isSelected
+        ? prev.filter(l => l !== language)
+        : [...prev, language]
+      
+      // Atualizar guideData.languages com a string formatada
+      setGuideData(prevGuide => ({
+        ...prevGuide,
+        languages: newSelection.join(', ')
+      }))
+      
+      return newSelection
+    })
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -444,7 +477,7 @@ function AuthForm() {
 
                 <div>
                   <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="register-email"
@@ -461,7 +494,7 @@ function AuthForm() {
 
                 <div>
                   <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-2">
-                    Senha
+                    Senha <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="register-password"
@@ -662,15 +695,31 @@ function AuthForm() {
                       <label htmlFor="guide-languages" className="block text-sm font-medium text-gray-700 mb-2">
                         Idiomas
                       </label>
-                      <input
-                        id="guide-languages"
-                        name="languages"
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
-                        placeholder="Ex: Português, Inglês, Espanhol"
-                        value={guideData.languages}
-                        onChange={handleGuideChange}
-                      />
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {availableLanguages.map((language) => (
+                          <label
+                            key={language}
+                            className={`flex items-center gap-2 px-4 py-2.5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                              selectedLanguages.includes(language)
+                                ? 'border-purple-500 bg-purple-50 text-purple-700'
+                                : 'border-gray-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50/50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedLanguages.includes(language)}
+                              onChange={() => handleLanguageChange(language)}
+                              className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                            />
+                            <span className="text-sm font-medium">{language}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {selectedLanguages.length > 0 && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          Selecionados: {selectedLanguages.join(', ')}
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
