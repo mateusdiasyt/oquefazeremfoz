@@ -1,0 +1,34 @@
+========================================
+🚀 DEPLOY AUTOMÁTICO - OQFOZ
+========================================
+
+O Git e Node.js foram instalados, mas precisam estar no PATH.
+
+OPÇÃO 1: REINICIAR TERMINAL (RECOMENDADO)
+------------------------------------------
+1. Feche este terminal completamente
+2. Abra um NOVO terminal (PowerShell ou CMD)
+3. Navegue até a pasta:
+   cd "C:\Users\PC 01\Desktop\oquefazeremfoz"
+4. Execute o script:
+   .\FAZER-DEPLOY.ps1
+
+OPÇÃO 2: COMANDOS MANUAIS
+--------------------------
+Após reiniciar o terminal, execute:
+
+git add .
+git commit -m "Corrigir erro 500 ao seguir empresa"
+git push origin main
+
+OPÇÃO 3: VIA GITHUB DESKTOP
+----------------------------
+1. Abra o GitHub Desktop
+2. Você verá o arquivo modificado
+3. Adicione mensagem: "Corrigir erro 500 ao seguir empresa"
+4. Clique em "Commit to main"
+5. Clique em "Push origin"
+
+========================================
+✅ Após o push, o Vercel fará deploy automático!
+========================================
