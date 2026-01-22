@@ -38,7 +38,9 @@ export default function SiteLayout({
       router.push('/login')
     }
     // Se estiver logado e tentar acessar login/register, redirecionar para home
-    if (!loading && user && isPublicRoute) {
+    // Mas permitir acesso a páginas de empresas mesmo quando logado
+    const isLoginOrRegister = pathname === '/login' || pathname === '/register'
+    if (!loading && user && isPublicRoute && isLoginOrRegister) {
       router.push('/')
     }
   }, [user, loading, router, pathname, isPublicRoute])
