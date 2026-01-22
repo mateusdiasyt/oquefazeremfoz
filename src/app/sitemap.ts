@@ -9,7 +9,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     where: {
       isApproved: true,
       slug: {
-        not: null,
+        not: {
+          equals: null,
+        },
       },
     },
     select: {
