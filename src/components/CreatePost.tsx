@@ -33,6 +33,11 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
 
+  // Não renderizar para admins (admins não precisam criar posts)
+  if (user?.roles?.includes('ADMIN') && !user?.roles?.includes('COMPANY')) {
+    return null
+  }
+
   useEffect(() => {
     const fetchBusinesses = async () => {
       if (user?.roles?.includes('COMPANY')) {

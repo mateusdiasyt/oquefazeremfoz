@@ -602,8 +602,8 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Feed */}
           <div className="lg:col-span-2 flex flex-col gap-6">
-            {/* Criar Post - para empresas e admins */}
-            {user && (user.roles.includes('COMPANY') || user.roles.includes('ADMIN')) && (
+            {/* Criar Post - apenas para empresas (admins não precisam criar posts) */}
+            {user && user.roles.includes('COMPANY') && (
               <CreatePost onPostCreated={handlePostCreated} />
             )}
 
