@@ -59,11 +59,37 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
 
+  const fetchConversations = useCallback(async () => {
+    try {
+      const response = await fetch('/api/messages/conversations')
+      if (response.ok) {
+        const data = await response.json()
+        setConversations(data.conversations)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar conversas:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    try {
+      const response = await fetch(`/api/messages/${conversationId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setMessages(data.messages)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar mensagens:', error)
+    }
+  }, [])
+
   useEffect(() => {
     if (user) {
       fetchConversations()
     }
-  }, [user])
+  }, [user, fetchConversations])
 
   useEffect(() => {
     if (selectedConversation) {
@@ -73,7 +99,7 @@ export default function MessagesPage() {
         fetchConversations()
       }, 500)
     }
-  }, [selectedConversation])
+  }, [selectedConversation, fetchMessages, fetchConversations])
 
   // Polling para atualizar mensagens e conversas automaticamente
   useEffect(() => {
@@ -127,32 +153,6 @@ export default function MessagesPage() {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [user, selectedConversation?.id, fetchMessages, fetchConversations])
-
-  const fetchConversations = useCallback(async () => {
-    try {
-      const response = await fetch('/api/messages/conversations')
-      if (response.ok) {
-        const data = await response.json()
-        setConversations(data.conversations)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar conversas:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const fetchMessages = useCallback(async (conversationId: string) => {
-    try {
-      const response = await fetch(`/api/messages/${conversationId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(data.messages)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar mensagens:', error)
-    }
-  }, [])
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) return
