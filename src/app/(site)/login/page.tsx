@@ -428,7 +428,7 @@ function AuthForm() {
                 {/* Campos básicos */}
                 <div>
                   <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Nome {accountType === 'COMPANY' ? 'do responsável' : accountType === 'GUIDE' ? 'do guia' : ''}
+                    Nome {accountType === 'COMPANY' ? 'do responsável' : ''}
                   </label>
                   <input
                     id="register-name"
@@ -436,7 +436,7 @@ function AuthForm() {
                     type="text"
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
-                    placeholder="Seu nome completo"
+                    placeholder={accountType === 'GUIDE' ? 'Seu nome completo' : 'Seu nome completo'}
                     value={registerName}
                     onChange={(e) => setName(e.target.value)}
                   />
