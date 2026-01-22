@@ -361,12 +361,11 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         slug = businessesMap.get(mentionedNameLower) || null
       } else {
         // Tentar encontrar parcial (caso o nome tenha variações)
-        for (const [businessName, businessSlug] of businessesMap.entries()) {
-          if (businessName.includes(mentionedNameLower) || mentionedNameLower.includes(businessName)) {
+        businessesMap.forEach((businessSlug, businessName) => {
+          if (!slug && (businessName.includes(mentionedNameLower) || mentionedNameLower.includes(businessName))) {
             slug = businessSlug
-            break
           }
-        }
+        })
       }
       
       // Criar link se tiver slug, senão apenas texto destacado
