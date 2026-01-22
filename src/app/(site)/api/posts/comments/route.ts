@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
+import { notifyNewComment } from '../../../../../lib/notifications'
 
 // GET - Buscar comentários de um post
 export async function GET(request: NextRequest) {
@@ -210,6 +211,20 @@ export async function POST(request: NextRequest) {
       }
     })
     console.log('✅ Comentário criado:', comment.id)
+
+    // Buscar informações do post para notificação
+    const postData = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { businessId: true }
+    })
+
+    // Criar notificação se o post pertence a uma empresa e o comentário não é da própria empresa
+    if (postData?.businessId && postData.businessId !== finalBusinessId) {
+      const commenterName = comment.user?.name || comment.user?.email || comment.business?.name || 'Alguém'
+      notifyNewComment(comment.id, commenterName, postData.businessId, postId).catch(err => 
+        console.error('Erro ao criar notificação de comentário:', err)
+      )
+    }
 
     return NextResponse.json({ 
       message: 'Comentário criado com sucesso!', 

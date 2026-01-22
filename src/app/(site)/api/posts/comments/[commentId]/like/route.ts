@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../../../lib/auth'
 import { prisma } from '../../../../../../../lib/db'
 import { randomUUID } from 'crypto'
+import { notifyCommentLike } from '../../../../../../../lib/notifications'
 
 export async function POST(
   request: NextRequest,
@@ -64,10 +65,28 @@ export async function POST(
         }
       })
 
-      // Contar likes
-      const likesCount = await prisma.commentlike.count({
-        where: { commentId }
-      })
+      // Contar likes e buscar informações para notificação
+      const [likesCount, commentData, likerUser] = await Promise.all([
+        prisma.commentlike.count({
+          where: { commentId }
+        }),
+        prisma.comment.findUnique({
+          where: { id: commentId },
+          select: { businessId: true, postId: true }
+        }),
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { name: true, email: true }
+        })
+      ])
+
+      // Criar notificação se o comentário pertence a uma empresa
+      if (commentData?.businessId && commentData?.postId) {
+        const likerName = likerUser?.name || likerUser?.email || 'Alguém'
+        notifyCommentLike(commentId, likerName, commentData.businessId, commentData.postId).catch(err => 
+          console.error('Erro ao criar notificação de like em comentário:', err)
+        )
+      }
 
       return NextResponse.json({
         liked: true,

@@ -55,6 +55,7 @@ model business {
   postlike        postlike[]
   follow_follow_followerBusinessId follow[] @relation("follow_followerBusinessId")
   follow_follow_followingBusinessId follow[] @relation("follow_followingBusinessId")
+  notification                     notification[]
 
   @@index([userId], map: "Business_userId_idx")
 }
@@ -392,6 +393,25 @@ model subscription {
   @@index([planId], map: "Subscription_planId_idx")
 }
 
+model notification {
+  id          String   @id
+  userId      String   // Usuário que recebe a notificação (dono da empresa)
+  businessId  String?  // Empresa relacionada à notificação
+  type        String   // 'like_post', 'like_comment', 'follow', 'comment'
+  title       String
+  message     String
+  link        String?  // Link para a página relacionada
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Notification_userId_fkey")
+  business    business? @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "Notification_businessId_fkey")
+
+  @@index([userId], map: "Notification_userId_idx")
+  @@index([businessId], map: "Notification_businessId_idx")
+  @@index([isRead], map: "Notification_isRead_idx")
+  @@index([createdAt], map: "Notification_createdAt_idx")
+}
+
 model user {
   id                               String           @id
   email                            String           @unique(map: "User_email_key")
@@ -415,6 +435,7 @@ model user {
   userrole                         userrole[]
   conversation                     conversation[]   @relation("conversationparticipants")
   commentlike                      commentlike[]
+  notification                     notification[]
 }
 
 model userrole {

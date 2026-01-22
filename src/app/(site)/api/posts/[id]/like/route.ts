@@ -112,15 +112,33 @@ export async function POST(
         }
       }
 
-      // Atualizar contador de likes
-      const updatedPost = await prisma.post.update({
-        where: { id: postId },
-        data: {
-          likes: {
-            increment: 1
+      // Buscar informações do post e do usuário para notificação
+      const [updatedPost, postData, likerUser] = await Promise.all([
+        prisma.post.update({
+          where: { id: postId },
+          data: {
+            likes: {
+              increment: 1
+            }
           }
-        }
-      })
+        }),
+        prisma.post.findUnique({
+          where: { id: postId },
+          select: { businessId: true }
+        }),
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { name: true, email: true }
+        })
+      ])
+
+      // Criar notificação se o post pertence a uma empresa
+      if (postData?.businessId) {
+        const likerName = likerUser?.name || likerUser?.email || 'Alguém'
+        notifyPostLike(postId, likerName, postData.businessId).catch(err => 
+          console.error('Erro ao criar notificação de like:', err)
+        )
+      }
 
       return NextResponse.json({ 
         message: 'Post curtido',

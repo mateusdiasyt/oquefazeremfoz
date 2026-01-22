@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
+import { notifyNewFollower } from '../../../../../lib/notifications'
 
 // POST - Seguir ou desseguir uma empresa
 export async function POST(request: NextRequest) {
@@ -107,6 +108,13 @@ export async function POST(request: NextRequest) {
     } else {
       // Seguir - criar businesslike e atualizar contador em paralelo
       try {
+        const [followerUser] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: user.id },
+            select: { name: true, email: true }
+          })
+        ])
+
         const [, updatedBusiness] = await Promise.all([
           prisma.businesslike.create({
             data: {
@@ -127,6 +135,12 @@ export async function POST(request: NextRequest) {
             }
           })
         ])
+
+        // Criar notificação de novo seguidor
+        const followerName = followerUser?.name || followerUser?.email || 'Alguém'
+        notifyNewFollower(followerName, businessId).catch(err => 
+          console.error('Erro ao criar notificação de seguidor:', err)
+        )
 
         return NextResponse.json({ 
           message: 'Empresa seguida com sucesso',

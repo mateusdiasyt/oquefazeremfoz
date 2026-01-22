@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, Gift, MapPin } from 'lucide-react'
 import { capitalizeWords } from '../utils/formatters'
+import NotificationBell from './NotificationBell'
 
 interface Business {
   id: string
@@ -125,6 +126,11 @@ export default function Header() {
           {/* User Menu */}
           <div className="flex items-center space-x-3">
             {user ? (
+              <>
+                {/* Notificações - apenas para empresas */}
+                <NotificationBell />
+                
+                {/* Dropdown do usuário */}
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
