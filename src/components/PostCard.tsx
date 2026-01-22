@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, Heart, Edit3, Trash2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -65,16 +65,18 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null)
   const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
   const [editCommentText, setEditCommentText] = useState('')
-  const [commentAsBusiness, setCommentAsBusiness] = useState(false) // false = pessoal, true = empresa
-  const [userBusiness, setUserBusiness] = useState<{ id: string; name: string; profileImage: string | null } | null>(null)
+  const [selectedCommentIdentity, setSelectedCommentIdentity] = useState<'user' | string>('user') // 'user' ou businessId
+  const [userBusinesses, setUserBusinesses] = useState<Array<{ id: string; name: string; profileImage: string | null; slug: string | null }>>([])
+  const [showCommentIdentityDropdown, setShowCommentIdentityDropdown] = useState(false)
+  const commentIdentityDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Verificar se o usuário curtiu o post
     checkIfLiked()
     
-    // Buscar informações da empresa do usuário
-    if (user?.businessId) {
-      fetchUserBusiness()
+    // Buscar todas as empresas do usuário
+    if (user?.roles?.includes('COMPANY')) {
+      fetchUserBusinesses()
     }
     
     // Pré-carregar comentários em background para reduzir delay ao abrir
@@ -88,13 +90,16 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   }, [user])
 
   useEffect(() => {
-    // Definir padrão: se o post é da própria empresa, comentar como empresa
-    if (user?.businessId && post.business?.id === user.businessId) {
-      setCommentAsBusiness(true)
-    } else {
-      setCommentAsBusiness(false)
+    // Definir padrão: se o post é de uma das empresas do usuário, comentar como essa empresa
+    if (userBusinesses.length > 0 && post.business?.id) {
+      const userOwnsPost = userBusinesses.some(b => b.id === post.business?.id)
+      if (userOwnsPost) {
+        setSelectedCommentIdentity(post.business.id)
+      } else {
+        setSelectedCommentIdentity('user')
+      }
     }
-  }, [user?.businessId, post.business?.id])
+  }, [userBusinesses, post.business?.id])
 
   const checkIfLiked = async () => {
     try {
@@ -151,7 +156,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           postId: post.id,
           content: newComment.trim(),
           parentId: replyingTo?.id || null,
-          businessId: commentAsBusiness && user?.businessId ? user.businessId : null
+          businessId: selectedCommentIdentity !== 'user' ? selectedCommentIdentity : null
         }),
       })
 
@@ -178,23 +183,18 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     }
   }
 
-  const fetchUserBusiness = async () => {
-    if (!user?.businessId) return
+  const fetchUserBusinesses = async () => {
+    if (!user?.roles?.includes('COMPANY')) return
     
     try {
-      const response = await fetch(`/api/business/profile`)
+      const response = await fetch('/api/business/my-businesses')
       if (response.ok) {
         const data = await response.json()
-        if (data.business) {
-          setUserBusiness({
-            id: data.business.id,
-            name: data.business.name,
-            profileImage: data.business.profileImage
-          })
-        }
+        const businesses = data.businesses || []
+        setUserBusinesses(businesses)
       }
     } catch (error) {
-      console.error('Erro ao buscar empresa do usuário:', error)
+      console.error('Erro ao buscar empresas do usuário:', error)
     }
   }
 
@@ -598,36 +598,97 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                     </div>
                   )}
                   {/* Seletor de identidade - apenas se usuário tem empresa */}
-                  {user?.businessId && userBusiness && (
-                    <div className="mb-2 flex items-center gap-2">
+                  {userBusinesses.length > 0 && (
+                    <div className="mb-2 relative" ref={commentIdentityDropdownRef}>
                       <button
                         type="button"
-                        onClick={() => setCommentAsBusiness(!commentAsBusiness)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors text-sm"
+                        onClick={() => setShowCommentIdentityDropdown(!showCommentIdentityDropdown)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors text-sm w-full text-left"
                       >
-                        {commentAsBusiness ? (
+                        {selectedCommentIdentity === 'user' ? (
                           <>
-                            {userBusiness.profileImage ? (
-                              <img src={userBusiness.profileImage} alt={userBusiness.name} className="w-5 h-5 rounded-full object-cover" />
-                            ) : (
-                              <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-purple-600 text-xs font-medium border border-purple-200">
-                                {userBusiness.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className="text-gray-700 font-medium">Comentar como {userBusiness.name}</span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                            <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
                               {user?.name?.charAt(0).toUpperCase() || 'U'}
                             </div>
-                            <span className="text-gray-700 font-medium">Comentar como {user?.name || 'Usuário'}</span>
+                            <span className="text-gray-700 font-medium truncate">Comentar como {user?.name || 'Usuário'}</span>
                           </>
+                        ) : (
+                          (() => {
+                            const selectedBusiness = userBusinesses.find(b => b.id === selectedCommentIdentity)
+                            if (!selectedBusiness) return null
+                            return (
+                              <>
+                                {selectedBusiness.profileImage ? (
+                                  <img src={selectedBusiness.profileImage} alt={selectedBusiness.name} className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                                ) : (
+                                  <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-purple-600 text-xs font-medium border border-purple-200 flex-shrink-0">
+                                    {selectedBusiness.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <span className="text-gray-700 font-medium truncate">Comentar como {selectedBusiness.name}</span>
+                              </>
+                            )
+                          })()
                         )}
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className={`w-4 h-4 text-gray-400 ml-auto transition-transform ${showCommentIdentityDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
+                      
+                      {showCommentIdentityDropdown && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                          {/* Opção de comentar como usuário */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCommentIdentity('user')
+                              setShowCommentIdentityDropdown(false)
+                            }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                              selectedCommentIdentity === 'user' ? 'bg-purple-50' : ''
+                            }`}
+                          >
+                            <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                              {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <span className="text-gray-700 font-medium">{user?.name || 'Usuário'}</span>
+                            {selectedCommentIdentity === 'user' && (
+                              <svg className="w-4 h-4 text-purple-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                          
+                          {/* Opções de empresas */}
+                          {userBusinesses.map((business) => (
+                            <button
+                              key={business.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCommentIdentity(business.id)
+                                setShowCommentIdentityDropdown(false)
+                              }}
+                              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                                selectedCommentIdentity === business.id ? 'bg-purple-50' : ''
+                              }`}
+                            >
+                              {business.profileImage ? (
+                                <img src={business.profileImage} alt={business.name} className="w-5 h-5 rounded-full object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-purple-600 text-xs font-medium border border-purple-200 flex-shrink-0">
+                                  {business.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="text-gray-700 font-medium truncate">{business.name}</span>
+                              {selectedCommentIdentity === business.id && (
+                                <svg className="w-4 h-4 text-purple-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                   <textarea
