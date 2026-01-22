@@ -447,12 +447,11 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
                 Cancelar
               </button>
               <button
-                type="submit"
-                onClick={(e) => {
-                  e.preventDefault()
+                type="button"
+                onClick={() => {
                   const form = document.getElementById('post-form') as HTMLFormElement
                   if (form) {
-                    form.requestSubmit()
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
                   }
                 }}
                 disabled={loading || uploading || (!title.trim() || (!content.trim() && !imageUrl.trim() && !videoUrl.trim()))}
