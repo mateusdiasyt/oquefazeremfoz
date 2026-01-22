@@ -433,6 +433,7 @@ export default function Header() {
                       </svg>
                       <span>Sair</span>
                     </button>
+                    </div>
                   </div>
                 )}
                 </div>
