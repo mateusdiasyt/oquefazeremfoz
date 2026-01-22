@@ -461,7 +461,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   }
 
   return (
-    <div className="bg-white border-b-2 border-gray-200 md:border md:border-gray-100 md:rounded-3xl md:shadow-sm hover:md:shadow-md transition-all duration-200 p-4 md:p-6 mb-0 md:mb-6">
+    <div className="bg-white border-b-2 border-gray-200 md:border md:border-gray-100 md:rounded-3xl md:shadow-sm hover:md:shadow-md transition-all duration-200 p-4 md:p-6 mb-0 md:mb-6 first:border-t-0">
       {/* Header do post */}
       <div className="flex items-center space-x-3 mb-5">
         {/* Foto de perfil da empresa */}
