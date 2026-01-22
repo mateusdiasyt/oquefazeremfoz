@@ -17,20 +17,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'ID da empresa é obrigatório' }, { status: 400 })
     }
 
-    // Buscar a empresa sendo seguida
-    const targetBusiness = await prisma.business.findUnique({
-      where: { id: businessId },
-      select: {
-        id: true,
-        userId: true,
-        user: {
-          select: {
-            id: true,
-            email: true
-          }
+    // Buscar empresa e verificar follow em paralelo para melhor performance
+    const [targetBusiness, existingFollow] = await Promise.all([
+      prisma.business.findUnique({
+        where: { id: businessId },
+        select: {
+          id: true,
+          userId: true,
+          followersCount: true
         }
-      }
-    })
+      }),
+      prisma.businesslike.findFirst({
+        where: {
+          userId: user.id,
+          businessId: businessId
+        },
+        select: {
+          id: true
+        }
+      })
+    ])
 
     if (!targetBusiness) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
@@ -39,21 +45,6 @@ export async function POST(request: NextRequest) {
     if (!targetBusiness.userId) {
       return NextResponse.json({ message: 'Empresa sem usuário associado' }, { status: 400 })
     }
-
-    // Determinar se é empresa e qual empresa usar para seguir
-    const isCompanyUser = user.roles?.includes('COMPANY')
-    const activeBusinessId = user.activeBusinessId || user.businessId
-
-    let existingFollow = null
-    
-    // Por enquanto, usar apenas businesslike para todos (até migração ser executada)
-    // TODO: Após executar add-follow-business-columns.sql, descomentar código de follow para empresas
-    existingFollow = await prisma.businesslike.findFirst({
-      where: {
-        userId: user.id,
-        businessId: businessId
-      }
-    })
     
     /* Código para quando as colunas followerBusinessId e followingBusinessId existirem:
     if (isCompanyUser && activeBusinessId) {
@@ -90,39 +81,23 @@ export async function POST(request: NextRequest) {
     */
 
     if (existingFollow) {
-      // Desseguir - remover businesslike (funciona para todos por enquanto)
-      await prisma.businesslike.delete({
-        where: { id: existingFollow.id }
-      })
-      
-      /* Código para quando as colunas existirem:
-      if (isCompanyUser && activeBusinessId) {
-        // Desseguir como empresa - remover follow
-        await prisma.follow.delete({
-          where: {
-            id: existingFollow.id
-          }
-        })
-      } else {
-        // Desseguir como usuário - remover businesslike
-        await prisma.businesslike.delete({
+      // Desseguir - remover businesslike e atualizar contador em paralelo
+      const [, updatedBusiness] = await Promise.all([
+        prisma.businesslike.delete({
           where: { id: existingFollow.id }
-        })
-      }
-      */
-
-      // Atualizar contadores
-      const updatedBusiness = await prisma.business.update({
-        where: { id: businessId },
-        data: {
-          followersCount: {
-            decrement: 1
+        }),
+        prisma.business.update({
+          where: { id: businessId },
+          data: {
+            followersCount: {
+              decrement: 1
+            }
+          },
+          select: {
+            followersCount: true
           }
-        },
-        select: {
-          followersCount: true
-        }
-      })
+        })
+      ])
 
       return NextResponse.json({ 
         message: 'Empresa desseguida com sucesso',
@@ -130,122 +105,46 @@ export async function POST(request: NextRequest) {
         followersCount: updatedBusiness.followersCount
       })
     } else {
-      // Seguir - criar businesslike (funciona para todos por enquanto)
-      // Verificar novamente para evitar race condition
-      const duplicateCheck = await prisma.businesslike.findFirst({
-        where: {
-          userId: user.id,
-          businessId: businessId
-        }
-      })
-
-      if (duplicateCheck) {
-        // Se já existe, retornar sucesso (pode ter sido criado entre a verificação e agora)
-        const currentBusiness = await prisma.business.findUnique({
-          where: { id: businessId },
-          select: { followersCount: true }
-        })
+      // Seguir - criar businesslike e atualizar contador em paralelo
+      try {
+        const [, updatedBusiness] = await Promise.all([
+          prisma.businesslike.create({
+            data: {
+              id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+              userId: user.id,
+              businessId: businessId
+            }
+          }),
+          prisma.business.update({
+            where: { id: businessId },
+            data: {
+              followersCount: {
+                increment: 1
+              }
+            },
+            select: {
+              followersCount: true
+            }
+          })
+        ])
 
         return NextResponse.json({ 
           message: 'Empresa seguida com sucesso',
           isFollowing: true,
-          followersCount: currentBusiness?.followersCount || 0
+          followersCount: updatedBusiness.followersCount,
+          followedAsBusiness: false
         })
-      }
-
-      await prisma.businesslike.create({
-        data: {
-          id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          userId: user.id,
-          businessId: businessId
-        }
-      })
-      
-      /* Código para quando as colunas existirem:
-      if (isCompanyUser && activeBusinessId) {
-        // Seguir como empresa - criar follow com businessId
-        // Verificar se já existe um follow com esses IDs de usuário para evitar constraint violation
-        const existingUserFollow = await prisma.follow.findFirst({
-          where: {
-            followerId: user.id,
-            followingId: targetBusiness.userId
-          }
-        })
-
-        if (existingUserFollow) {
-          // Se já existe follow entre usuários, atualizar para incluir businessIds
-          await prisma.follow.update({
-            where: { id: existingUserFollow.id },
-            data: {
-              followerBusinessId: activeBusinessId,
-              followingBusinessId: businessId
-            }
-          })
-        } else {
-          // Criar novo follow
-          await prisma.follow.create({
-            data: {
-              id: `follow_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-              followerId: user.id, // Obrigatório
-              followingId: targetBusiness.userId, // Obrigatório
-              followerBusinessId: activeBusinessId,
-              followingBusinessId: businessId
-            }
-          })
-        }
-      } else {
-        // Seguir como usuário - criar businesslike (manter sistema atual)
-        // Verificar novamente para evitar race condition
-        const duplicateCheck = await prisma.businesslike.findFirst({
-          where: {
-            userId: user.id,
-            businessId: businessId
-          }
-        })
-
-        if (duplicateCheck) {
-          // Se já existe, retornar sucesso (pode ter sido criado entre a verificação e agora)
-          const currentBusiness = await prisma.business.findUnique({
-            where: { id: businessId },
-            select: { followersCount: true }
-          })
-
+      } catch (error: any) {
+        // Se já existe (P2002 = unique constraint violation), retornar sucesso
+        if (error.code === 'P2002') {
           return NextResponse.json({ 
             message: 'Empresa seguida com sucesso',
             isFollowing: true,
-            followersCount: currentBusiness?.followersCount || 0
+            followersCount: targetBusiness.followersCount
           })
         }
-
-        await prisma.businesslike.create({
-          data: {
-            id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-            userId: user.id,
-            businessId: businessId
-          }
-        })
+        throw error
       }
-      */
-
-      // Atualizar contadores
-      const updatedBusiness = await prisma.business.update({
-        where: { id: businessId },
-        data: {
-          followersCount: {
-            increment: 1
-          }
-        },
-        select: {
-          followersCount: true
-        }
-      })
-
-      return NextResponse.json({ 
-        message: 'Empresa seguida com sucesso',
-        isFollowing: true,
-        followersCount: updatedBusiness.followersCount,
-        followedAsBusiness: false // Será true quando as colunas existirem e código for descomentado
-      })
     }
 
   } catch (error: any) {
