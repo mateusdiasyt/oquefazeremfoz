@@ -1,26 +1,43 @@
 'use client'
 
-import { useState } from 'react'
-import { MessageCircle, Package, Gift, MapPin, Star } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import { Home, Search, Gift, MapPin, ShieldCheck } from 'lucide-react'
 
 export default function MobileNavigation() {
-  const [activeTab, setActiveTab] = useState('posts')
+  const pathname = usePathname()
+  const [activeTab, setActiveTab] = useState('inicio')
+
+  // Atualizar tab ativa baseado na rota atual
+  useEffect(() => {
+    if (pathname === '/') {
+      setActiveTab('inicio')
+    } else if (pathname === '/empresas') {
+      setActiveTab('descubra')
+    } else if (pathname === '/cupons') {
+      setActiveTab('cupons')
+    } else if (pathname === '/mapa-turistico') {
+      setActiveTab('mapa')
+    } else if (pathname === '/selo-verificado') {
+      setActiveTab('selo')
+    }
+  }, [pathname])
 
   const navigationItems = [
     {
-      id: 'chat',
-      icon: MessageCircle,
-      label: 'Chat',
-      href: '/messages'
-    },
-    {
-      id: 'posts',
-      icon: Package,
-      label: 'Posts',
+      id: 'inicio',
+      icon: Home,
+      label: 'Início',
       href: '/'
     },
     {
-      id: 'coupons',
+      id: 'descubra',
+      icon: Search,
+      label: 'Descubra',
+      href: '/empresas'
+    },
+    {
+      id: 'cupons',
       icon: Gift,
       label: 'Cupons',
       href: '/cupons'
@@ -28,14 +45,14 @@ export default function MobileNavigation() {
     {
       id: 'mapa',
       icon: MapPin,
-      label: 'Mapa',
+      label: 'Mapa Turístico',
       href: '/mapa-turistico'
     },
     {
-      id: 'favorites',
-      icon: Star,
-      label: 'Favoritos',
-      href: '/favoritos'
+      id: 'selo',
+      icon: ShieldCheck,
+      label: 'Selo Verificado',
+      href: '/selo-verificado'
     }
   ]
 
@@ -51,22 +68,22 @@ export default function MobileNavigation() {
               key={item.id}
               href={item.href}
               onClick={() => setActiveTab(item.id)}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-300 min-w-[60px] ${
                 isActive
-                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white'
-                  : 'text-gray-600 hover:text-pink-600 hover:bg-pink-50'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
             >
-              <div className={`p-2 rounded-lg transition-all duration-300 ${
+              <div className={`p-1.5 rounded-lg transition-all duration-300 ${
                 isActive
                   ? 'bg-white/20'
-                  : 'hover:bg-pink-100'
+                  : ''
               }`}>
                 <Icon size={20} />
               </div>
-              <span className={`text-xs font-medium mt-1 ${
+              <span className={`text-xs font-medium mt-1 text-center ${
                 isActive ? 'text-white' : 'text-gray-600'
-              }`}>
+              }`} style={{ letterSpacing: '-0.01em' }}>
                 {item.label}
               </span>
             </a>
