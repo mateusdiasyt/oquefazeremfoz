@@ -1,8 +1,17 @@
--- Adicionar role 'GUIDE' ao enum userrole_role
--- Execute este script no banco de dados PostgreSQL (Neon.tech)
+-- ============================================
+-- ADICIONAR ROLE 'GUIDE' AO ENUM userrole_role
+-- ============================================
+-- Execute este script no SQL Editor do Neon.tech
+-- 
+-- INSTRUÇÕES:
+-- 1. Acesse https://console.neon.tech
+-- 2. Selecione seu projeto
+-- 3. Vá em "SQL Editor"
+-- 4. Clique em "New query"
+-- 5. Cole este comando e clique em "Run"
+-- ============================================
 
--- Primeiro, criar um novo tipo com o valor adicional
 ALTER TYPE "userrole_role" ADD VALUE IF NOT EXISTS 'GUIDE';
 
--- Nota: Se você já tiver dados na tabela userrole, não precisa fazer nada mais.
--- O enum já foi atualizado com o novo valor.
+-- Verificar se foi adicionado (execute separadamente):
+-- SELECT unnest(enum_range(NULL::userrole_role)) AS role_value;
