@@ -104,7 +104,20 @@ export default function Header() {
     }
   }, [searchExpanded])
 
+  // Limpar timeout ao desmontar componente
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current)
+      }
+    }
+  }, [])
+
   const handleLogout = async () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current)
+      dropdownTimeoutRef.current = null
+    }
     await logout()
     setShowDropdown(false)
   }
