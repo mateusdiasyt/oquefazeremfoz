@@ -72,16 +72,16 @@ export async function POST(
       })
     } else {
       // Curtir - adicionar o like como empresa ou usuário
-      const likeData: any = {
-        id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        postId: postId
-      }
-      
       // Por enquanto, sempre usar userId até a migração ser executada
       // Após a migração, poderemos usar businessId também
-      likeData.userId = user.id
+      // NÃO incluir businessId no create até a coluna existir no banco
       await prisma.postlike.create({
-        data: likeData
+        data: {
+          id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          postId: postId,
+          userId: user.id
+          // businessId não incluído até migração ser executada
+        }
       })
 
       // Atualizar contador de likes
