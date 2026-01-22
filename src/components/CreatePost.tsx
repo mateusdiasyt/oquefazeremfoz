@@ -239,10 +239,10 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6 mb-6">
-      <div className="flex items-start space-x-3">
+    <div className="bg-white border border-gray-200 rounded-3xl shadow-lg p-6 mb-6">
+      <div className="flex items-start space-x-4">
         {/* Avatar da empresa */}
-        <div className="w-11 h-11 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+        <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
           {business?.profileImage ? (
             <img
               src={business.profileImage}
@@ -250,11 +250,11 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               className="w-full h-full object-cover"
             />
           ) : business?.name ? (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-base border-2 border-purple-200">
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-bold text-lg border-2 border-purple-200">
               {business.name.charAt(0).toUpperCase()}
             </div>
           ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-base border-2 border-purple-200">
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-bold text-lg border-2 border-purple-200">
               E
             </div>
           )}
@@ -268,7 +268,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
                 <select
                   value={selectedBusinessId || ''}
                   onChange={(e) => setSelectedBusinessId(e.target.value)}
-                  className="appearance-none bg-transparent border-0 text-sm font-semibold text-gray-900 pr-6 focus:outline-none cursor-pointer hover:text-purple-600 transition-colors"
+                  className="appearance-none bg-transparent border-0 text-sm font-bold text-gray-900 pr-6 focus:outline-none cursor-pointer hover:text-purple-600 transition-colors"
                 >
                   {businesses
                     .filter((b: any) => b.isApproved) // Apenas empresas aprovadas
@@ -291,13 +291,13 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               )}
             </div>
           )}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="No que você está pensando?"
-              className="w-full px-5 py-4 bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-300 transition-all duration-200 text-sm"
-              rows={3}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200 text-gray-900 placeholder-gray-400 text-sm"
+              rows={4}
               disabled={loading}
               style={{ letterSpacing: '-0.01em' }}
             />
@@ -312,35 +312,37 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
             )}
             
             {showImageInput && (
-              <div className="mt-4 animate-slide-up">
-                <div className="mb-4">
-                  <label className="block text-sm font-display font-semibold text-dark-200 mb-3">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Escolher Imagem
                   </label>
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                    onChange={handleImageFileChange}
-                    className="input w-full"
-                    disabled={loading || uploading}
-                  />
-                  <p className="text-xs text-dark-500 mt-2">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                      onChange={handleImageFileChange}
+                      className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 file:cursor-pointer"
+                      disabled={loading || uploading}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
                     Formatos: JPG, PNG, GIF, WebP • Máximo: 5MB • Proporção: 4:3
                   </p>
                   {uploading && (
-                    <div className="flex items-center space-x-2 mt-2">
-                      <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-sm text-primary-400">Enviando imagem...</p>
+                    <div className="flex items-center space-x-2 mt-3">
+                      <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-sm text-purple-600 font-medium">Enviando imagem...</p>
                     </div>
                   )}
                 </div>
                 {imageUrl && (
-                  <div className="mt-3">
-                    <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-medium" style={{ aspectRatio: '4/3' }}>
+                  <div className="space-y-3">
+                    <div className="relative w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200" style={{ aspectRatio: '4/3' }}>
                       <img 
                         src={imageUrl} 
                         alt="Preview" 
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
                         }}
@@ -352,7 +354,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
                         setImageUrl('')
                         setMediaType(null)
                       }}
-                      className="mt-3 text-sm text-red-400 hover:text-red-300 transition-colors duration-200"
+                      className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200"
                     >
                       Remover imagem
                     </button>
@@ -362,35 +364,37 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
             )}
 
             {showVideoInput && (
-              <div className="mt-4 animate-slide-up">
-                <div className="mb-4">
-                  <label className="block text-sm font-display font-semibold text-dark-200 mb-3">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Escolher Vídeo
                   </label>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/avi,video/mov,video/wmv,video/webm"
-                    onChange={handleVideoFileChange}
-                    className="input w-full"
-                    disabled={loading || uploading}
-                  />
-                  <p className="text-xs text-dark-500 mt-2">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="video/mp4,video/avi,video/mov,video/wmv,video/webm"
+                      onChange={handleVideoFileChange}
+                      className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 file:cursor-pointer"
+                      disabled={loading || uploading}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
                     Formatos: MP4, AVI, MOV, WMV, WebM • Máximo: 32MB • Proporção: 4:3
                   </p>
                   {uploading && (
-                    <div className="flex items-center space-x-2 mt-2">
-                      <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-sm text-primary-400">Enviando vídeo...</p>
+                    <div className="flex items-center space-x-2 mt-3">
+                      <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="text-sm text-purple-600 font-medium">Enviando vídeo...</p>
                     </div>
                   )}
                 </div>
                 {videoUrl && (
-                  <div className="mt-3">
-                    <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-medium" style={{ aspectRatio: '4/3' }}>
+                  <div className="space-y-3">
+                    <div className="relative w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200" style={{ aspectRatio: '4/3' }}>
                       <video 
                         src={videoUrl} 
                         controls
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'
                         }}
@@ -402,7 +406,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
                         setVideoUrl('')
                         setMediaType(null)
                       }}
-                      className="mt-3 text-sm text-red-400 hover:text-red-300 transition-colors duration-200"
+                      className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200"
                     >
                       Remover vídeo
                     </button>
@@ -412,50 +416,50 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
             )}
 
             {error && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                 <p className="text-red-600 text-sm font-medium">{error}</p>
               </div>
             )}
 
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex space-x-4">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex items-center space-x-3">
                 <button
                   type="button"
                   onClick={handleImageClick}
-                  className={`flex items-center space-x-2 transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-200 ${
                     showImageInput || mediaType === 'image'
-                      ? 'text-purple-600' 
-                      : 'text-gray-500 hover:text-purple-600'
+                      ? 'bg-purple-100 text-purple-700' 
+                      : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                   }`}
-                  disabled={uploading}
+                  disabled={uploading || loading}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-sm font-medium">Foto</span>
+                  <span className="text-sm font-semibold">Foto</span>
                 </button>
                 
                 <button
                   type="button"
                   onClick={handleVideoClick}
-                  className={`flex items-center space-x-2 transition-all duration-200 ${
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-200 ${
                     showVideoInput || mediaType === 'video'
-                      ? 'text-purple-600' 
-                      : 'text-gray-500 hover:text-purple-600'
+                      ? 'bg-purple-100 text-purple-700' 
+                      : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                   }`}
-                  disabled={uploading}
+                  disabled={uploading || loading}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-sm font-medium">Vídeo</span>
+                  <span className="text-sm font-semibold">Vídeo</span>
                 </button>
               </div>
 
               <button
                 type="submit"
                 disabled={loading || uploading || (!content.trim() && !imageUrl.trim() && !videoUrl.trim())}
-                className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm shadow-purple-500/20 hover:shadow-md text-sm"
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg shadow-purple-500/30 text-sm"
                 style={{ letterSpacing: '-0.01em' }}
               >
                 {loading ? 'Publicando...' : uploading ? 'Enviando...' : 'Publicar'}
