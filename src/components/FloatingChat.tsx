@@ -157,7 +157,7 @@ export default function FloatingChat() {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
         fetchConversations()
-      }, 5000) // Verificar conversas a cada 5 segundos
+      }, 10000) // ✅ Aumentar para 10s (reduzir spam e carga)
     }
 
     const stopConversationsPolling = () => {
@@ -212,9 +212,8 @@ export default function FloatingChat() {
     const startPolling = () => {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
-        fetchMessages(conversationId)
-        // Também atualizar lista de conversas para ver novas mensagens
-        fetchConversations()
+        // ✅ Polling apenas de mensagens (conversas tem polling separado)
+        fetchMessages(conversationId, true)
       }, 3000) // Verificar a cada 3 segundos (mais responsivo)
     }
 
@@ -294,7 +293,7 @@ export default function FloatingChat() {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
         fetchConversations()
-      }, 5000) // Verificar conversas a cada 5 segundos
+      }, 10000) // ✅ Aumentar para 10s (reduzir spam e carga)
     }
 
     const stopConversationsPolling = () => {
@@ -349,9 +348,8 @@ export default function FloatingChat() {
     const startPolling = () => {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
-        fetchMessages(conversationId)
-        // Também atualizar lista de conversas para ver novas mensagens
-        fetchConversations()
+        // ✅ Polling apenas de mensagens (conversas tem polling separado)
+        fetchMessages(conversationId, true)
       }, 3000) // Verificar a cada 3 segundos (mais responsivo)
     }
 
