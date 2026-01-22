@@ -222,7 +222,8 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
   if (!isOpen) return null
 
   const postUrl = `${window.location.origin}/post/${post.id}`
-  const urls = extractUrlsFromText(post.body || '')
+  const urlData = extractUrlsFromText(post.body || '')
+  const urls = urlData.urls || []
 
   return (
     <div 
