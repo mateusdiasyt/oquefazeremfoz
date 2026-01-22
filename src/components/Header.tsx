@@ -71,11 +71,11 @@ export default function Header() {
       }
     }
 
-    const timeoutId = setTimeout(() => {
+    const timeoutId = window.setTimeout(() => {
       fetchBusinesses()
     }, 300)
 
-    return () => clearTimeout(timeoutId)
+    return () => window.clearTimeout(timeoutId)
   }, [searchTerm])
 
   // Fechar pesquisa ao clicar fora
