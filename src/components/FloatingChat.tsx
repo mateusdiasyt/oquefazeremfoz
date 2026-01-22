@@ -730,7 +730,7 @@ export default function FloatingChat() {
                                       ? 'font-bold text-gray-900' 
                                       : 'font-semibold text-gray-800'
                                   }`}>
-                                    {conversation.business?.name}
+                                    {capitalizeWords(conversation.business?.name)}
                                   </h4>
                                   <span className={`text-xs ${
                                     (conversation.unreadCount || 0) > 0 

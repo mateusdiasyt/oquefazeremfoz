@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { capitalizeWords } from '../../../utils/formatters'
 import { Plus, Building2, CheckCircle, MapPin, Star, Users, ExternalLink, Settings } from 'lucide-react'
 
 interface Business {
@@ -159,7 +160,7 @@ export default function MinhasEmpresasPage() {
                   )}
                   <div className="flex-1 min-w-0 -mt-8">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900 truncate">{business.name}</h3>
+                      <h3 className="font-bold text-gray-900 truncate">{capitalizeWords(business.name)}</h3>
                       {business.isVerified && (
                         <img 
                           src="/icons/verificado.png" 

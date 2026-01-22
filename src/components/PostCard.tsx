@@ -485,7 +485,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               className="font-semibold text-gray-900 text-base hover:text-purple-600 transition-colors duration-200 cursor-pointer truncate"
               style={{ letterSpacing: '-0.01em' }}
             >
-              {post.business.name}
+              {capitalizeWords(post.business.name)}
             </a>
             {post.business.isVerified && (
               <img 

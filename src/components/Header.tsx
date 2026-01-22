@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, Gift, MapPin } from 'lucide-react'
+import { capitalizeWords } from '../utils/formatters'
 
 interface Business {
   id: string
@@ -176,7 +177,7 @@ export default function Header() {
                                     </span>
                                   </div>
                                 )}
-                                <span className="truncate">{business.name}</span>
+                                <span className="truncate">{capitalizeWords(business.name)}</span>
                               </a>
                             ))}
                             <div className="border-t border-gray-100 my-1"></div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
+import { capitalizeWords } from '../../../../utils/formatters'
 import ProductForm from '../../../../components/ProductForm'
 import CouponForm from '../../../../components/CouponForm'
 import ReviewForm from '../../../../components/ReviewForm'
@@ -762,7 +763,7 @@ export default function BusinessProfilePage() {
               {/* Business Info - foto e título na mesma linha */}
               <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>{business.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>{capitalizeWords(business.name)}</h1>
                   {business.isVerified && (
                     <img 
                       src="/icons/verificado.png" 

@@ -411,7 +411,7 @@ export default function EmpresasPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-xl font-bold text-gray-800 truncate group-hover:text-pink-600 transition-colors">
-                          {business.name}
+                          {capitalizeWords(business.name)}
                         </h3>
                         {business.isVerified && (
                           <img 

@@ -755,7 +755,7 @@ export default function HomePage() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h5>
+                                <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{capitalizeWords(business.name)}</h5>
                                 {business.isVerified && (
                                   <img 
                                     src="/icons/verificado.png" 
