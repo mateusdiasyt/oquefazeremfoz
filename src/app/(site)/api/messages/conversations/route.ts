@@ -88,19 +88,34 @@ export async function GET(request: NextRequest) {
     // Criar lista de conversas com empresas seguidas
     const allConversations = []
 
+    // ✅ CORREÇÃO N+1: Buscar todos os counts de uma vez
+    const conversationIds = existingConversations.map(c => c.id)
+    const unreadCounts = conversationIds.length > 0 ? await prisma.message.groupBy({
+      by: ['conversationId'],
+      where: {
+        receiverId: user.id,
+        isRead: false,
+        conversationId: {
+          in: conversationIds
+        }
+      },
+      _count: {
+        id: true
+      }
+    }) : []
+
+    // Criar mapa para lookup O(1)
+    const unreadCountMap = new Map(
+      unreadCounts.map(item => [item.conversationId, item._count.id])
+    )
+
     // Adicionar conversas existentes
     for (const conv of existingConversations) {
       const otherParticipant = conv.user.find(p => p.id !== user.id)
       const lastMessage = conv.message[0]
 
-      // Contar mensagens não lidas
-      const unreadCount = await prisma.message.count({
-        where: {
-          conversationId: conv.id,
-          receiverId: user.id,
-          isRead: false
-        }
-      })
+      // ✅ Usar mapa em vez de query individual
+      const unreadCount = unreadCountMap.get(conv.id) || 0
 
       // Buscar empresa ativa do outro participante
       const otherParticipantActiveBusiness = otherParticipant?.activeBusinessId 

@@ -99,11 +99,15 @@ export default function FloatingChat() {
         const data = await response.json()
         const newMessages = data.messages || []
         
-        // Comparar se há mudanças reais antes de atualizar
+        // ✅ CORREÇÃO: Comparação leve usando hash
+        const getMessagesHash = (msgs: Message[]) => 
+          msgs.length > 0 
+            ? `${msgs.length}_${msgs[msgs.length - 1].id}_${msgs[msgs.length - 1].isRead}`
+            : '0'
+        
         const hasChanges = 
           newMessages.length !== messages.length ||
-          JSON.stringify(newMessages.map((m: Message) => ({ id: m.id, isRead: m.isRead }))) !== 
-          JSON.stringify(messages.map((m: Message) => ({ id: m.id, isRead: m.isRead })))
+          getMessagesHash(newMessages) !== getMessagesHash(messages)
         
         if (hasChanges) {
           // Verificar se há mensagens novas (não enviadas pelo usuário atual)
@@ -406,46 +410,66 @@ export default function FloatingChat() {
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) {
-      console.log('Condições não atendidas:', { 
-        hasMessage: !!newMessage.trim(), 
-        hasConversation: !!selectedConversation, 
-        hasUser: !!user 
-      })
       return
     }
 
     const messageContent = newMessage.trim()
+    const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    
+    // ✅ OPTIMISTIC UI: Criar mensagem otimista IMEDIATAMENTE
+    const optimisticMessage: Message = {
+      id: tempMessageId,
+      content: messageContent,
+      sender: {
+        id: user.id,
+        name: user.name || user.email || 'Você',
+        business: user.activeBusinessId ? {
+          id: user.activeBusinessId,
+          name: '',
+          profileImage: ''
+        } : undefined
+      },
+      receiver: {
+        id: selectedConversation.business?.userId || '',
+        name: selectedConversation.business?.name || '',
+        business: selectedConversation.business ? {
+          id: selectedConversation.business.id,
+          name: selectedConversation.business.name,
+          profileImage: selectedConversation.business.profileImage || ''
+        } : undefined
+      },
+      createdAt: new Date().toISOString(),
+      isRead: false
+    }
+
+    // ✅ Atualizar UI instantaneamente (0ms de delay)
+    setMessages(prev => [...prev, optimisticMessage])
     setNewMessage('')
+    scrollToBottom()
 
     try {
-      console.log('Enviando mensagem:', { messageContent, conversationId: selectedConversation.id })
-      
       // Primeiro, encontrar ou criar conversa
       let conversation = selectedConversation
-      if (!conversation.id) {
-        console.log('Criando nova conversa para businessId:', conversation.business!.id)
+      if (conversation.id.startsWith('temp-')) {
         const startResponse = await fetch('/api/messages/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ businessId: conversation.business!.id })
         })
         
-        console.log('Resposta start conversation:', startResponse.status)
         if (startResponse.ok) {
           const startData = await startResponse.json()
           conversation = startData.conversation
           setSelectedConversation(conversation)
-          console.log('Nova conversa criada:', conversation)
         } else {
-          const errorData = await startResponse.json()
-          console.error('Erro ao criar conversa:', errorData)
+          // Reverter mensagem otimista
+          setMessages(prev => prev.filter(msg => msg.id !== tempMessageId))
           return
         }
       }
 
-      // Enviar mensagem
-      console.log('Enviando mensagem para conversa:', conversation.id)
-      const response = await fetch(`/api/messages/${conversation!.id}`, {
+      // Enviar mensagem em background
+      const response = await fetch(`/api/messages/${conversation.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -454,42 +478,34 @@ export default function FloatingChat() {
         })
       })
 
-      console.log('📤 Resposta send message:', response.status)
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Mensagem enviada com sucesso:', data)
+        const realMessage = data.message
         
-        // Se a conversa era temporária, agora temos uma conversa real
-        if (conversation.id.startsWith('temp-') && data.message) {
-          console.log('🔄 Conversa temporária convertida para real')
-          // Atualizar a conversa selecionada com o ID real
-          const realConversationId = data.message.conversationId || data.message.id
-          console.log('🆔 ID real da conversa:', realConversationId)
-          
-          // Atualizar selectedConversation com ID real
+        // ✅ Substituir mensagem otimista pela real
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempMessageId ? realMessage : msg
+        ))
+
+        // Se a conversa era temporária, atualizar ID
+        if (selectedConversation.id.startsWith('temp-') && realMessage.conversationId) {
           setSelectedConversation(prev => ({
             ...prev!,
-            id: realConversationId
+            id: realMessage.conversationId
           }))
-          
-          // Buscar mensagens da conversa real (não silencioso - é uma nova conversa)
-          await fetchMessages(realConversationId, false)
-        } else {
-          // Para conversas já existentes, buscar mensagens normalmente (silencioso - já temos mensagens)
-          console.log('🔄 Atualizando mensagens da conversa:', conversation.id)
-          if (conversation.id) {
-            await fetchMessages(conversation.id, true)
-          }
         }
         
-        // Atualizar lista de conversas imediatamente
-        console.log('🔄 Atualizando lista de conversas')
-        await fetchConversations()
+        // Atualizar lista de conversas em background (não bloqueia)
+        fetchConversations()
       } else {
+        // ✅ Reverter mensagem otimista se falhar
+        setMessages(prev => prev.filter(msg => msg.id !== tempMessageId))
         const errorData = await response.json()
         console.error('❌ Erro ao enviar mensagem:', errorData)
       }
     } catch (error) {
+      // ✅ Reverter mensagem otimista se erro
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessageId))
       console.error('Erro ao enviar mensagem:', error)
     }
   }

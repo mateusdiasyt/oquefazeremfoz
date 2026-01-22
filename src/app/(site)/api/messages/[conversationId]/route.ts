@@ -50,51 +50,67 @@ export async function GET(
       return NextResponse.json({ message: 'Conversa não encontrada' }, { status: 404 })
     }
 
-    // Buscar mensagens da conversa
-    const messages = await prisma.message.findMany({
-      where: {
-        conversationId
-      },
-      include: {
-        user_message_senderIdTouser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            activeBusinessId: true,
-            business: {
-              orderBy: { createdAt: 'desc' }
+    // ✅ CORREÇÃO: Buscar mensagens e marcar como lidas em paralelo
+    const [messages] = await Promise.all([
+      prisma.message.findMany({
+        where: {
+          conversationId
+        },
+        include: {
+          user_message_senderIdTouser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              activeBusinessId: true,
+              business: {
+                select: {
+                  id: true,
+                  name: true,
+                  profileImage: true
+                },
+                orderBy: { createdAt: 'desc' },
+                take: 1 // ✅ Apenas empresa ativa
+              }
+            }
+          },
+          user_message_receiverIdTouser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              activeBusinessId: true,
+              business: {
+                select: {
+                  id: true,
+                  name: true,
+                  profileImage: true
+                },
+                orderBy: { createdAt: 'desc' },
+                take: 1 // ✅ Apenas empresa ativa
+              }
             }
           }
         },
-        user_message_receiverIdTouser: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            activeBusinessId: true,
-            business: {
-              orderBy: { createdAt: 'desc' }
-            }
-          }
+        orderBy: {
+          createdAt: 'asc'
         }
-      },
-      orderBy: {
-        createdAt: 'asc'
-      }
-    })
-
-    // Marcar mensagens como lidas
-    await prisma.message.updateMany({
-      where: {
-        conversationId,
-        receiverId: user.id,
-        isRead: false
-      },
-      data: {
-        isRead: true
-      }
-    })
+      }),
+      // ✅ Marcar como lidas de forma assíncrona (não bloqueia resposta)
+      prisma.message.updateMany({
+        where: {
+          conversationId,
+          receiverId: user.id,
+          isRead: false
+        },
+        data: {
+          isRead: true
+        }
+      }).catch(err => {
+        console.error('Erro ao marcar mensagens como lidas:', err)
+        return { count: 0 }
+      })
+    ])
 
     // Transformar dados para o formato esperado pelo componente
     const formattedMessages = messages.map(message => {
