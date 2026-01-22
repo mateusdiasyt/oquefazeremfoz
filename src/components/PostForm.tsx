@@ -244,72 +244,83 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {editPost ? 'Editar Post' : 'Novo Post'}
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
+          <h2 className="text-2xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+            {editPost ? 'Editar Post' : 'Criar Post'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="post-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
           <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Título
+            </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Título do post"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Digite o título do post..."
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400"
+              disabled={loading}
             />
           </div>
 
           <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Conteúdo
+            </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="No que você está pensando?"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              rows={4}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+              rows={5}
               disabled={loading}
+              style={{ letterSpacing: '-0.01em' }}
             />
           </div>
           
           {showImageInput && (
-            <div className="mt-4">
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-dark-200 mb-3">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Escolher Imagem
                 </label>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                  onChange={handleImageFileChange}
-                  className="w-full px-3 py-2 bg-dark-700 text-dark-100 rounded-lg border border-dark-600 focus:border-primary-500 focus:outline-none"
-                  disabled={loading || uploading}
-                />
-                <p className="text-xs text-dark-500 mt-2">
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    onChange={handleImageFileChange}
+                    className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 file:cursor-pointer"
+                    disabled={loading || uploading}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
                   Formatos: JPG, PNG, GIF, WebP • Máximo: 5MB • Proporção: 4:3
                 </p>
                 {uploading && (
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm text-primary-400">Enviando imagem...</p>
+                  <div className="flex items-center space-x-2 mt-3">
+                    <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-sm text-purple-600 font-medium">Enviando imagem...</p>
                   </div>
                 )}
               </div>
               {imageUrl && (
-                <div className="mt-3">
-                  <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-medium" style={{ aspectRatio: '4/3' }}>
+                <div className="space-y-3">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200" style={{ aspectRatio: '4/3' }}>
                     <img 
                       src={imageUrl} 
                       alt="Preview" 
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
                       }}
@@ -321,7 +332,7 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
                       setImageUrl('')
                       setMediaType(null)
                     }}
-                    className="mt-3 text-sm text-red-400 hover:text-red-300 transition-colors duration-200"
+                    className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200"
                   >
                     Remover imagem
                   </button>
@@ -331,35 +342,37 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
           )}
 
           {showVideoInput && (
-            <div className="mt-4">
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-dark-200 mb-3">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Escolher Vídeo
                 </label>
-                <input
-                  type="file"
-                  accept="video/mp4,video/avi,video/mov,video/wmv,video/webm"
-                  onChange={handleVideoFileChange}
-                  className="w-full px-3 py-2 bg-dark-700 text-dark-100 rounded-lg border border-dark-600 focus:border-primary-500 focus:outline-none"
-                  disabled={loading || uploading}
-                />
-                <p className="text-xs text-dark-500 mt-2">
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="video/mp4,video/avi,video/mov,video/wmv,video/webm"
+                    onChange={handleVideoFileChange}
+                    className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 file:cursor-pointer"
+                    disabled={loading || uploading}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
                   Formatos: MP4, AVI, MOV, WMV, WebM • Máximo: 64MB • Proporção: 4:3
                 </p>
                 {uploading && (
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-sm text-primary-400">Enviando vídeo...</p>
+                  <div className="flex items-center space-x-2 mt-3">
+                    <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-sm text-purple-600 font-medium">Enviando vídeo...</p>
                   </div>
                 )}
               </div>
               {videoUrl && (
-                <div className="mt-3">
-                  <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-medium" style={{ aspectRatio: '4/3' }}>
+                <div className="space-y-3">
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-lg border border-gray-200" style={{ aspectRatio: '4/3' }}>
                     <video 
                       src={videoUrl} 
                       controls
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none'
                       }}
@@ -371,7 +384,7 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
                       setVideoUrl('')
                       setMediaType(null)
                     }}
-                    className="mt-3 text-sm text-red-400 hover:text-red-300 transition-colors duration-200"
+                    className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors duration-200"
                   >
                     Remover vídeo
                   </button>
@@ -381,64 +394,69 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
           )}
 
           {error && (
-            <div className="mt-3 p-3 bg-red-950/30 border border-red-500/30 rounded-xl">
-              <p className="text-red-400 text-sm font-medium">{error}</p>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-600 text-sm font-medium">{error}</p>
             </div>
           )}
+        </form>
 
-          <div className="flex items-center justify-between mt-6">
-            <div className="flex space-x-6">
+        {/* Footer */}
+        <div className="px-6 py-5 border-t border-gray-100 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <button
                 type="button"
                 onClick={handleImageClick}
-                className={`flex items-center space-x-2 transition-all duration-300 hover:scale-105 ${
+                className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-200 ${
                   showImageInput || mediaType === 'image'
-                    ? 'text-primary-400' 
-                    : 'text-dark-400 hover:text-primary-400'
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                 }`}
-                disabled={uploading}
+                disabled={uploading || loading}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-sm font-medium">Foto</span>
+                <span className="text-sm font-semibold">Foto</span>
               </button>
               
               <button
                 type="button"
                 onClick={handleVideoClick}
-                className={`flex items-center space-x-2 transition-all duration-300 hover:scale-105 ${
+                className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-200 ${
                   showVideoInput || mediaType === 'video'
-                    ? 'text-primary-400' 
-                    : 'text-dark-400 hover:text-primary-400'
+                    ? 'bg-purple-100 text-purple-700' 
+                    : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                 }`}
-                disabled={uploading}
+                disabled={uploading || loading}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                <span className="text-sm font-medium">Vídeo</span>
+                <span className="text-sm font-semibold">Vídeo</span>
               </button>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex items-center space-x-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-dark-600 text-dark-300 rounded-lg hover:bg-dark-500 transition-colors"
+                className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                disabled={loading || uploading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                disabled={loading || uploading || (!content.trim() && !imageUrl.trim() && !videoUrl.trim())}
-                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                form="post-form"
+                disabled={loading || uploading || (!title.trim() || (!content.trim() && !imageUrl.trim() && !videoUrl.trim()))}
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg shadow-purple-500/30"
               >
-                {loading ? 'Salvando...' : uploading ? 'Enviando...' : editPost ? 'Salvar' : 'Publicar'}
+                {loading ? 'Salvando...' : uploading ? 'Enviando...' : editPost ? 'Salvar alterações' : 'Publicar'}
               </button>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )
