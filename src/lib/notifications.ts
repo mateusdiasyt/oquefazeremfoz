@@ -57,12 +57,20 @@ export async function createNotification({
  * Cria notificação de like em post
  */
 export async function notifyPostLike(postId: string, likerName: string, businessId: string) {
+  // Buscar slug da empresa para criar o link correto
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { slug: true }
+  })
+  
+  const businessSlug = business?.slug || businessId
+  
   return createNotification({
     businessId,
     type: 'like_post',
     title: 'Nova curtida no seu post',
     message: `${likerName} curtiu seu post`,
-    link: `/posts/${postId}`
+    link: `/empresa/${businessSlug}`
   })
 }
 
@@ -70,12 +78,20 @@ export async function notifyPostLike(postId: string, likerName: string, business
  * Cria notificação de like em comentário
  */
 export async function notifyCommentLike(commentId: string, likerName: string, businessId: string, postId: string) {
+  // Buscar slug da empresa para criar o link correto
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { slug: true }
+  })
+  
+  const businessSlug = business?.slug || businessId
+  
   return createNotification({
     businessId,
     type: 'like_comment',
     title: 'Nova curtida no seu comentário',
     message: `${likerName} curtiu seu comentário`,
-    link: `/posts/${postId}#comment-${commentId}`
+    link: `/empresa/${businessSlug}#comment-${commentId}`
   })
 }
 
@@ -83,12 +99,20 @@ export async function notifyCommentLike(commentId: string, likerName: string, bu
  * Cria notificação de novo seguidor
  */
 export async function notifyNewFollower(followerName: string, businessId: string) {
+  // Buscar slug da empresa para criar o link correto
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { slug: true }
+  })
+  
+  const businessSlug = business?.slug || businessId
+  
   return createNotification({
     businessId,
     type: 'follow',
     title: 'Novo seguidor',
     message: `${followerName} começou a seguir sua empresa`,
-    link: `/empresa/${businessId}/seguidores`
+    link: `/empresa/${businessSlug}`
   })
 }
 
@@ -96,11 +120,19 @@ export async function notifyNewFollower(followerName: string, businessId: string
  * Cria notificação de novo comentário
  */
 export async function notifyNewComment(commentId: string, commenterName: string, businessId: string, postId: string) {
+  // Buscar slug da empresa para criar o link correto
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { slug: true }
+  })
+  
+  const businessSlug = business?.slug || businessId
+  
   return createNotification({
     businessId,
     type: 'comment',
     title: 'Novo comentário no seu post',
     message: `${commenterName} comentou no seu post`,
-    link: `/posts/${postId}#comment-${commentId}`
+    link: `/empresa/${businessSlug}#comment-${commentId}`
   })
 }
