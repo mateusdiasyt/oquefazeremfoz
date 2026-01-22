@@ -104,8 +104,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sitemap.xml (sitemap - importante para SEO)
+     * - robots.txt (robots file - importante para SEO)
      * - public folder files
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap|robots|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
