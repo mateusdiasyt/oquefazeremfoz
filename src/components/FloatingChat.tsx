@@ -69,14 +69,21 @@ export default function FloatingChat() {
 
   const fetchConversations = useCallback(async () => {
     try {
-      console.log('Buscando conversas...')
       const response = await fetch('/api/messages/conversations')
-      console.log('Resposta fetchConversations:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Conversas encontradas:', data.conversations)
-        setConversations(data.conversations || [])
+        const newConversations = data.conversations || []
+        
+        // ✅ CORREÇÃO: Comparar antes de atualizar (evita re-render desnecessário)
+        const hasChanges = 
+          newConversations.length !== conversations.length ||
+          JSON.stringify(newConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount }))) !==
+          JSON.stringify(conversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })))
+        
+        if (hasChanges) {
+          setConversations(newConversations)
+        }
       } else {
         const errorData = await response.json()
         console.error('Erro ao buscar conversas:', errorData)
@@ -84,7 +91,7 @@ export default function FloatingChat() {
     } catch (error) {
       console.error('Erro ao buscar conversas:', error)
     }
-  }, [])
+  }, [conversations])
 
   const fetchMessages = useCallback(async (conversationId: string, silent: boolean = false) => {
     try {
