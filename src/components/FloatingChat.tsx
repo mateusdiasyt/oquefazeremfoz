@@ -593,7 +593,7 @@ export default function FloatingChat() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full shadow-lg hover:from-pink-600 hover:to-pink-700 transition-all duration-300 z-50 flex items-center justify-center"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full shadow-lg hover:from-pink-600 hover:to-pink-700 transition-all duration-300 z-50 flex items-center justify-center md:bottom-6 md:right-6 mb-20 md:mb-0"
         >
           <MessageCircle size={24} />
         </button>
