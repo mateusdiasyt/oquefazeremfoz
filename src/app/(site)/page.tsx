@@ -443,40 +443,42 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6" style={{ letterSpacing: '-0.03em' }}>
-              O Que Fazer em Foz
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto" style={{ letterSpacing: '-0.01em' }}>
-              Conheça as melhores empresas de Foz do Iguaçu
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={() => router.push('/empresas')}
-                className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-200 flex items-center justify-center gap-2"
-                style={{ letterSpacing: '-0.01em' }}
-              >
-                <MapPin className="w-5 h-5" />
-                Explorar Empresas
-              </button>
-              <button
-                onClick={() => router.push('/register')}
-                className="px-6 py-3.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
-                style={{ letterSpacing: '-0.01em' }}
-              >
-                <Users className="w-5 h-5" />
-                Criar Conta
-              </button>
+      {/* Hero Section - Apenas para usuários não logados */}
+      {!user && (
+        <section className="relative overflow-hidden bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div className="text-center">
+              <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6" style={{ letterSpacing: '-0.03em' }}>
+                O Que Fazer em Foz
+              </h1>
+              <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto" style={{ letterSpacing: '-0.01em' }}>
+                Conheça as melhores empresas de Foz do Iguaçu
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => router.push('/empresas')}
+                  className="px-6 py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-200 flex items-center justify-center gap-2"
+                  style={{ letterSpacing: '-0.01em' }}
+                >
+                  <MapPin className="w-5 h-5" />
+                  Explorar Empresas
+                </button>
+                <button
+                  onClick={() => router.push('/register')}
+                  className="px-6 py-3.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-2xl hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                  style={{ letterSpacing: '-0.01em' }}
+                >
+                  <Users className="w-5 h-5" />
+                  Criar Conta
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Search Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
+      <section className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 ${!user ? '-mt-10' : 'pt-8'} relative z-10`}>
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
             <div className="flex-1 relative w-full">
