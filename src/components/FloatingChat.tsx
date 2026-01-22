@@ -165,7 +165,7 @@ export default function FloatingChat() {
     const startConversationsPolling = () => {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
-        fetchConversations()
+        fetchConversations(false) // ✅ Polling silencioso (sem loading)
       }, 10000) // ✅ Aumentar para 10s (reduzir spam e carga)
     }
 
@@ -301,7 +301,7 @@ export default function FloatingChat() {
     const startConversationsPolling = () => {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
-        fetchConversations()
+        fetchConversations(false) // ✅ Polling silencioso (sem loading)
       }, 10000) // ✅ Aumentar para 10s (reduzir spam e carga)
     }
 
@@ -510,7 +510,7 @@ export default function FloatingChat() {
         }
         
         // Atualizar lista de conversas em background (não bloqueia)
-        fetchConversations()
+        fetchConversations(false) // ✅ Sem loading (atualização em background)
       } else {
         // ✅ Reverter mensagem otimista se falhar
         setMessages(prev => prev.filter(msg => msg.id !== tempMessageId))
