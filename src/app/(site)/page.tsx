@@ -674,94 +674,138 @@ export default function HomePage() {
                   <p className="text-gray-500 text-sm">Nenhuma empresa cadastrada ainda</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {businesses
-                    .filter(b => b.isApproved) // Garantir que está aprovada
-                    .sort((a, b) => {
-                      // 1. Empresas verificadas primeiro
-                      if (a.isVerified !== b.isVerified) {
-                        return b.isVerified ? -1 : 1 // Verificadas vêm primeiro
-                      }
-                      // 2. Mais seguidores
-                      const followersDiff = (b.followersCount || 0) - (a.followersCount || 0)
-                      if (followersDiff !== 0) return followersDiff
-                      // 3. Mais likes
-                      const likesDiff = (b.likesCount || 0) - (a.likesCount || 0)
-                      if (likesDiff !== 0) return likesDiff
-                      // 4. Mais recentes (desempate)
-                      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                    })
-                    .slice(0, 3)
-                    .map((business) => (
-                    <div key={business.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50/50 transition-colors border border-transparent hover:border-gray-100">
-                      <button
-                        onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
-                        className="flex items-center space-x-3 flex-1 min-w-0 text-left"
-                      >
-                        {business.profileImage ? (
-                          <img
-                            src={business.profileImage}
-                            alt={business.name}
-                            className="w-11 h-11 rounded-xl object-cover border border-gray-200"
-                          />
-                        ) : (
-                          <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border border-gray-200">
-                            {business.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        {/* Informações do nome - ocultar no mobile */}
-                        <div className="flex-1 min-w-0 hidden md:block">
-                          <div className="flex items-center gap-2">
-                            <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h5>
-                            {business.isVerified && (
+                <>
+                  {/* Mobile: Grid horizontal com apenas fotos */}
+                  <div className="grid grid-cols-3 gap-3 md:hidden">
+                    {businesses
+                      .filter(b => b.isApproved)
+                      .sort((a, b) => {
+                        if (a.isVerified !== b.isVerified) {
+                          return b.isVerified ? -1 : 1
+                        }
+                        const followersDiff = (b.followersCount || 0) - (a.followersCount || 0)
+                        if (followersDiff !== 0) return followersDiff
+                        const likesDiff = (b.likesCount || 0) - (a.likesCount || 0)
+                        if (likesDiff !== 0) return likesDiff
+                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      })
+                      .slice(0, 3)
+                      .map((business) => (
+                        <button
+                          key={business.id}
+                          onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
+                          className="relative group"
+                        >
+                          {business.profileImage ? (
+                            <img
+                              src={business.profileImage}
+                              alt={business.name}
+                              className="w-full aspect-square rounded-xl object-cover border border-gray-200"
+                            />
+                          ) : (
+                            <div className="w-full aspect-square bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-lg border border-gray-200">
+                              {business.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          {business.isVerified && (
+                            <div className="absolute top-1 right-1">
                               <img 
                                 src="/icons/verificado.png" 
                                 alt="Verificado" 
                                 className="w-4 h-4 object-contain"
                                 title="Empresa verificada"
                               />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-xs text-gray-500 truncate">{business.category}</p>
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                              </svg>
-                              <span>{business.followersCount}</span>
                             </div>
-                          </div>
+                          )}
+                        </button>
+                      ))}
+                  </div>
+                  
+                  {/* Desktop: Lista vertical completa */}
+                  <div className="hidden md:block space-y-2">
+                    {businesses
+                      .filter(b => b.isApproved)
+                      .sort((a, b) => {
+                        if (a.isVerified !== b.isVerified) {
+                          return b.isVerified ? -1 : 1
+                        }
+                        const followersDiff = (b.followersCount || 0) - (a.followersCount || 0)
+                        if (followersDiff !== 0) return followersDiff
+                        const likesDiff = (b.likesCount || 0) - (a.likesCount || 0)
+                        if (likesDiff !== 0) return likesDiff
+                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      })
+                      .slice(0, 3)
+                      .map((business) => (
+                        <div key={business.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50/50 transition-colors border border-transparent hover:border-gray-100">
+                          <button
+                            onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
+                            className="flex items-center space-x-3 flex-1 min-w-0 text-left"
+                          >
+                            {business.profileImage ? (
+                              <img
+                                src={business.profileImage}
+                                alt={business.name}
+                                className="w-11 h-11 rounded-xl object-cover border border-gray-200"
+                              />
+                            ) : (
+                              <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border border-gray-200">
+                                {business.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h5>
+                                {business.isVerified && (
+                                  <img 
+                                    src="/icons/verificado.png" 
+                                    alt="Verificado" 
+                                    className="w-4 h-4 object-contain"
+                                    title="Empresa verificada"
+                                  />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <p className="text-xs text-gray-500 truncate">{business.category}</p>
+                                <div className="flex items-center gap-1 text-xs text-gray-400">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>{business.followersCount}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleFollowBusiness(business.id)
+                            }}
+                            className={`p-2 rounded-lg transition-all duration-200 ${
+                              business.isFollowing 
+                                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                                : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
+                            }`}
+                            title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
+                          >
+                            <svg className="w-4 h-4" fill={business.isFollowing ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          </button>
                         </div>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleFollowBusiness(business.id)
-                        }}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          business.isFollowing 
-                            ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                            : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
-                        }`}
-                        title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
-                      >
-                        <svg className="w-4 h-4" fill={business.isFollowing ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      ))}
+                  </div>
+                </>
               )}
             </div>
 
             {/* Cupons do Dia */}
-            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
-              <div className="flex items-center space-x-3 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Gift className="w-5 h-5 text-white" />
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-4 md:p-6">
+              <div className="flex items-center space-x-3 mb-4 md:mb-5">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Gift className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Cupons do Dia</h4>
+                <h4 className="text-base md:text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Cupons do Dia</h4>
               </div>
               
               {coupons.length === 0 ? (
