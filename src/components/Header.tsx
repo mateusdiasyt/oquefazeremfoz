@@ -305,7 +305,8 @@ export default function Header() {
                 </button>
 
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-lg py-2 z-50 animate-slide-up border border-gray-100">
+                  <div className="absolute right-0 top-full pt-1 w-56 z-50">
+                    <div className="bg-white rounded-2xl shadow-lg py-2 animate-slide-up border border-gray-100">
                     {isCompany() && (
                       <>
                         {/* Links para cada empresa */}
