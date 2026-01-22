@@ -477,13 +477,13 @@ export default function HomePage() {
 
       {/* Search Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
-        <div className="bg-white/80 backdrop-blur-xl border border-purple-200/50 rounded-3xl shadow-lg shadow-purple-500/5 p-6">
-          <div className="flex flex-col lg:flex-row items-center gap-4">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-6">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
             <div className="flex-1 relative w-full">
-              <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
               <input 
-                className="w-full pl-12 pr-5 py-4 bg-white/50 border border-purple-100 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 text-lg" 
-                placeholder="Buscar hotéis, restaurantes, atrações..." 
+                className="w-full pl-10 md:pl-12 pr-3 md:pr-5 py-2.5 md:py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 text-sm md:text-base" 
+                placeholder="Buscar estabelecimentos..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => {
@@ -562,12 +562,12 @@ export default function HomePage() {
             </div>
             
             {/* Filtro de Categoria */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+            <div className="flex items-center gap-2 md:gap-2">
+              <label className="text-xs md:text-sm font-medium text-gray-600 md:text-gray-700 whitespace-nowrap hidden md:block">
                 Categoria:
               </label>
               <select 
-                className="input text-sm min-w-[140px] bg-white border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                className="flex-1 md:flex-none text-sm bg-white border border-gray-200 rounded-xl px-3 md:px-4 py-2.5 md:py-3 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 min-w-0 md:min-w-[140px]"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -583,7 +583,7 @@ export default function HomePage() {
             </div>
             
             <button 
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-2xl whitespace-nowrap hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 text-lg"
+              className="w-full md:w-auto px-6 md:px-8 py-2.5 md:py-4 bg-purple-600 text-white font-medium rounded-xl md:rounded-2xl hover:bg-purple-700 transition-all duration-200 text-sm md:text-base"
               onClick={() => {
                 // Redirecionar para página de empresas com filtros
                 const params = new URLSearchParams()
