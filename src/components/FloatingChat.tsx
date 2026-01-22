@@ -62,11 +62,68 @@ export default function FloatingChat() {
   const [isOnline, setIsOnline] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const fetchConversations = useCallback(async () => {
+    try {
+      console.log('Buscando conversas...')
+      const response = await fetch('/api/messages/conversations')
+      console.log('Resposta fetchConversations:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Conversas encontradas:', data.conversations)
+        setConversations(data.conversations || [])
+      } else {
+        const errorData = await response.json()
+        console.error('Erro ao buscar conversas:', errorData)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar conversas:', error)
+    }
+  }, [])
+
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    try {
+      console.log('🔍 Buscando mensagens para conversa:', conversationId)
+      setLoading(true)
+      const response = await fetch(`/api/messages/${conversationId}`)
+      
+      console.log('📨 Resposta fetchMessages:', response.status)
+        if (response.ok) {
+          const data = await response.json()
+        const newMessages = data.messages || []
+        console.log('💬 Mensagens encontradas:', newMessages.length)
+        console.log('📋 Dados das mensagens:', newMessages)
+        
+        // Verificar se há mensagens novas (não enviadas pelo usuário atual)
+        const hasNewMessages = newMessages.some((msg: Message) => 
+          msg.receiver?.id === user?.id && !msg.isRead
+        )
+        
+        if (hasNewMessages) {
+          playMessageSound()
+        }
+        
+        setMessages(newMessages)
+      } else {
+        const errorData = await response.json()
+        console.error('❌ Erro ao buscar mensagens:', errorData)
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar mensagens:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user, playMessageSound])
+
   useEffect(() => {
     if (isOpen && user) {
       fetchConversations()
     }
-  }, [isOpen, user])
+  }, [isOpen, user, fetchConversations])
 
   // Polling para lista de conversas (mesmo sem conversa selecionada)
   useEffect(() => {
@@ -193,68 +250,148 @@ export default function FloatingChat() {
         fetchConversations()
       }, 500)
     }
-  }, [selectedConversation])
+  }, [selectedConversation, fetchMessages, fetchConversations])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const fetchConversations = useCallback(async () => {
-    try {
-      console.log('Buscando conversas...')
-      const response = await fetch('/api/messages/conversations')
-      console.log('Resposta fetchConversations:', response.status)
-      
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Conversas encontradas:', data.conversations)
-        setConversations(data.conversations || [])
-      } else {
-        const errorData = await response.json()
-        console.error('Erro ao buscar conversas:', errorData)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar conversas:', error)
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchConversations()
     }
-  }, [])
+  }, [isOpen, user, fetchConversations])
 
-  const fetchMessages = useCallback(async (conversationId: string) => {
-    try {
-      console.log('🔍 Buscando mensagens para conversa:', conversationId)
-      setLoading(true)
-      const response = await fetch(`/api/messages/${conversationId}`)
-      
-      console.log('📨 Resposta fetchMessages:', response.status)
-        if (response.ok) {
-          const data = await response.json()
-        const newMessages = data.messages || []
-        console.log('💬 Mensagens encontradas:', newMessages.length)
-        console.log('📋 Dados das mensagens:', newMessages)
-        
-        // Verificar se há mensagens novas (não enviadas pelo usuário atual)
-        const hasNewMessages = newMessages.some((msg: Message) => 
-          msg.receiver?.id === user?.id && !msg.isRead
-        )
-        
-        if (hasNewMessages) {
-          playMessageSound()
-        }
-        
-        setMessages(newMessages)
-      } else {
-        const errorData = await response.json()
-        console.error('❌ Erro ao buscar mensagens:', errorData)
-      }
-    } catch (error) {
-      console.error('❌ Erro ao buscar mensagens:', error)
-    } finally {
-      setLoading(false)
+  // Polling para lista de conversas (mesmo sem conversa selecionada)
+  useEffect(() => {
+    if (!isOpen || !user) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const startConversationsPolling = () => {
+      if (interval) clearInterval(interval)
+      interval = setInterval(() => {
+        fetchConversations()
+      }, 5000) // Verificar conversas a cada 5 segundos
     }
-  }, [user])
+
+    const stopConversationsPolling = () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = null
+      }
+    }
+
+    const handleFocus = () => {
+      startConversationsPolling()
+    }
+
+    const handleBlur = () => {
+      stopConversationsPolling()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopConversationsPolling()
+      } else {
+        startConversationsPolling()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    startConversationsPolling()
+
+    return () => {
+      stopConversationsPolling()
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isOpen, user, fetchConversations])
+
+  // Polling inteligente - só quando a janela está ativa
+  useEffect(() => {
+    if (!isOpen || !user || !selectedConversation) return
+
+    // Só fazer polling se a conversa for real (não temporária)
+    const conversationId = selectedConversation.id
+    if (conversationId.startsWith('temp-')) {
+      return
+    }
+
+    let interval: NodeJS.Timeout | null = null
+
+    const startPolling = () => {
+      if (interval) clearInterval(interval)
+      interval = setInterval(() => {
+        fetchMessages(conversationId)
+        // Também atualizar lista de conversas para ver novas mensagens
+        fetchConversations()
+      }, 3000) // Verificar a cada 3 segundos (mais responsivo)
+    }
+
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = null
+      }
+    }
+
+    // Iniciar polling quando a janela ganha foco
+    const handleFocus = () => {
+      setIsOnline(true)
+      startPolling()
+    }
+
+    // Parar polling quando a janela perde foco
+    const handleBlur = () => {
+      setIsOnline(false)
+      stopPolling()
+    }
+
+    // Verificar se a página está visível
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsOnline(false)
+        stopPolling()
+      } else {
+        setIsOnline(true)
+        startPolling()
+      }
+    }
+
+    // Adicionar listeners
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    // Iniciar polling inicial
+    startPolling()
+
+    return () => {
+      stopPolling()
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isOpen, user, selectedConversation?.id, fetchMessages, fetchConversations])
+
+  useEffect(() => {
+    if (selectedConversation) {
+      fetchMessages(selectedConversation.id)
+      // Atualizar lista de conversas após marcar como lidas
+      setTimeout(() => {
+        fetchConversations()
+      }, 500)
+    }
+  }, [selectedConversation, fetchMessages, fetchConversations])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) {
