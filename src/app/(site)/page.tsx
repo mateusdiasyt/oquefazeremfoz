@@ -64,6 +64,7 @@ interface Business {
   createdAt: string
   averageRating: number
   isVerified: boolean
+  isApproved: boolean
 }
 
 interface Coupon {
