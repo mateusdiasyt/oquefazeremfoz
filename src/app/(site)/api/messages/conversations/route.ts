@@ -181,6 +181,7 @@ export async function GET(request: NextRequest) {
               userId: business.user.id
             },
             lastMessage: null,
+            unreadCount: 0, // Sem conversa = sem mensagens não lidas
             updatedAt: business.createdAt.toISOString()
           })
         }
