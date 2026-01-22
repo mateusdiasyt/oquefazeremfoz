@@ -45,6 +45,7 @@ interface Conversation {
   id: string
   business: Business | null
   lastMessage: Message | null
+  unreadCount?: number
   updatedAt: string
 }
 
@@ -134,6 +135,10 @@ export default function FloatingChat() {
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.id)
+      // Atualizar lista de conversas após marcar como lidas
+      setTimeout(() => {
+        fetchConversations()
+      }, 500)
     }
   }, [selectedConversation])
 
@@ -428,39 +433,60 @@ export default function FloatingChat() {
                       <button
                             key={conversation.id}
                             onClick={() => setSelectedConversation(conversation)}
-                            className="w-full p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                            className={`w-full p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors ${
+                              (conversation.unreadCount || 0) > 0 ? 'bg-gray-50' : ''
+                            }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center">
-                                {conversation.business?.profileImage ? (
-                                  <img
-                                    src={conversation.business.profileImage}
-                                    alt={conversation.business.name}
-                                    className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                                  <span className="text-white font-bold">
-                                    {conversation.business?.name?.charAt(0)?.toUpperCase() || 'E'}
-                              </span>
-                            )}
-                          </div>
+                              <div className="relative">
+                                <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center">
+                                  {conversation.business?.profileImage ? (
+                                    <img
+                                      src={conversation.business.profileImage}
+                                      alt={conversation.business.name}
+                                      className="w-12 h-12 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-white font-bold">
+                                      {conversation.business?.name?.charAt(0)?.toUpperCase() || 'E'}
+                                    </span>
+                                  )}
+                                </div>
+                                {(conversation.unreadCount || 0) > 0 && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                                    {conversation.unreadCount}
+                                  </div>
+                                )}
+                              </div>
                               
-                          <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between">
-                                  <h4 className="font-semibold text-sm text-gray-800 truncate">
+                                  <h4 className={`text-sm truncate ${
+                                    (conversation.unreadCount || 0) > 0 
+                                      ? 'font-bold text-gray-900' 
+                                      : 'font-semibold text-gray-800'
+                                  }`}>
                                     {conversation.business?.name}
                                   </h4>
-                                  <span className="text-xs text-gray-500">
+                                  <span className={`text-xs ${
+                                    (conversation.unreadCount || 0) > 0 
+                                      ? 'text-gray-700 font-medium' 
+                                      : 'text-gray-500'
+                                  }`}>
                                     {conversation.lastMessage && formatConversationTime(conversation.lastMessage.createdAt)}
-                              </span>
-                            </div>
+                                  </span>
+                                </div>
                                 
-                                <p className="text-sm text-gray-600 truncate mt-1 text-left">
+                                <p className={`text-sm truncate mt-1 text-left ${
+                                  (conversation.unreadCount || 0) > 0 
+                                    ? 'font-semibold text-gray-900' 
+                                    : 'text-gray-600'
+                                }`}>
                                   {conversation.lastMessage?.content || 'Nenhuma mensagem ainda'}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
+                                </p>
+                              </div>
+                            </div>
+                          </button>
                     ))
                   )}
                 </div>
@@ -501,14 +527,14 @@ export default function FloatingChat() {
                                 message.sender?.id === user.id ? 'text-pink-100' : 'text-gray-500'
                               }`}>
                                 <span className="text-xs">
-                                {formatTime(message.createdAt)}
+                                  {formatTime(message.createdAt)}
                                 </span>
                                 {message.sender?.id === user.id && (
-                                  <div className="flex items-center">
+                                  <div className="flex items-center ml-1">
                                     {message.isRead ? (
-                                      <CheckCheck size={12} className="text-blue-300" />
+                                      <CheckCheck size={14} className="text-blue-400" />
                                     ) : (
-                                      <Check size={12} className="opacity-70" />
+                                      <Check size={14} className="opacity-60" />
                                     )}
                                   </div>
                                 )}

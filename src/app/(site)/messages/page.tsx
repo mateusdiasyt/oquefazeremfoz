@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useNotification } from '../../../contexts/NotificationContext'
+import { Check, CheckCheck } from 'lucide-react'
 
 interface Conversation {
   id: string
@@ -67,6 +68,10 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.id)
+      // Atualizar lista de conversas após marcar como lidas
+      setTimeout(() => {
+        fetchConversations()
+      }, 500)
     }
   }, [selectedConversation])
 
@@ -178,6 +183,8 @@ export default function MessagesPage() {
                       onClick={() => setSelectedConversation(conversation)}
                       className={`p-4 border-b border-dark-600 cursor-pointer hover:bg-dark-700 transition-colors ${
                         selectedConversation?.id === conversation.id ? 'bg-dark-700' : ''
+                      } ${
+                        conversation.unreadCount > 0 ? 'bg-dark-750' : ''
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -204,7 +211,11 @@ export default function MessagesPage() {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
-                            <h3 className="font-semibold text-dark-100 truncate">
+                            <h3 className={`truncate ${
+                              conversation.unreadCount > 0 
+                                ? 'font-bold text-dark-100' 
+                                : 'font-semibold text-dark-100'
+                            }`}>
                               {conversation.otherParticipant?.name || 'Usuário'}
                             </h3>
                             {conversation.otherParticipant?.isVerified && (
@@ -214,7 +225,11 @@ export default function MessagesPage() {
                             )}
                           </div>
                           {conversation.lastMessage && (
-                            <p className="text-sm text-dark-400 truncate">
+                            <p className={`text-sm truncate ${
+                              conversation.unreadCount > 0 
+                                ? 'font-semibold text-dark-100' 
+                                : 'text-dark-400'
+                            }`}>
                               {conversation.lastMessage.sender.id === user?.id ? 'Você: ' : ''}
                               {conversation.lastMessage.content}
                             </p>
@@ -272,11 +287,22 @@ export default function MessagesPage() {
                             : 'bg-dark-700 text-dark-100'
                         }`}>
                           <p className="text-sm">{message.content}</p>
-                          <p className={`text-xs mt-1 ${
+                          <div className={`flex items-center justify-end gap-1 mt-1 ${
                             message.sender.id === user?.id ? 'text-primary-100' : 'text-dark-400'
                           }`}>
-                            {formatTime(message.createdAt)}
-                          </p>
+                            <span className="text-xs">
+                              {formatTime(message.createdAt)}
+                            </span>
+                            {message.sender.id === user?.id && (
+                              <div className="flex items-center ml-1">
+                                {message.isRead ? (
+                                  <CheckCheck size={12} className="text-blue-400" />
+                                ) : (
+                                  <Check size={12} className="opacity-60" />
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

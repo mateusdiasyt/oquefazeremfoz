@@ -93,6 +93,15 @@ export async function GET(request: NextRequest) {
       const otherParticipant = conv.user.find(p => p.id !== user.id)
       const lastMessage = conv.message[0]
 
+      // Contar mensagens não lidas
+      const unreadCount = await prisma.message.count({
+        where: {
+          conversationId: conv.id,
+          receiverId: user.id,
+          isRead: false
+        }
+      })
+
       // Buscar empresa ativa do outro participante
       const otherParticipantActiveBusiness = otherParticipant?.activeBusinessId 
         ? otherParticipant.business.find(b => b.id === otherParticipant.activeBusinessId)
@@ -144,6 +153,7 @@ export async function GET(request: NextRequest) {
           createdAt: lastMessage.createdAt.toISOString(),
           isRead: lastMessage.isRead
         } : null,
+        unreadCount,
         updatedAt: conv.updatedAt.toISOString()
       })
     }
