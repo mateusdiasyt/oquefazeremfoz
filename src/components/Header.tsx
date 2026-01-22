@@ -131,9 +131,12 @@ export default function Header() {
                 <NotificationBell />
                 
                 {/* Dropdown do usuário */}
-              <div className="relative">
+              <div 
+                className="relative"
+                onMouseEnter={() => setShowDropdown(true)}
+                onMouseLeave={() => setShowDropdown(false)}
+              >
                 <button
-                  onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center space-x-2.5 bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded-xl text-gray-700 hover:text-gray-900 transition-all duration-200 border border-gray-200 hover:border-gray-300"
                   style={{ letterSpacing: '-0.01em' }}
                 >
@@ -167,7 +170,6 @@ export default function Header() {
                                 key={business.id}
                                 href={`/empresa/${business.slug}`}
                                 className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
-                                onClick={() => setShowDropdown(false)}
                                 style={{ letterSpacing: '-0.01em' }}
                               >
                                 {business.profileImage ? (
@@ -192,7 +194,6 @@ export default function Header() {
                         <a
                           href="/minhas-empresas"
                           className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
-                          onClick={() => setShowDropdown(false)}
                           style={{ letterSpacing: '-0.01em' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +204,6 @@ export default function Header() {
                         <a
                           href="/empresa/dashboard"
                           className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
-                          onClick={() => setShowDropdown(false)}
                           style={{ letterSpacing: '-0.01em' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +214,6 @@ export default function Header() {
                         <a
                           href="/messages"
                           className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
-                          onClick={() => setShowDropdown(false)}
                           style={{ letterSpacing: '-0.01em' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +229,6 @@ export default function Header() {
                       <a
                         href="/perfil"
                         className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
-                        onClick={() => setShowDropdown(false)}
                         style={{ letterSpacing: '-0.01em' }}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -244,7 +242,6 @@ export default function Header() {
                       <Link
                         href="/admin"
                         className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
-                        onClick={() => setShowDropdown(false)}
                         style={{ letterSpacing: '-0.01em' }}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
