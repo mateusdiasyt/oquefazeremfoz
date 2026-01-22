@@ -212,83 +212,14 @@ export default function HomePage() {
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [businessToUnfollow, setBusinessToUnfollow] = useState<Business | null>(null)
   
-  // Estados para filtro de busca
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
-  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [suggestions, setSuggestions] = useState<Business[]>([])
+  // Estados removidos - busca agora está no header
   
   // Estados para scroll infinito
   const [currentPage, setCurrentPage] = useState(1)
   const [hasMorePosts, setHasMorePosts] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
 
-  // Função para filtrar empresas
-  const filterBusinesses = () => {
-    let filtered = businesses
-
-    // Filtrar por termo de busca
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(business =>
-        business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        business.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        business.category.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    // Filtrar por categoria
-    if (selectedCategory) {
-      filtered = filtered.filter(business =>
-        business.category.toLowerCase() === selectedCategory.toLowerCase()
-      )
-    }
-
-    setFilteredBusinesses(filtered)
-  }
-
-  // Função para gerar sugestões em tempo real
-  const generateSuggestions = (term: string) => {
-    if (term.length < 2) {
-      setSuggestions([])
-      setShowSuggestions(false)
-      return
-    }
-
-    let filtered = businesses
-
-    // Filtrar por termo de busca
-    filtered = filtered.filter(business =>
-      business.name.toLowerCase().includes(term.toLowerCase()) ||
-      business.description?.toLowerCase().includes(term.toLowerCase()) ||
-      business.category.toLowerCase().includes(term.toLowerCase())
-    )
-
-    // Filtrar por categoria se selecionada
-    if (selectedCategory) {
-      filtered = filtered.filter(business =>
-        business.category.toLowerCase() === selectedCategory.toLowerCase()
-      )
-    }
-
-    // Limitar a 5 sugestões
-    setSuggestions(filtered.slice(0, 5))
-    setShowSuggestions(true)
-  }
-
-  // Efeito para filtrar quando os filtros mudarem
-  useEffect(() => {
-    filterBusinesses()
-  }, [businesses, searchTerm, selectedCategory])
-
-  // Efeito para gerar sugestões em tempo real
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      generateSuggestions(searchTerm)
-    }, 300) // Debounce de 300ms
-
-    return () => clearTimeout(timeoutId)
-  }, [searchTerm, selectedCategory, businesses])
+  // Funções de busca removidas - agora está no header
 
   useEffect(() => {
     // Usuário já está disponível via useAuth context
@@ -478,128 +409,6 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Search Section */}
-      <section className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 ${!user ? '-mt-10' : 'pt-8'} relative z-10`}>
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 md:p-6">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
-            <div className="flex-1 relative w-full">
-              <Search className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
-              <input 
-                className="w-full pl-10 md:pl-12 pr-3 md:pr-5 py-2.5 md:py-4 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 text-sm md:text-base" 
-                placeholder="Buscar estabelecimentos..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => {
-                  if (suggestions.length > 0) setShowSuggestions(true)
-                }}
-                onBlur={() => {
-                  // Delay para permitir cliques nas sugestões
-                  setTimeout(() => setShowSuggestions(false), 200)
-                }}
-              />
-              
-              {/* Dropdown de Sugestões */}
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                  {suggestions.map((business) => (
-                    <div
-                      key={business.id}
-                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                      onClick={() => {
-                        setSearchTerm(business.name)
-                        setShowSuggestions(false)
-                        router.push(`/empresa/${business.slug}`)
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        {/* Foto de Perfil */}
-                        <div className="flex-shrink-0">
-                          {business.profileImage ? (
-                            <img
-                              src={business.profileImage}
-                              alt={business.name}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                              <span className="text-white font-semibold text-sm">
-                                {business.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Informações da Empresa */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-gray-900 truncate">{capitalizeWords(business.name)}</h4>
-                            {business.isVerified && (
-                              <img 
-                                src="/icons/verificado.png" 
-                                alt="Verificado" 
-                                className="w-4 h-4 object-contain"
-                                title="Empresa verificada"
-                              />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3 mt-1">
-                            <p className="text-sm text-gray-500 truncate">{business.category}</p>
-                            <div className="flex items-center gap-1 text-xs text-gray-400">
-                              <Heart className="w-3 h-3" fill="currentColor" />
-                              <span>{business.followersCount}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Indicador de Ação */}
-                        <div className="flex-shrink-0">
-                          <div className="text-xs text-purple-600 font-medium">
-                            Ver perfil
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {/* Filtro de Categoria */}
-            <div className="flex items-center gap-2 md:gap-2">
-              <label className="text-xs md:text-sm font-medium text-gray-600 md:text-gray-700 whitespace-nowrap hidden md:block">
-                Categoria:
-              </label>
-              <select 
-                className="flex-1 md:flex-none text-sm bg-white border border-gray-200 rounded-xl px-3 md:px-4 py-2.5 md:py-3 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all duration-200 min-w-0 md:min-w-[140px]"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="">Todas</option>
-                <option value="Hotel">Hotéis</option>
-                <option value="Restaurante">Restaurantes</option>
-                <option value="Turismo">Turismo</option>
-                <option value="Atração">Atrações</option>
-                <option value="Shopping">Shopping</option>
-                <option value="Serviço">Serviços</option>
-                <option value="Outro">Outros</option>
-              </select>
-            </div>
-            
-            <button 
-              className="w-full md:w-auto px-6 md:px-8 py-2.5 md:py-4 bg-purple-600 text-white font-medium rounded-xl md:rounded-2xl hover:bg-purple-700 transition-all duration-200 text-sm md:text-base"
-              onClick={() => {
-                // Redirecionar para página de empresas com filtros
-                const params = new URLSearchParams()
-                if (searchTerm) params.set('q', searchTerm)
-                if (selectedCategory) params.set('category', selectedCategory)
-                router.push(`/empresas?${params.toString()}`)
-              }}
-            >
-              Buscar
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* Main Content */}
       <section className="w-full pt-8 pb-20">

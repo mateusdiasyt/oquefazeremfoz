@@ -4,7 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Gift, MapPin } from 'lucide-react'
+import { Home, Search, Gift, MapPin, Compass, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { capitalizeWords } from '../utils/formatters'
 import NotificationBell from './NotificationBell'
 
@@ -19,7 +20,12 @@ export default function Header() {
   const { user, logout, isCompany, isAdmin } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [userBusinesses, setUserBusinesses] = useState<Business[]>([])
+  const [searchExpanded, setSearchExpanded] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchSuggestions, setSearchSuggestions] = useState<Business[]>([])
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     const fetchUserBusinesses = async () => {
@@ -38,6 +44,37 @@ export default function Header() {
 
     fetchUserBusinesses()
   }, [user, isCompany])
+
+  // Buscar empresas para sugestões de pesquisa
+  useEffect(() => {
+    const fetchBusinesses = async () => {
+      if (searchTerm.length >= 2) {
+        try {
+          const response = await fetch('/api/business/list')
+          if (response.ok) {
+            const data = await response.json()
+            const businesses = data.businesses || []
+            const filtered = businesses.filter((business: Business) =>
+              business.name.toLowerCase().includes(searchTerm.toLowerCase())
+            ).slice(0, 5)
+            setSearchSuggestions(filtered)
+            setShowSearchSuggestions(true)
+          }
+        } catch (error) {
+          console.error('Erro ao buscar empresas:', error)
+        }
+      } else {
+        setSearchSuggestions([])
+        setShowSearchSuggestions(false)
+      }
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetchBusinesses()
+    }, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm])
 
   const handleLogout = async () => {
     await logout()
@@ -73,6 +110,88 @@ export default function Header() {
             >
               <Home className="w-5 h-5" />
             </a>
+            
+            {/* Campo de Pesquisa Expansível */}
+            <div className="relative">
+              {!searchExpanded ? (
+                <button
+                  onClick={() => setSearchExpanded(true)}
+                  className="p-2.5 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-600 hover:bg-purple-50/50"
+                  title="Pesquisar empresas"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              ) : (
+                <div className="relative">
+                  <div className="flex items-center bg-white border border-gray-200 rounded-xl shadow-lg">
+                    <Search className="w-4 h-4 text-gray-400 ml-3" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar empresa..."
+                      className="px-3 py-2 w-64 focus:outline-none text-sm"
+                      autoFocus
+                      onBlur={() => {
+                        setTimeout(() => {
+                          if (searchTerm.trim() === '') {
+                            setSearchExpanded(false)
+                          }
+                        }, 200)
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        setSearchTerm('')
+                        setSearchExpanded(false)
+                        setShowSearchSuggestions(false)
+                      }}
+                      className="p-2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {/* Sugestões de pesquisa */}
+                  {showSearchSuggestions && searchSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                      {searchSuggestions.map((business) => (
+                        <div
+                          key={business.id}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onMouseDown={() => {
+                            router.push(`/empresa/${business.slug}`)
+                            setSearchTerm('')
+                            setSearchExpanded(false)
+                            setShowSearchSuggestions(false)
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {business.profileImage ? (
+                              <img
+                                src={business.profileImage}
+                                alt={business.name}
+                                className="w-8 h-8 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white text-xs font-medium">
+                                  {business.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-sm font-medium text-gray-900 truncate">
+                              {capitalizeWords(business.name)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <a 
               href="/empresas" 
               className={`p-2.5 rounded-xl transition-all duration-200 ${
@@ -82,7 +201,7 @@ export default function Header() {
               }`}
               title="Descubra"
             >
-              <Search className="w-5 h-5" />
+              <Compass className="w-5 h-5" />
             </a>
             <a 
               href="/cupons" 
