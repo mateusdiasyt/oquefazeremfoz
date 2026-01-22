@@ -601,7 +601,7 @@ export default function FloatingChat() {
 
       {/* Chat Container */}
       {isOpen && (
-        <div className={`fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 transition-all duration-300 ${
+        <div className={`fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 transition-all duration-300 mb-20 md:mb-0 ${
           isMinimized ? 'w-80 h-16' : 'w-96 h-[600px]'
         }`}>
           {/* Header */}
