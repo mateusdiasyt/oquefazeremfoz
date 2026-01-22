@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { prisma } from '../../../../../lib/db'
+import { prisma } from '../../../../lib/db'
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   try {
