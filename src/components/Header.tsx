@@ -19,6 +19,7 @@ interface Business {
 export default function Header() {
   const { user, logout, isCompany, isAdmin } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [userBusinesses, setUserBusinesses] = useState<Business[]>([])
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -279,8 +280,18 @@ export default function Header() {
                 {/* Dropdown do usuário */}
               <div 
                 className="relative"
-                onMouseEnter={() => setShowDropdown(true)}
-                onMouseLeave={() => setShowDropdown(false)}
+                onMouseEnter={() => {
+                  if (dropdownTimeoutRef.current) {
+                    clearTimeout(dropdownTimeoutRef.current)
+                    dropdownTimeoutRef.current = null
+                  }
+                  setShowDropdown(true)
+                }}
+                onMouseLeave={() => {
+                  dropdownTimeoutRef.current = setTimeout(() => {
+                    setShowDropdown(false)
+                  }, 150) // Pequeno delay para permitir movimento do mouse
+                }}
               >
                 <button
                   className="flex items-center space-x-2.5 bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded-xl text-gray-700 hover:text-gray-900 transition-all duration-200 border border-gray-200 hover:border-gray-300"
