@@ -26,11 +26,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Tipo de arquivo não suportado' }, { status: 400 })
     }
 
-    // Verificar tamanho do arquivo (5MB para imagens, 64MB para vídeos)
-    const maxSize = isImage ? 5 * 1024 * 1024 : 64 * 1024 * 1024
+    // Verificar tamanho do arquivo (5MB para imagens, 32MB para vídeos)
+    const maxSize = isImage ? 5 * 1024 * 1024 : 32 * 1024 * 1024
     if (file.size > maxSize) {
       return NextResponse.json({ 
-        message: `Arquivo muito grande. Máximo: ${isImage ? '5MB' : '64MB'}` 
+        message: `Arquivo muito grande. Máximo: ${isImage ? '5MB' : '32MB'}` 
       }, { status: 400 })
     }
 

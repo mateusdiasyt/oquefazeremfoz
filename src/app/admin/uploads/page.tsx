@@ -159,7 +159,7 @@ export default function UploadManagement() {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Vídeos</h3>
               <ul className="text-gray-600 space-y-1">
                 <li>• Formatos: MP4, AVI, MOV, WMV, WebM</li>
-                <li>• Tamanho máximo: 64MB</li>
+                <li>• Tamanho máximo: 32MB</li>
                 <li>• Armazenamento: public/uploads/videos/</li>
               </ul>
             </div>

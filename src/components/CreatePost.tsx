@@ -104,10 +104,10 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
     // Validação de tamanho no frontend
     const isImage = file.type.startsWith('image/')
     const isVideo = file.type.startsWith('video/')
-    const maxSize = isImage ? 5 * 1024 * 1024 : 64 * 1024 * 1024 // 5MB para imagens, 64MB para vídeos
+    const maxSize = isImage ? 5 * 1024 * 1024 : 32 * 1024 * 1024 // 5MB para imagens, 32MB para vídeos
 
     if (file.size > maxSize) {
-      setError(`Arquivo muito grande. Máximo: ${isImage ? '5MB' : '64MB'}`)
+      setError(`Arquivo muito grande. Máximo: ${isImage ? '5MB' : '32MB'}`)
       setUploading(false)
       return
     }
@@ -375,7 +375,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
                     disabled={loading || uploading}
                   />
                   <p className="text-xs text-dark-500 mt-2">
-                    Formatos: MP4, AVI, MOV, WMV, WebM • Máximo: 64MB • Proporção: 4:3
+                    Formatos: MP4, AVI, MOV, WMV, WebM • Máximo: 32MB • Proporção: 4:3
                   </p>
                   {uploading && (
                     <div className="flex items-center space-x-2 mt-2">
