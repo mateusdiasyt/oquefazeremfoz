@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
         message: 'Empresa seguida com sucesso',
         isFollowing: true,
         followersCount: updatedBusiness.followersCount,
-        followedAsBusiness: isCompanyUser && !!activeBusinessId
+        followedAsBusiness: false // Será true quando as colunas existirem e código for descomentado
       })
     }
 
