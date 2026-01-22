@@ -709,7 +709,8 @@ export default function HomePage() {
                             {business.name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <div className="flex-1 min-w-0">
+                        {/* Informações do nome - ocultar no mobile */}
+                        <div className="flex-1 min-w-0 hidden md:block">
                           <div className="flex items-center gap-2">
                             <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h5>
                             {business.isVerified && (
@@ -813,7 +814,10 @@ export default function HomePage() {
 
                   {/* Previsão dos próximos 7 dias */}
                   <div>
-                    <h5 className="text-sm font-semibold text-gray-700 mb-3">Próximos 7 dias</h5>
+                    <h5 className="text-sm font-semibold text-gray-700 mb-3">
+                      <span className="hidden md:inline">Próximos 7 dias</span>
+                      <span className="md:hidden">Próximos dias</span>
+                    </h5>
                     <div className="space-y-2">
                       {weather.daily.slice(0, 7).map((day, index) => {
                         const today = new Date()
@@ -833,8 +837,9 @@ export default function HomePage() {
                           dayName = weekDayNames[dayDate.getDay()]
                         }
                         
+                        // No mobile, mostrar apenas hoje e amanhã (índices 0 e 1)
                         return (
-                          <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div key={index} className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors ${index > 1 ? 'hidden md:flex' : ''}`}>
                           <div className="flex items-center space-x-3">
                             <img 
                               src={`https://openweathermap.org/img/wn/${day.icon}.png`} 
