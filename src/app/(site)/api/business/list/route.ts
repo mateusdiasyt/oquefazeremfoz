@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calcular followersCount dinamicamente para cada empresa e verificar se o usuário está seguindo
-    const businessesWithFollowersCount = businesses.map(business => {
+    const businessesWithFollowersCount = validBusinesses.map(business => {
       const isFollowing = currentUser 
         ? business.businesslike.some(like => like.userId === currentUser.id)
         : false
