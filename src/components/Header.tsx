@@ -3,6 +3,8 @@
 import { useAuth } from '../contexts/AuthContext'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { Home, Search, Gift, MapPin } from 'lucide-react'
 
 interface Business {
   id: string
@@ -15,6 +17,7 @@ export default function Header() {
   const { user, logout, isCompany, isAdmin } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
   const [userBusinesses, setUserBusinesses] = useState<Business[]>([])
+  const pathname = usePathname()
 
   useEffect(() => {
     const fetchUserBusinesses = async () => {
@@ -56,41 +59,65 @@ export default function Header() {
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex space-x-1">
+          <nav className="hidden md:flex items-center space-x-1">
             <a 
               href="/" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
-              style={{ letterSpacing: '-0.01em' }}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                pathname === '/'
+                  ? 'text-purple-600 bg-purple-50'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
+              }`}
+              title="Início"
             >
-              Início
+              <Home className="w-5 h-5" />
             </a>
             <a 
               href="/empresas" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
-              style={{ letterSpacing: '-0.01em' }}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                pathname === '/empresas'
+                  ? 'text-purple-600 bg-purple-50'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
+              }`}
+              title="Descubra"
             >
-              Descubra
+              <Search className="w-5 h-5" />
             </a>
             <a 
               href="/cupons" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
-              style={{ letterSpacing: '-0.01em' }}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                pathname === '/cupons'
+                  ? 'text-purple-600 bg-purple-50'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
+              }`}
+              title="Cupons"
             >
-              Cupons
+              <Gift className="w-5 h-5" />
             </a>
             <a 
               href="/mapa-turistico" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
-              style={{ letterSpacing: '-0.01em' }}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                pathname === '/mapa-turistico'
+                  ? 'text-purple-600 bg-purple-50'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
+              }`}
+              title="Mapa Turístico"
             >
-              Mapa Turístico
+              <MapPin className="w-5 h-5" />
             </a>
             <a 
               href="/selo-verificado" 
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
-              style={{ letterSpacing: '-0.01em' }}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                pathname === '/selo-verificado'
+                  ? 'text-purple-600 bg-purple-50'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
+              }`}
+              title="Selo Verificado"
             >
-              Selo Verificado
+              <img 
+                src="/icons/verificado.png" 
+                alt="Selo Verificado" 
+                className="w-5 h-5 object-contain"
+              />
             </a>
           </nav>
 
