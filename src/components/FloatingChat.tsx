@@ -58,9 +58,10 @@ export default function FloatingChat() {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [isInitialLoading, setIsInitialLoading] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const lastMessageCountRef = useRef<number>(0)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -85,29 +86,39 @@ export default function FloatingChat() {
     }
   }, [])
 
-  const fetchMessages = useCallback(async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string, silent: boolean = false) => {
     try {
-      console.log('🔍 Buscando mensagens para conversa:', conversationId)
-      setLoading(true)
+      // Apenas mostrar loading se for carregamento inicial (não há mensagens) e não for silencioso
+      if (!silent && messages.length === 0) {
+        setIsInitialLoading(true)
+      }
+
       const response = await fetch(`/api/messages/${conversationId}`)
       
-      console.log('📨 Resposta fetchMessages:', response.status)
-        if (response.ok) {
-          const data = await response.json()
+      if (response.ok) {
+        const data = await response.json()
         const newMessages = data.messages || []
-        console.log('💬 Mensagens encontradas:', newMessages.length)
-        console.log('📋 Dados das mensagens:', newMessages)
         
-        // Verificar se há mensagens novas (não enviadas pelo usuário atual)
-        const hasNewMessages = newMessages.some((msg: Message) => 
-          msg.receiver?.id === user?.id && !msg.isRead
-        )
+        // Comparar se há mudanças reais antes de atualizar
+        const hasChanges = 
+          newMessages.length !== messages.length ||
+          JSON.stringify(newMessages.map(m => ({ id: m.id, isRead: m.isRead }))) !== 
+          JSON.stringify(messages.map(m => ({ id: m.id, isRead: m.isRead })))
         
-        if (hasNewMessages) {
-          playMessageSound()
+        if (hasChanges) {
+          // Verificar se há mensagens novas (não enviadas pelo usuário atual)
+          const hasNewMessages = newMessages.some((msg: Message) => 
+            msg.receiver?.id === user?.id && !msg.isRead
+          )
+          
+          if (hasNewMessages && silent) {
+            // Apenas tocar som se for atualização silenciosa com mensagens novas
+            playMessageSound()
+          }
+          
+          setMessages(newMessages)
+          lastMessageCountRef.current = newMessages.length
         }
-        
-        setMessages(newMessages)
       } else {
         const errorData = await response.json()
         console.error('❌ Erro ao buscar mensagens:', errorData)
@@ -115,9 +126,9 @@ export default function FloatingChat() {
     } catch (error) {
       console.error('❌ Erro ao buscar mensagens:', error)
     } finally {
-      setLoading(false)
+      setIsInitialLoading(false)
     }
-  }, [user, playMessageSound])
+  }, [user, playMessageSound, messages])
 
   useEffect(() => {
     if (isOpen && user) {
@@ -461,13 +472,13 @@ export default function FloatingChat() {
             id: realConversationId
           }))
           
-          // Buscar mensagens da conversa real
-          await fetchMessages(realConversationId)
+          // Buscar mensagens da conversa real (não silencioso - é uma nova conversa)
+          await fetchMessages(realConversationId, false)
         } else {
-          // Para conversas já existentes, buscar mensagens normalmente
+          // Para conversas já existentes, buscar mensagens normalmente (silencioso - já temos mensagens)
           console.log('🔄 Atualizando mensagens da conversa:', conversation.id)
           if (conversation.id) {
-            await fetchMessages(conversation.id)
+            await fetchMessages(conversation.id, true)
           }
         }
         
@@ -686,7 +697,7 @@ export default function FloatingChat() {
                   <div className="w-full flex flex-col">
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {loading ? (
+                      {isInitialLoading ? (
                         <div className="flex justify-center">
                           <div className="w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
