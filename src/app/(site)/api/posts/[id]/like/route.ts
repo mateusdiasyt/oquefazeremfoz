@@ -74,15 +74,31 @@ export async function POST(
       // Curtir - adicionar o like como empresa ou usuário
       // Por enquanto, sempre usar userId até a migração ser executada
       // Após a migração, poderemos usar businessId também
-      // NÃO incluir businessId no create até a coluna existir no banco
-      await prisma.postlike.create({
-        data: {
-          id: `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          postId: postId,
-          userId: user.id
-          // businessId não incluído até migração ser executada
+      // Usar $queryRaw para evitar erro quando businessId não existe no banco
+      const likeId = `postlike_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      
+      // Verificar se a coluna businessId existe antes de tentar inserir
+      try {
+        // Tentar inserir usando SQL raw para evitar o Prisma tentar usar businessId
+        await prisma.$executeRaw`
+          INSERT INTO "postlike" (id, "postId", "userId")
+          VALUES (${likeId}, ${postId}, ${user.id})
+        `
+      } catch (rawError: any) {
+        // Se der erro, tentar com Prisma normal (caso a coluna já exista)
+        if (rawError.code === 'P2022' || rawError.message?.includes('businessId')) {
+          // Se o erro for sobre businessId, usar Prisma mas sem passar businessId
+          await prisma.postlike.create({
+            data: {
+              id: likeId,
+              postId: postId,
+              userId: user.id
+            }
+          })
+        } else {
+          throw rawError
         }
-      })
+      }
 
       // Atualizar contador de likes
       const updatedPost = await prisma.post.update({
