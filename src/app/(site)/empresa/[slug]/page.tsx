@@ -61,6 +61,7 @@ const WhatsAppIcon = ({ size = 20, className = "" }: { size?: number; className?
 interface Business {
   id: string
   name: string
+  slug?: string | null
   category: string
   presentationVideo?: string | null
   description?: string
