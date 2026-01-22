@@ -19,7 +19,7 @@ interface Business {
 export default function Header() {
   const { user, logout, isCompany, isAdmin } = useAuth()
   const [showDropdown, setShowDropdown] = useState(false)
-  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const dropdownTimeoutRef = useRef<number | null>(null)
   const [userBusinesses, setUserBusinesses] = useState<Business[]>([])
   const [searchExpanded, setSearchExpanded] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
