@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { capitalizeWords } from '../../../../utils/formatters'
+import Script from 'next/script'
 import ProductForm from '../../../../components/ProductForm'
 import CouponForm from '../../../../components/CouponForm'
 import ReviewForm from '../../../../components/ReviewForm'
@@ -632,6 +633,36 @@ export default function BusinessProfilePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Structured Data (JSON-LD) para SEO */}
+      {business && (
+        <Script
+          id="business-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': business.category === 'Restaurante' ? 'Restaurant' : 
+                       business.category === 'Hotel' ? 'Hotel' : 
+                       business.category === 'Loja' ? 'Store' : 'LocalBusiness',
+              name: business.name,
+              description: business.description || `${business.name} - ${business.category} em Foz do Iguaçu`,
+              image: business.coverImage || business.profileImage || 'https://oquefazeremfoz.com.br/og-image.png',
+              url: `https://oquefazeremfoz.com.br/empresa/${params.slug}`,
+              address: business.address ? {
+                '@type': 'PostalAddress',
+                streetAddress: business.address,
+                addressLocality: 'Foz do Iguaçu',
+                addressRegion: 'PR',
+                addressCountry: 'BR',
+              } : undefined,
+              telephone: business.phone || undefined,
+              ...(business.website && { sameAs: [business.website] }),
+              ...(business.instagram && { sameAs: business.website ? [business.website, `https://instagram.com/${business.instagram.replace('@', '')}`] : [`https://instagram.com/${business.instagram.replace('@', '')}`] }),
+            }),
+          }}
+        />
+      )}
+      
       {/* Cover Section */}
       <div className="relative h-64 md:h-80 overflow-hidden group">
         {business.coverImage ? (

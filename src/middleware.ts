@@ -51,11 +51,23 @@ async function verifyJWT(token: string, secret: string) {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
-  // Rotas públicas (acessíveis sem login)
-  const publicRoutes = ['/login', '/register']
-  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
+  // Rotas públicas (acessíveis sem login) - IMPORTANTE PARA SEO
+  const publicRoutes = [
+    '/login', 
+    '/register',
+    '/empresa', // Páginas de empresas devem ser públicas para SEO
+    '/empresas', // Lista de empresas pública
+    '/cupons', // Cupons públicos
+    '/mapa-turistico', // Mapa público
+    '/selo-verificado' // Selo verificados públicos
+  ]
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || 
+    pathname.startsWith(route + '/') ||
+    pathname.match(/^\/empresa\/[^\/]+$/) // Páginas individuais de empresas
+  )
   
-  // Se for rota pública, permitir acesso
+  // Se for rota pública, permitir acesso (importante para crawlers do Google)
   if (isPublicRoute) {
     return NextResponse.next()
   }

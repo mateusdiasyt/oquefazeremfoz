@@ -17,9 +17,20 @@ export default function SiteLayout({
   const pathname = usePathname()
   const { user, loading } = useAuth()
   
-  // Rotas públicas (não precisam de autenticação)
-  const publicRoutes = ['/login', '/register']
-  const isPublicRoute = publicRoutes.includes(pathname)
+  // Rotas públicas (não precisam de autenticação) - IMPORTANTE PARA SEO
+  const publicRoutes = [
+    '/login', 
+    '/register',
+    '/empresa',
+    '/empresas',
+    '/cupons',
+    '/mapa-turistico',
+    '/selo-verificado'
+  ]
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || 
+    pathname.startsWith(route + '/')
+  )
   
   useEffect(() => {
     // Se não estiver carregando e não houver usuário, redirecionar para login
@@ -56,9 +67,21 @@ export default function SiteLayout({
     )
   }
   
-  // Para rotas públicas (login/register), não mostrar Header, Footer, etc.
-  if (isPublicRoute) {
+  // Para rotas públicas de login/register, não mostrar Header, Footer, etc.
+  if (pathname === '/login' || pathname === '/register') {
     return <>{children}</>
+  }
+  
+  // Para rotas públicas de empresas (SEO), mostrar layout mas sem chat
+  if (isPublicRoute && !user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 pb-20 md:pb-0">{children}</main>
+        <Footer />
+        <MobileNavigation />
+      </div>
+    )
   }
   
   // Para usuários logados, mostrar layout completo
