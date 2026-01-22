@@ -217,7 +217,29 @@ export default function BusinessProfilePage() {
       
       // Set related data from the response
       // Mapear os dados corretamente
-      if (businessData.post) setPosts(businessData.post)
+      if (businessData.post) {
+        setPosts(businessData.post)
+        // Verificar likes iniciais para cada post (em background)
+        if (user) {
+          businessData.post.forEach(async (post: Post) => {
+            try {
+              const likeResponse = await fetch(`/api/posts/${post.id}/like`)
+              if (likeResponse.ok) {
+                const likeData = await likeResponse.json()
+                setPostLikes(prev => ({
+                  ...prev,
+                  [post.id]: {
+                    isLiked: likeData.liked,
+                    likesCount: likeData.likesCount ?? post.likes
+                  }
+                }))
+              }
+            } catch (error) {
+              // Silenciar erro, usar valor padrão do post
+            }
+          })
+        }
+      }
       if (businessData.businessreview) setReviews(businessData.businessreview)
       if (businessData.businessproduct) setProducts(businessData.businessproduct.filter((p: any) => p.isActive !== false))
       if (businessData.businesscoupon) setCoupons(businessData.businesscoupon)
