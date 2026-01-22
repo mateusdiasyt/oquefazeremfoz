@@ -1105,7 +1105,7 @@ export default function BusinessProfilePage() {
                         <PostCard 
                           post={adaptedPost}
                           onLike={() => {
-                            // Atualizar dados após like
+                            // Atualizar contadores após like
                             fetchBusinessData()
                           }}
                         />
