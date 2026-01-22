@@ -658,14 +658,14 @@ export default function HomePage() {
           </div>
 
           {/* Sidebar */}
-          <aside className="flex flex-col gap-6">
+          <aside className="flex flex-col gap-4 md:gap-6">
             {/* Empresas em Destaque */}
-            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
-              <div className="flex items-center space-x-3 mb-5">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Star className="w-5 h-5 text-white" />
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-4 md:p-6">
+              <div className="flex items-center space-x-3 mb-4 md:mb-5">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Star className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Empresas em Destaque</h4>
+                <h4 className="text-base md:text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Empresas em Destaque</h4>
               </div>
               
               {businesses.length === 0 ? (
@@ -700,15 +700,15 @@ export default function HomePage() {
                             <img
                               src={business.profileImage}
                               alt={business.name}
-                              className="w-full aspect-square rounded-xl object-cover border border-gray-200"
+                              className="w-full aspect-square rounded-full object-cover border border-gray-200"
                             />
                           ) : (
-                            <div className="w-full aspect-square bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-lg border border-gray-200">
+                            <div className="w-full aspect-square bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-lg border border-gray-200">
                               {business.name.charAt(0).toUpperCase()}
                             </div>
                           )}
                           {business.isVerified && (
-                            <div className="absolute top-1 right-1">
+                            <div className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5">
                               <img 
                                 src="/icons/verificado.png" 
                                 alt="Verificado" 
