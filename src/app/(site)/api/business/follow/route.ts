@@ -46,14 +46,38 @@ export async function POST(request: NextRequest) {
 
     let existingFollow = null
     
+    // Por enquanto, usar apenas businesslike para todos (até migração ser executada)
+    // TODO: Após executar add-follow-business-columns.sql, descomentar código de follow para empresas
+    existingFollow = await prisma.businesslike.findFirst({
+      where: {
+        userId: user.id,
+        businessId: businessId
+      }
+    })
+    
+    /* Código para quando as colunas followerBusinessId e followingBusinessId existirem:
     if (isCompanyUser && activeBusinessId) {
       // Se for empresa, seguir como empresa usando businessId
-      existingFollow = await prisma.follow.findFirst({
-        where: {
-          followerBusinessId: activeBusinessId,
-          followingBusinessId: businessId
+      try {
+        existingFollow = await prisma.follow.findFirst({
+          where: {
+            followerBusinessId: activeBusinessId,
+            followingBusinessId: businessId
+          }
+        })
+      } catch (error: any) {
+        // Se as colunas não existirem, usar businesslike como fallback
+        if (error.code === 'P2022') {
+          existingFollow = await prisma.businesslike.findFirst({
+            where: {
+              userId: user.id,
+              businessId: businessId
+            }
+          })
+        } else {
+          throw error
         }
-      })
+      }
     } else {
       // Se for usuário normal, seguir como usuário (manter compatibilidade com sistema atual usando businesslike)
       existingFollow = await prisma.businesslike.findFirst({
@@ -63,9 +87,15 @@ export async function POST(request: NextRequest) {
         }
       })
     }
+    */
 
     if (existingFollow) {
+      // Desseguir - remover businesslike (funciona para todos por enquanto)
+      await prisma.businesslike.delete({
+        where: { id: existingFollow.id }
+      })
       
+      /* Código para quando as colunas existirem:
       if (isCompanyUser && activeBusinessId) {
         // Desseguir como empresa - remover follow
         await prisma.follow.delete({
@@ -79,6 +109,7 @@ export async function POST(request: NextRequest) {
           where: { id: existingFollow.id }
         })
       }
+      */
 
       // Atualizar contadores
       const updatedBusiness = await prisma.business.update({
@@ -99,6 +130,38 @@ export async function POST(request: NextRequest) {
         followersCount: updatedBusiness.followersCount
       })
     } else {
+      // Seguir - criar businesslike (funciona para todos por enquanto)
+      // Verificar novamente para evitar race condition
+      const duplicateCheck = await prisma.businesslike.findFirst({
+        where: {
+          userId: user.id,
+          businessId: businessId
+        }
+      })
+
+      if (duplicateCheck) {
+        // Se já existe, retornar sucesso (pode ter sido criado entre a verificação e agora)
+        const currentBusiness = await prisma.business.findUnique({
+          where: { id: businessId },
+          select: { followersCount: true }
+        })
+
+        return NextResponse.json({ 
+          message: 'Empresa seguida com sucesso',
+          isFollowing: true,
+          followersCount: currentBusiness?.followersCount || 0
+        })
+      }
+
+      await prisma.businesslike.create({
+        data: {
+          id: `businesslike_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          userId: user.id,
+          businessId: businessId
+        }
+      })
+      
+      /* Código para quando as colunas existirem:
       if (isCompanyUser && activeBusinessId) {
         // Seguir como empresa - criar follow com businessId
         // Verificar se já existe um follow com esses IDs de usuário para evitar constraint violation
@@ -162,6 +225,7 @@ export async function POST(request: NextRequest) {
           }
         })
       }
+      */
 
       // Atualizar contadores
       const updatedBusiness = await prisma.business.update({
@@ -236,7 +300,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
-    // Verificar se está seguindo (como empresa ou usuário)
+    // Verificar se está seguindo (usando businesslike por enquanto)
+    // TODO: Após executar add-follow-business-columns.sql, adicionar verificação de follow para empresas
+    const existingFollow = await prisma.businesslike.findFirst({
+      where: {
+        userId: user.id,
+        businessId: businessId
+      }
+    })
+    
+    /* Código para quando as colunas existirem:
     const isCompanyUser = user.roles?.includes('COMPANY')
     const activeBusinessId = user.activeBusinessId || user.businessId
     
@@ -244,12 +317,26 @@ export async function GET(request: NextRequest) {
     
     if (isCompanyUser && activeBusinessId) {
       // Verificar se a empresa está seguindo
-      existingFollow = await prisma.follow.findFirst({
-        where: {
-          followerBusinessId: activeBusinessId,
-          followingBusinessId: businessId
+      try {
+        existingFollow = await prisma.follow.findFirst({
+          where: {
+            followerBusinessId: activeBusinessId,
+            followingBusinessId: businessId
+          }
+        })
+      } catch (error: any) {
+        // Se as colunas não existirem, usar businesslike como fallback
+        if (error.code === 'P2022') {
+          existingFollow = await prisma.businesslike.findFirst({
+            where: {
+              userId: user.id,
+              businessId: businessId
+            }
+          })
+        } else {
+          throw error
         }
-      })
+      }
     } else {
       // Verificar se o usuário está seguindo (businesslike)
       existingFollow = await prisma.businesslike.findFirst({
@@ -259,10 +346,11 @@ export async function GET(request: NextRequest) {
         }
       })
     }
+    */
 
     return NextResponse.json({ 
       isFollowing: !!existingFollow,
-      followedAsBusiness: isCompanyUser && !!activeBusinessId
+      followedAsBusiness: false // Será true quando as colunas existirem e código for descomentado
     })
 
   } catch (error) {
