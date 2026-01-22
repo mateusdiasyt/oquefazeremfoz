@@ -174,7 +174,7 @@ export default function Header() {
                       className="px-3 py-2 w-64 focus:outline-none text-sm"
                       autoFocus
                       onBlur={() => {
-                        setTimeout(() => {
+                        window.setTimeout(() => {
                           if (searchTerm.trim() === '') {
                             setSearchExpanded(false)
                           }
