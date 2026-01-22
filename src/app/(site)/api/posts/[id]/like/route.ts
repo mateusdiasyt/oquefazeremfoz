@@ -48,12 +48,24 @@ export async function POST(
     })
 
     if (existingLike) {
-      // Descurtir - remover o like
-      await prisma.postlike.delete({
-        where: {
-          id: existingLike.id
+      // Descurtir - remover o like usando SQL raw para evitar erro com businessId
+      try {
+        await prisma.$executeRaw`
+          DELETE FROM "postlike" 
+          WHERE id = ${existingLike.id}
+        `
+      } catch (rawError: any) {
+        // Se der erro, tentar com Prisma normal (caso a coluna já exista)
+        if (rawError.code === 'P2022' || rawError.message?.includes('businessId')) {
+          await prisma.postlike.delete({
+            where: {
+              id: existingLike.id
+            }
+          })
+        } else {
+          throw rawError
         }
-      })
+      }
 
       // Atualizar contador de likes
       const updatedPost = await prisma.post.update({
