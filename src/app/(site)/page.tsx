@@ -531,7 +531,7 @@ export default function HomePage() {
                         {/* Informações da Empresa */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-gray-900 truncate">{business.name}</h4>
+                            <h4 className="font-medium text-gray-900 truncate">{capitalizeWords(business.name)}</h4>
                             {business.isVerified && (
                               <img 
                                 src="/icons/verificado.png" 
