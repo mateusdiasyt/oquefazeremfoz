@@ -63,18 +63,30 @@ export default function FloatingChat() {
   const [isOnline, setIsOnline] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const lastMessageCountRef = useRef<number>(0)
+  const fetchConversationsAbortControllerRef = useRef<AbortController | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   const fetchConversations = useCallback(async (showLoading: boolean = false) => {
+    // ✅ CORREÇÃO: Cancelar requisição anterior se ainda estiver pendente
+    if (fetchConversationsAbortControllerRef.current) {
+      fetchConversationsAbortControllerRef.current.abort()
+    }
+
+    // Criar novo AbortController para esta requisição
+    const abortController = new AbortController()
+    fetchConversationsAbortControllerRef.current = abortController
+
     try {
       if (showLoading) {
         setIsLoadingConversations(true)
       }
       
-      const response = await fetch('/api/messages/conversations')
+      const response = await fetch('/api/messages/conversations', {
+        signal: abortController.signal
+      })
       
       if (response.ok) {
         const data = await response.json()
@@ -93,11 +105,19 @@ export default function FloatingChat() {
         const errorData = await response.json()
         console.error('Erro ao buscar conversas:', errorData)
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Ignorar erro se foi cancelado
+      if (error.name === 'AbortError') {
+        return
+      }
       console.error('Erro ao buscar conversas:', error)
     } finally {
       if (showLoading) {
         setIsLoadingConversations(false)
+      }
+      // Limpar referência se esta foi a requisição atual
+      if (fetchConversationsAbortControllerRef.current === abortController) {
+        fetchConversationsAbortControllerRef.current = null
       }
     }
   }, [conversations])
