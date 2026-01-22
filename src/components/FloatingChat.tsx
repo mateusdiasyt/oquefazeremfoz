@@ -78,8 +78,8 @@ export default function FloatingChat() {
         // ✅ CORREÇÃO: Comparar antes de atualizar (evita re-render desnecessário)
         const hasChanges = 
           newConversations.length !== conversations.length ||
-          JSON.stringify(newConversations.map(c => ({ id: c.id, unreadCount: c.unreadCount }))) !==
-          JSON.stringify(conversations.map(c => ({ id: c.id, unreadCount: c.unreadCount })))
+          JSON.stringify(newConversations.map((c: Conversation) => ({ id: c.id, unreadCount: c.unreadCount }))) !==
+          JSON.stringify(conversations.map((c: Conversation) => ({ id: c.id, unreadCount: c.unreadCount })))
         
         if (hasChanges) {
           setConversations(newConversations)
