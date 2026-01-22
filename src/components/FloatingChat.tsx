@@ -102,8 +102,8 @@ export default function FloatingChat() {
         // Comparar se há mudanças reais antes de atualizar
         const hasChanges = 
           newMessages.length !== messages.length ||
-          JSON.stringify(newMessages.map(m => ({ id: m.id, isRead: m.isRead }))) !== 
-          JSON.stringify(messages.map(m => ({ id: m.id, isRead: m.isRead })))
+          JSON.stringify(newMessages.map((m: Message) => ({ id: m.id, isRead: m.isRead }))) !== 
+          JSON.stringify(messages.map((m: Message) => ({ id: m.id, isRead: m.isRead })))
         
         if (hasChanges) {
           // Verificar se há mensagens novas (não enviadas pelo usuário atual)
