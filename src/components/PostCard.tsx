@@ -63,7 +63,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   )
   const [commentLoading, setCommentLoading] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
-  const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string } | null>(null)
+  const [replyingTo, setReplyingTo] = useState<{ id: string; userName: string; businessSlug?: string | null } | null>(null)
   const [editingComment, setEditingComment] = useState<{ id: string; body: string; createdAt: string } | null>(null)
   const [editCommentText, setEditCommentText] = useState('')
   const [selectedCommentIdentity, setSelectedCommentIdentity] = useState<'user' | string>('user') // 'user' ou businessId
@@ -297,9 +297,106 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   }
 
   const handleReply = (comment: any) => {
-    const userName = comment.user?.name || comment.user?.email?.split('@')[0] || 'usuário'
-    setReplyingTo({ id: comment.id, userName })
+    // Priorizar empresa, senão usuário
+    const userName = comment.business?.name || comment.user?.name || comment.user?.email?.split('@')[0] || 'usuário'
+    const businessSlug = comment.business?.slug || null
+    setReplyingTo({ id: comment.id, userName, businessSlug })
     setNewComment(`@${userName} `)
+  }
+
+  // Função para renderizar texto com @mentions como links
+  const renderCommentText = (text: string, currentBusinessSlug?: string | null) => {
+    if (!text) return null
+    
+    // Coletar todas as empresas mencionadas (do post e dos comentários)
+    const businessesMap = new Map<string, string | null>()
+    
+    // Adicionar empresa do post
+    if (post.business?.name && post.business?.slug) {
+      businessesMap.set(post.business.name.toLowerCase().trim(), post.business.slug)
+    }
+    
+    // Adicionar empresas dos comentários
+    comments.forEach(comment => {
+      if (comment.business?.name) {
+        const name = comment.business.name.toLowerCase().trim()
+        if (!businessesMap.has(name) && comment.business.slug) {
+          businessesMap.set(name, comment.business.slug)
+        }
+      }
+      // Adicionar empresas das respostas
+      if (comment.replies) {
+        comment.replies.forEach((reply: any) => {
+          if (reply.business?.name) {
+            const name = reply.business.name.toLowerCase().trim()
+            if (!businessesMap.has(name) && reply.business.slug) {
+              businessesMap.set(name, reply.business.slug)
+            }
+          }
+        })
+      }
+    })
+    
+    // Regex para encontrar @mentions (permite espaços e caracteres especiais comuns)
+    const mentionRegex = /@([^\s@,\.!?\n]+(?:\s+[^\s@,\.!?\n]+)*)/g
+    const parts: (string | JSX.Element)[] = []
+    let lastIndex = 0
+    let match
+    let keyCounter = 0
+
+    while ((match = mentionRegex.exec(text)) !== null) {
+      // Adicionar texto antes da menção
+      if (match.index > lastIndex) {
+        parts.push(text.substring(lastIndex, match.index))
+      }
+      
+      const mentionedName = match[1].trim()
+      const mentionedNameLower = mentionedName.toLowerCase()
+      
+      // Buscar slug da empresa mencionada
+      let slug: string | null = null
+      
+      // Primeiro, tentar encontrar exato
+      if (businessesMap.has(mentionedNameLower)) {
+        slug = businessesMap.get(mentionedNameLower) || null
+      } else {
+        // Tentar encontrar parcial (caso o nome tenha variações)
+        for (const [businessName, businessSlug] of businessesMap.entries()) {
+          if (businessName.includes(mentionedNameLower) || mentionedNameLower.includes(businessName)) {
+            slug = businessSlug
+            break
+          }
+        }
+      }
+      
+      // Criar link se tiver slug, senão apenas texto destacado
+      if (slug) {
+        parts.push(
+          <a
+            key={`mention-${keyCounter++}`}
+            href={`/empresa/${slug}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              router.push(`/empresa/${slug}`)
+            }}
+            className="text-purple-600 hover:text-purple-700 font-medium underline"
+          >
+            @{mentionedName}
+          </a>
+        )
+      } else {
+        parts.push(<span key={`mention-${keyCounter++}`} className="text-purple-600 font-medium">@{mentionedName}</span>)
+      }
+      
+      lastIndex = match.index + match[0].length
+    }
+    
+    // Adicionar texto restante
+    if (lastIndex < text.length) {
+      parts.push(text.substring(lastIndex))
+    }
+    
+    return parts.length > 0 ? <>{parts}</> : text
   }
 
   const cancelReply = () => {
@@ -819,7 +916,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                         </div>
                       ) : (
                         <p className="text-gray-700 text-sm leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
-                          {comment.body}
+                          {renderCommentText(comment.body, comment.business?.slug)}
                         </p>
                       )}
                           {/* Ações do comentário */}
@@ -943,7 +1040,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                   ) : (
                                     <>
                                       <p className="text-gray-700 text-xs leading-relaxed mb-2" style={{ letterSpacing: '-0.01em' }}>
-                                        {reply.body}
+                                        {renderCommentText(reply.body, reply.business?.slug)}
                                       </p>
                                       {/* Ações da resposta */}
                                       <div className="flex items-center gap-4 mt-1.5 pt-1.5 border-t border-gray-200">

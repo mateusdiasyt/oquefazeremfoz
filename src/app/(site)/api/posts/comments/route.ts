@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             profileImage: true,
-            isVerified: true
+            isVerified: true,
+            slug: true
           }
         },
         _count: {
