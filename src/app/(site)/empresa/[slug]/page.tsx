@@ -11,6 +11,7 @@ import ReviewForm from '../../../../components/ReviewForm'
 import CreatePost from '../../../../components/CreatePost'
 import PostForm from '../../../../components/PostForm'
 import FollowersModal from '../../../../components/FollowersModal'
+import PostCard from '../../../../components/PostCard'
 import { 
   Heart, 
   MessageCircle, 
@@ -1067,116 +1068,72 @@ export default function BusinessProfilePage() {
                 }} />
               )}
               
-              <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2" style={{ letterSpacing: '-0.01em' }}>
-                    <MessageSquare className="w-5 h-5 text-purple-600" />
-                    Posts
-                  </h2>
-                </div>
-
-                <div className="space-y-4">
-                  {posts.length === 0 ? (
+              <div className="space-y-0">
+                {posts.length === 0 ? (
+                  <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
                     <p className="text-gray-500 text-center py-8">Nenhum post ainda.</p>
-                  ) : (
-                    posts.map((post) => (
-                      <div key={post.id} className="border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-shadow">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            {business.profileImage ? (
-                              <img
-                                src={business.profileImage}
-                                alt={business.name}
-                                className="w-11 h-11 rounded-xl object-cover border border-gray-100"
-                              />
-                            ) : (
-                              <div className="w-11 h-11 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl flex items-center justify-center border border-gray-100">
-                                <span className="text-sm font-semibold text-purple-600" style={{ letterSpacing: '-0.01em' }}>
-                                  {business.name?.charAt(0)?.toUpperCase()}
-                                </span>
-                              </div>
-                            )}
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-semibold text-gray-900 text-sm" style={{ letterSpacing: '-0.01em' }}>{business.name}</h3>
-                                {business.isVerified && (
-                                  <img 
-                                    src="/icons/verificado.png" 
-                                    alt="Verificado" 
-                                    className="w-4 h-4 object-contain"
-                                    title="Empresa verificada"
-                                  />
-                                )}
-                              </div>
-                              <p className="text-xs text-gray-500">
-                                {new Date(post.createdAt).toLocaleDateString('pt-BR')}
-                              </p>
-                            </div>
+                  </div>
+                ) : (
+                  posts.map((post) => {
+                    // Adaptar post para o formato do PostCard
+                    const adaptedPost = {
+                      id: post.id,
+                      title: post.title,
+                      body: post.body || null,
+                      imageUrl: post.imageUrl || null,
+                      videoUrl: post.videoUrl || null,
+                      likes: post._count?.postlike || post.likes || 0,
+                      createdAt: post.createdAt,
+                      business: {
+                        id: business?.id || '',
+                        name: business?.name || '',
+                        isApproved: business?.isApproved || false,
+                        profileImage: business?.profileImage || null,
+                        isVerified: business?.isVerified || false,
+                        slug: business?.slug || null
+                      },
+                      comments: [],
+                      postLikes: user && post.isLiked ? [{ userId: user.id }] : [],
+                      _count: {
+                        comment: post._count?.comment || 0,
+                        postlike: post._count?.postlike || post.likes || 0
+                      }
+                    }
+
+                    return (
+                      <div key={post.id} className="relative">
+                        <PostCard 
+                          post={adaptedPost}
+                          onLike={() => {
+                            // Atualizar dados após like
+                            fetchBusinessData()
+                          }}
+                        />
+                        {isOwner && (
+                          <div className="absolute top-4 right-4 flex gap-1.5 z-10">
+                            <button
+                              onClick={() => {
+                                setEditingPost(post)
+                                setShowPostForm(true)
+                              }}
+                              className="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors shadow-sm border border-gray-200"
+                              title="Editar post"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeletePost(post.id)}
+                              className="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shadow-sm border border-gray-200"
+                              title="Excluir post"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
-                          {isOwner && (
-                            <div className="flex gap-1.5">
-                              <button
-                                onClick={() => {
-                                  setEditingPost(post)
-                                  setShowPostForm(true)
-                                }}
-                                className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                title="Editar post"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleDeletePost(post.id)}
-                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Excluir post"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <h4 className="font-semibold text-gray-900 mb-3 text-base" style={{ letterSpacing: '-0.01em' }}>{post.title}</h4>
-                        {post.body && <p className="text-gray-700 mb-4 text-sm leading-relaxed" style={{ letterSpacing: '-0.01em' }}>{post.body}</p>}
-                        {post.imageUrl && (
-                          <img
-                            src={post.imageUrl}
-                            alt="Post"
-                            className="w-full h-auto object-cover rounded-2xl mb-4 border border-gray-100"
-                          />
                         )}
-                        {post.videoUrl && (
-                          <video
-                            src={post.videoUrl}
-                            controls
-                            className="w-full h-auto rounded-2xl mb-4 border border-gray-100"
-                          />
-                        )}
-                        <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                          <button 
-                            onClick={() => handleLikePost(post.id)}
-                            className={`flex items-center gap-2 transition-colors ${
-                              postLikes[post.id]?.isLiked 
-                                ? 'text-red-500 hover:text-red-600' 
-                                : 'text-gray-500 hover:text-purple-600'
-                            }`}
-                          >
-                            <Heart className={`w-4 h-4 ${postLikes[post.id]?.isLiked ? 'fill-current' : ''}`} />
-                            <span className="text-sm font-medium">
-                              {postLikes[post.id]?.likesCount ?? post.likes ?? 0}
-                            </span>
-                          </button>
-                          <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
-                            <MessageCircle className="w-4 h-4" />
-                            <span className="text-sm font-medium">{post._count?.comment || 0}</span>
-                          </button>
-                          <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
-                            <Share2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                          </div>
-                    ))
-            )}
-          </div>
+                      </div>
+                    )
+                  })
+                )}
               </div>
             </div>
 
