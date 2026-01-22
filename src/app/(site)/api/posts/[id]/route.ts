@@ -4,6 +4,77 @@ import { prisma } from '../../../../../lib/db'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
 
+// GET - Buscar post individual
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const postId = params.id
+
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        business: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+            isVerified: true,
+            isApproved: true,
+            slug: true
+          }
+        },
+        _count: {
+          select: {
+            comment: true,
+            postlike: true
+          }
+        }
+      }
+    })
+
+    if (!post) {
+      return NextResponse.json({ message: 'Post não encontrado' }, { status: 404 })
+    }
+
+    // Verificar se o usuário curtiu o post (se estiver logado)
+    let isLiked = false
+    try {
+      const user = await getCurrentUser()
+      if (user) {
+        const like = await prisma.postlike.findFirst({
+          where: {
+            postId: post.id,
+            userId: user.id
+          }
+        })
+        isLiked = !!like
+      }
+    } catch {
+      // Usuário não logado, continuar
+    }
+
+    return NextResponse.json({
+      post: {
+        id: post.id,
+        title: post.title,
+        body: post.body,
+        imageUrl: post.imageUrl,
+        videoUrl: post.videoUrl,
+        likes: post._count.postlike,
+        createdAt: post.createdAt,
+        business: post.business,
+        _count: post._count,
+        isLiked
+      }
+    })
+  } catch (error) {
+    console.error('Erro ao buscar post:', error)
+    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 })
+  }
+}
+
 // DELETE - Deletar post (foto da galeria)
 export async function DELETE(
   request: NextRequest,

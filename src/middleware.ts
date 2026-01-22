@@ -64,7 +64,8 @@ export async function middleware(request: NextRequest) {
     '/empresas', // Lista de empresas pública
     '/cupons', // Cupons públicos
     '/mapa-turistico', // Mapa público
-    '/selo-verificado' // Selo verificados públicos
+    '/selo-verificado', // Selo verificados públicos
+    '/post' // Páginas de posts individuais (para compartilhamento)
   ]
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || 

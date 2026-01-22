@@ -25,7 +25,8 @@ export default function SiteLayout({
     '/empresas',
     '/cupons',
     '/mapa-turistico',
-    '/selo-verificado'
+    '/selo-verificado',
+    '/post' // Páginas de posts individuais (para compartilhamento)
   ]
   const isPublicRoute = publicRoutes.some(route => 
     pathname === route || 

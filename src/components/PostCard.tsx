@@ -7,7 +7,8 @@ import { useAuth } from '../contexts/AuthContext'
 import UrlPreview from './UrlPreview'
 import ShareModal from './ShareModal'
 import { extractUrlsFromText } from '../utils/urlDetector'
-import { capitalizeWords } from '../utils/formatters'
+import { capitalizeWords, getTimeAgo } from '../utils/formatters'
+import PostDetailModal from './PostDetailModal'
 
 interface Post {
   id: string
@@ -69,6 +70,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [userBusinesses, setUserBusinesses] = useState<Array<{ id: string; name: string; profileImage: string | null; slug: string | null }>>([])
   const [showCommentIdentityDropdown, setShowCommentIdentityDropdown] = useState(false)
   const commentIdentityDropdownRef = useRef<HTMLDivElement>(null)
+  const [showPostDetailModal, setShowPostDetailModal] = useState(false)
 
   useEffect(() => {
     // Verificar se o usuário curtiu o post
@@ -514,7 +516,12 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               />
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{formatDate(post.createdAt)}</p>
+          <button
+            onClick={() => setShowPostDetailModal(true)}
+            className="text-xs text-gray-500 mt-0.5 hover:text-purple-600 hover:underline transition-colors"
+          >
+            {getTimeAgo(post.createdAt)}
+          </button>
         </div>
       </div>
 
@@ -997,6 +1004,14 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           </div>
         </div>
       )}
+
+      {/* Modal de Detalhes do Post */}
+      <PostDetailModal
+        post={post}
+        isOpen={showPostDetailModal}
+        onClose={() => setShowPostDetailModal(false)}
+        onLike={handleLike}
+      />
 
       {/* Modal de Compartilhamento */}
       <ShareModal
