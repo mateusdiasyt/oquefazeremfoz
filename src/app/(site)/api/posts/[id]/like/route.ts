@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../../lib/auth'
 import { prisma } from '../../../../../../lib/db'
+import { notifyPostLike } from '../../../../../../lib/notifications'
 
 // POST - Curtir/descurtir post
 export async function POST(

@@ -267,7 +267,8 @@ export default function Header() {
                     </button>
                   </div>
                 )}
-              </div>
+                </div>
+              </>
             ) : (
               <div className="flex space-x-2">
                 <a
