@@ -448,7 +448,13 @@ export default function PostForm({ businessId, editPost, onClose, onPostCreated 
               </button>
               <button
                 type="submit"
-                form="post-form"
+                onClick={(e) => {
+                  e.preventDefault()
+                  const form = document.getElementById('post-form') as HTMLFormElement
+                  if (form) {
+                    form.requestSubmit()
+                  }
+                }}
                 disabled={loading || uploading || (!title.trim() || (!content.trim() && !imageUrl.trim() && !videoUrl.trim()))}
                 className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg shadow-purple-500/30"
               >
