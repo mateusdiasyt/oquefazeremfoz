@@ -411,7 +411,7 @@ export default function PerfilPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-pink-500 to-pink-600 flex items-center justify-center text-white font-semibold">
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold border-2 border-purple-200">
                             {review.business.name.charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -487,7 +487,7 @@ export default function PerfilPage() {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-pink-500 to-pink-600 flex items-center justify-center text-white font-semibold">
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold border-2 border-purple-200">
                             {follow.business.name.charAt(0).toUpperCase()}
                           </div>
                         )}

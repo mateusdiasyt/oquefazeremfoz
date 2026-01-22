@@ -250,11 +250,11 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               className="w-full h-full object-cover"
             />
           ) : business?.name ? (
-            <div className="w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-semibold text-base">
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-base border-2 border-purple-200">
               {business.name.charAt(0).toUpperCase()}
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-semibold text-base">
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-base border-2 border-purple-200">
               E
             </div>
           )}

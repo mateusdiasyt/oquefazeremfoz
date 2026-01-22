@@ -153,7 +153,7 @@ export default function MinhasEmpresasPage() {
                       className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-md -mt-8"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-xl -mt-8 border-2 border-white shadow-md">
+                    <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-purple-600 font-bold text-xl -mt-8 border-2 border-purple-200 shadow-md">
                       {business.name.charAt(0).toUpperCase()}
                     </div>
                   )}

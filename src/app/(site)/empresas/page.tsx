@@ -388,8 +388,8 @@ export default function EmpresasPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center">
-                      <span className="text-white font-bold text-3xl">
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center border-2 border-purple-200">
+                      <span className="text-purple-600 font-bold text-3xl">
                         {business.name.charAt(0).toUpperCase()}
                       </span>
                     </div>

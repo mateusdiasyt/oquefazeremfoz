@@ -473,7 +473,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-semibold text-base">
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-base border-2 border-purple-200">
               {post.business.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -609,7 +609,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                             {userBusiness.profileImage ? (
                               <img src={userBusiness.profileImage} alt={userBusiness.name} className="w-5 h-5 rounded-full object-cover" />
                             ) : (
-                              <div className="w-5 h-5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                              <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-purple-600 text-xs font-medium border border-purple-200">
                                 {userBusiness.name.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -682,12 +682,12 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                           comment.business.profileImage ? (
                             <img src={comment.business.profileImage} alt={comment.business.name} className="w-8 h-8 rounded-lg object-cover border border-gray-100" />
                           ) : (
-                            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-purple-600 font-medium text-xs border-2 border-purple-200">
                               {comment.business.name.charAt(0).toUpperCase()}
                             </div>
                           )
                         ) : (
-                          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-purple-600 font-medium text-xs border-2 border-purple-200">
                             {comment.user?.name ? comment.user.name.charAt(0).toUpperCase() : 'U'}
                           </div>
                         )}
@@ -805,12 +805,12 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                   reply.business.profileImage ? (
                                     <img src={reply.business.profileImage} alt={reply.business.name} className="w-6 h-6 rounded-lg object-cover border border-gray-100" />
                                   ) : (
-                                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                    <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-purple-600 font-medium text-xs border border-purple-200">
                                       {reply.business.name.charAt(0).toUpperCase()}
                                     </div>
                                   )
                                 ) : (
-                                  <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-medium text-xs">
+                                  <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-purple-600 font-medium text-xs border border-purple-200">
                                     {reply.user?.name ? reply.user.name.charAt(0).toUpperCase() : 'U'}
                                   </div>
                                 )}

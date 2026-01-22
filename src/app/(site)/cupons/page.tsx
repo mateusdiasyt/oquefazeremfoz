@@ -170,7 +170,7 @@ function CouponCard({ coupon, getTimeAgo, router }: { coupon: Coupon; getTimeAgo
             />
           ) : (
             <div
-              className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border-2 border-white shadow-sm cursor-pointer"
+              className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold text-sm border-2 border-purple-200 shadow-sm cursor-pointer"
               onClick={() => router.push(`/empresa/${coupon.business.slug || coupon.business.id}`)}
             >
               {coupon.business.name.charAt(0).toUpperCase()}

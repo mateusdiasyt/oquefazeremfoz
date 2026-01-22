@@ -703,7 +703,7 @@ export default function HomePage() {
                               className="w-full aspect-square rounded-full object-cover border border-gray-200"
                             />
                           ) : (
-                            <div className="w-full aspect-square bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold text-lg border border-gray-200">
+                            <div className="w-full aspect-square bg-gray-100 rounded-full flex items-center justify-center text-purple-600 font-semibold text-lg border-2 border-purple-200">
                               {business.name.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -749,7 +749,7 @@ export default function HomePage() {
                                 className="w-11 h-11 rounded-xl object-cover border border-gray-200"
                               />
                             ) : (
-                              <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm border border-gray-200">
+                              <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold text-sm border-2 border-purple-200">
                                 {business.name.charAt(0).toUpperCase()}
                               </div>
                             )}

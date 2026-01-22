@@ -554,7 +554,7 @@ export default function MapaTuristico() {
                           className="w-12 h-12 rounded-xl object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold">
+                        <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-purple-600 font-bold border-2 border-purple-200">
                           {empresa.name.charAt(0).toUpperCase()}
                         </div>
                       )}
