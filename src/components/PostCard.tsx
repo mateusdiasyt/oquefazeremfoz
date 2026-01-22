@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import UrlPreview from './UrlPreview'
 import ShareModal from './ShareModal'
 import { extractUrlsFromText } from '../utils/urlDetector'
+import { capitalizeWords } from '../utils/formatters'
 
 interface Post {
   id: string

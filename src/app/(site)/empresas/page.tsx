@@ -18,6 +18,7 @@ import {
   Grid,
   List
 } from 'lucide-react'
+import { capitalizeWords } from '../../../utils/formatters'
 
 // Ícone simplificado do WhatsApp
 const WhatsAppIcon = ({ size = 20, className = "" }) => (

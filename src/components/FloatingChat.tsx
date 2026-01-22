@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotification } from '@/contexts/NotificationContext'
 import { MessageCircle, X, Send, ChevronDown, ChevronUp, Search, ArrowLeft, Check, CheckCheck } from 'lucide-react'
+import { capitalizeWords } from '@/utils/formatters'
 
 interface Business {
   id: string

@@ -7,6 +7,7 @@ import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
 import FloatingChat from '@/components/FloatingChat'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
+import { capitalizeWords } from '@/utils/formatters'
 
 interface Post {
   id: string
