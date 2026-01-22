@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotification } from '@/contexts/NotificationContext'
 import { MessageCircle, X, Send, ChevronDown, ChevronUp, Search, ArrowLeft, Check, CheckCheck } from 'lucide-react'
@@ -68,12 +68,63 @@ export default function FloatingChat() {
     }
   }, [isOpen, user])
 
+  // Polling para lista de conversas (mesmo sem conversa selecionada)
+  useEffect(() => {
+    if (!isOpen || !user) return
+
+    let interval: NodeJS.Timeout | null = null
+
+    const startConversationsPolling = () => {
+      if (interval) clearInterval(interval)
+      interval = setInterval(() => {
+        fetchConversations()
+      }, 5000) // Verificar conversas a cada 5 segundos
+    }
+
+    const stopConversationsPolling = () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = null
+      }
+    }
+
+    const handleFocus = () => {
+      startConversationsPolling()
+    }
+
+    const handleBlur = () => {
+      stopConversationsPolling()
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopConversationsPolling()
+      } else {
+        startConversationsPolling()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', handleBlur)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    startConversationsPolling()
+
+    return () => {
+      stopConversationsPolling()
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [isOpen, user, fetchConversations])
+
   // Polling inteligente - só quando a janela está ativa
   useEffect(() => {
     if (!isOpen || !user || !selectedConversation) return
 
     // Só fazer polling se a conversa for real (não temporária)
-    if (selectedConversation.id.startsWith('temp-')) {
+    const conversationId = selectedConversation.id
+    if (conversationId.startsWith('temp-')) {
       return
     }
 
@@ -82,8 +133,10 @@ export default function FloatingChat() {
     const startPolling = () => {
       if (interval) clearInterval(interval)
       interval = setInterval(() => {
-        fetchMessages(selectedConversation.id)
-      }, 15000) // Verificar a cada 15 segundos
+        fetchMessages(conversationId)
+        // Também atualizar lista de conversas para ver novas mensagens
+        fetchConversations()
+      }, 3000) // Verificar a cada 3 segundos (mais responsivo)
     }
 
     const stopPolling = () => {
@@ -130,7 +183,7 @@ export default function FloatingChat() {
       window.removeEventListener('blur', handleBlur)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [isOpen, user, selectedConversation])
+  }, [isOpen, user, selectedConversation?.id, fetchMessages, fetchConversations])
 
   useEffect(() => {
     if (selectedConversation) {
@@ -150,7 +203,7 @@ export default function FloatingChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
       console.log('Buscando conversas...')
       const response = await fetch('/api/messages/conversations')
@@ -167,9 +220,9 @@ export default function FloatingChat() {
     } catch (error) {
       console.error('Erro ao buscar conversas:', error)
     }
-  }
+  }, [])
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       console.log('🔍 Buscando mensagens para conversa:', conversationId)
       setLoading(true)
@@ -201,7 +254,7 @@ export default function FloatingChat() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) {
@@ -281,9 +334,9 @@ export default function FloatingChat() {
           }
         }
         
-        // Atualizar lista de conversas
+        // Atualizar lista de conversas imediatamente
         console.log('🔄 Atualizando lista de conversas')
-        fetchConversations()
+        await fetchConversations()
       } else {
         const errorData = await response.json()
         console.error('❌ Erro ao enviar mensagem:', errorData)

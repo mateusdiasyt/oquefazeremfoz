@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useNotification } from '../../../contexts/NotificationContext'
 import { Check, CheckCheck } from 'lucide-react'
@@ -75,7 +75,60 @@ export default function MessagesPage() {
     }
   }, [selectedConversation])
 
-  const fetchConversations = async () => {
+  // Polling para atualizar mensagens e conversas automaticamente
+  useEffect(() => {
+    if (!user) return
+
+    let messagesInterval: NodeJS.Timeout | null = null
+    let conversationsInterval: NodeJS.Timeout | null = null
+
+    const conversationId = selectedConversation?.id
+
+    const startPolling = () => {
+      // Polling de mensagens (se houver conversa selecionada)
+      if (conversationId && !conversationId.startsWith('temp-')) {
+        if (messagesInterval) clearInterval(messagesInterval)
+        messagesInterval = setInterval(() => {
+          fetchMessages(conversationId)
+        }, 3000) // Verificar mensagens a cada 3 segundos
+      }
+
+      // Polling de conversas (sempre ativo)
+      if (conversationsInterval) clearInterval(conversationsInterval)
+      conversationsInterval = setInterval(() => {
+        fetchConversations()
+      }, 5000) // Verificar conversas a cada 5 segundos
+    }
+
+    const stopPolling = () => {
+      if (messagesInterval) {
+        clearInterval(messagesInterval)
+        messagesInterval = null
+      }
+      if (conversationsInterval) {
+        clearInterval(conversationsInterval)
+        conversationsInterval = null
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling()
+      } else {
+        startPolling()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    startPolling()
+
+    return () => {
+      stopPolling()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [user, selectedConversation?.id, fetchMessages, fetchConversations])
+
+  const fetchConversations = useCallback(async () => {
     try {
       const response = await fetch('/api/messages/conversations')
       if (response.ok) {
@@ -87,9 +140,9 @@ export default function MessagesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       const response = await fetch(`/api/messages/${conversationId}`)
       if (response.ok) {
@@ -99,7 +152,7 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Erro ao buscar mensagens:', error)
     }
-  }
+  }, [])
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) return
