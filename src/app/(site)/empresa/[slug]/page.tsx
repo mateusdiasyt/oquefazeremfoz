@@ -143,6 +143,7 @@ export default function BusinessProfilePage() {
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [gallery, setGallery] = useState<GalleryItem[]>([])
   const [followers, setFollowers] = useState<any[]>([])
+  const [postLikes, setPostLikes] = useState<Record<string, { isLiked: boolean; likesCount: number }>>({})
   
   // Modal states
   const [showProductForm, setShowProductForm] = useState(false)
@@ -355,14 +356,29 @@ export default function BusinessProfilePage() {
 
     try {
       const response = await fetch(`/api/posts/${postId}/like`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
 
       if (response.ok) {
         const result = await response.json()
-        fetchBusinessData()
-        showNotification(result.liked ? 'Post curtido!' : 'Post descurtido', 'success')
+        // Atualizar estado local imediatamente
+        setPostLikes(prev => ({
+          ...prev,
+          [postId]: {
+            isLiked: result.liked,
+            likesCount: result.likesCount
+          }
+        }))
+        // Atualizar o post na lista também
+        setPosts(prev => prev.map(p => 
+          p.id === postId ? { ...p, likes: result.likesCount } : p
+        ))
       } else {
+        const errorText = await response.text()
+        console.error('Erro ao curtir post:', errorText)
         showNotification('Erro ao curtir post', 'error')
       }
     } catch (error) {
@@ -1113,9 +1129,18 @@ export default function BusinessProfilePage() {
                           />
                         )}
                         <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                          <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
-                            <Heart className="w-4 h-4" />
-                            <span className="text-sm font-medium">{post.likes || 0}</span>
+                          <button 
+                            onClick={() => handleLikePost(post.id)}
+                            className={`flex items-center gap-2 transition-colors ${
+                              postLikes[post.id]?.isLiked 
+                                ? 'text-red-500 hover:text-red-600' 
+                                : 'text-gray-500 hover:text-purple-600'
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 ${postLikes[post.id]?.isLiked ? 'fill-current' : ''}`} />
+                            <span className="text-sm font-medium">
+                              {postLikes[post.id]?.likesCount ?? post.likes ?? 0}
+                            </span>
                           </button>
                           <button className="flex items-center gap-2 text-gray-500 hover:text-purple-600 transition-colors">
                             <MessageCircle className="w-4 h-4" />
