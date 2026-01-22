@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useAuth } from '../../contexts/AuthContext'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import FloatingChat from '../../components/FloatingChat'
@@ -10,6 +13,55 @@ export default function SiteLayout({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const { user, loading } = useAuth()
+  
+  // Rotas públicas (não precisam de autenticação)
+  const publicRoutes = ['/login', '/register']
+  const isPublicRoute = publicRoutes.includes(pathname)
+  
+  useEffect(() => {
+    // Se não estiver carregando e não houver usuário, redirecionar para login
+    if (!loading && !user && !isPublicRoute) {
+      router.push('/login')
+    }
+    // Se estiver logado e tentar acessar login/register, redirecionar para home
+    if (!loading && user && isPublicRoute) {
+      router.push('/')
+    }
+  }, [user, loading, router, pathname, isPublicRoute])
+  
+  // Mostrar loading enquanto verifica autenticação
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Se não estiver logado e não for rota pública, mostrar loading (será redirecionado)
+  if (!user && !isPublicRoute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecionando...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Para rotas públicas (login/register), não mostrar Header, Footer, etc.
+  if (isPublicRoute) {
+    return <>{children}</>
+  }
+  
+  // Para usuários logados, mostrar layout completo
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

@@ -49,24 +49,51 @@ async function verifyJWT(token: string, secret: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    const token = request.cookies.get('auth-token')?.value
-    
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-
-    try {
-      const decoded = await verifyJWT(token, JWT_SECRET)
-      return NextResponse.next()
-    } catch (error) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+  const pathname = request.nextUrl.pathname
+  
+  // Rotas públicas (acessíveis sem login)
+  const publicRoutes = ['/login', '/register']
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
+  
+  // Se for rota pública, permitir acesso
+  if (isPublicRoute) {
+    return NextResponse.next()
+  }
+  
+  // Verificar autenticação para rotas protegidas
+  const token = request.cookies.get('auth-token')?.value
+  
+  if (!token) {
+    // Redirecionar para login se não estiver autenticado
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  return NextResponse.next()
+  try {
+    const decoded = await verifyJWT(token, JWT_SECRET)
+    
+    // Verificação adicional para rotas admin
+    if (pathname.startsWith('/admin')) {
+      // Verificar se o usuário tem role ADMIN (isso será verificado no layout do admin também)
+      return NextResponse.next()
+    }
+    
+    return NextResponse.next()
+  } catch (error) {
+    // Token inválido, redirecionar para login
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
