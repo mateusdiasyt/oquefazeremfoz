@@ -26,6 +26,7 @@ export default function Header() {
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchUserBusinesses = async () => {
@@ -76,6 +77,32 @@ export default function Header() {
     return () => clearTimeout(timeoutId)
   }, [searchTerm])
 
+  // Fechar pesquisa ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        // Verificar se o clique não foi em um link
+        const target = event.target as HTMLElement
+        const isLink = target.closest('a') || target.closest('button')
+        
+        // Se não for um link e a pesquisa estiver expandida, fechar
+        if (!isLink && searchExpanded) {
+          setSearchExpanded(false)
+          setSearchTerm('')
+          setShowSearchSuggestions(false)
+        }
+      }
+    }
+
+    if (searchExpanded) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [searchExpanded])
+
   const handleLogout = async () => {
     await logout()
     setShowDropdown(false)
@@ -112,7 +139,7 @@ export default function Header() {
             </a>
             
             {/* Campo de Pesquisa Expansível */}
-            <div className="relative">
+            <div className="relative" ref={searchRef}>
               {!searchExpanded ? (
                 <button
                   onClick={() => setSearchExpanded(true)}
