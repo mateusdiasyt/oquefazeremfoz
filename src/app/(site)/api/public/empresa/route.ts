@@ -70,7 +70,7 @@ export async function GET(req: Request) {
   })
 
   if (!business) {
-    return NextResponse.json(null)
+    return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
   }
 
   // Tentar buscar presentationVideo usando SQL raw se a coluna existir

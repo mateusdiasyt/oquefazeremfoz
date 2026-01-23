@@ -193,13 +193,23 @@ export default function BusinessProfilePage() {
       
       // Fetch all business data at once using public API
       const businessResponse = await fetch(`/api/public/empresa?slug=${params.slug}`)
-      if (!businessResponse.ok) {
-        throw new Error('Empresa não encontrada')
+      
+      if (businessResponse.status === 404) {
+        showNotification('Empresa não encontrada', 'error')
+        router.push('/empresas')
+        return
       }
+      
+      if (!businessResponse.ok) {
+        throw new Error('Erro ao carregar dados da empresa')
+      }
+      
       const businessData = await businessResponse.json()
       
       if (!businessData) {
-        throw new Error('Empresa não encontrada')
+        showNotification('Empresa não encontrada', 'error')
+        router.push('/empresas')
+        return
       }
       
       // Check if user is following this business
@@ -257,9 +267,14 @@ export default function BusinessProfilePage() {
         }
       }
 
-    } catch (error) {
-      console.error('Erro ao carregar dados da empresa:', error)
-      showNotification('Erro ao carregar dados da empresa', 'error')
+    } catch (error: any) {
+      // Não logar erro se for "Empresa não encontrada" (já foi tratado acima)
+      if (error?.message !== 'Empresa não encontrada') {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Erro ao carregar dados da empresa:', error)
+        }
+        showNotification('Erro ao carregar dados da empresa', 'error')
+      }
     } finally {
       setLoading(false)
     }
