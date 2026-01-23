@@ -126,6 +126,12 @@ export default function AdminDashboard() {
               >
                 Gerenciar Usuários
               </a>
+              <a
+                href="/admin/guias"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Gerenciar Guias
+              </a>
             </div>
           </div>
         </div>
