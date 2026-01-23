@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, isCompany, isAdmin } from '../../../../../lib/auth'
+import { getCurrentUser, isCompany, isAdmin, isGuide } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
 import { unlink } from 'fs/promises'
 import { join } from 'path'
@@ -16,6 +16,16 @@ export async function GET(
       where: { id: postId },
       include: {
         business: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+            isVerified: true,
+            isApproved: true,
+            slug: true
+          }
+        },
+        guide: {
           select: {
             id: true,
             name: true,
@@ -65,6 +75,7 @@ export async function GET(
         likes: post._count.postlike,
         createdAt: post.createdAt,
         business: post.business,
+        guide: post.guide,
         _count: post._count,
         isLiked
       }
@@ -92,21 +103,33 @@ export async function DELETE(
     // Buscar o post
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: { business: true }
+      include: { 
+        business: true,
+        guide: true
+      }
     })
 
     if (!post) {
       return NextResponse.json({ message: 'Post não encontrado' }, { status: 404 })
     }
 
-    // Verificar se o usuário é dono da empresa ou admin
-    if (!isCompany(user.roles) && !isAdmin(user.roles)) {
+    // Verificar se o usuário tem permissão (empresa, guia ou admin)
+    if (!isCompany(user.roles) && !isGuide(user.roles) && !isAdmin(user.roles)) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    // Verificar se é dono da empresa (se não for admin)
-    if (!isAdmin(user.roles) && post.business.userId !== user.id) {
-      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+    // Verificar se é dono (se não for admin)
+    if (!isAdmin(user.roles)) {
+      if (post.business && post.business.userId !== user.id) {
+        return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+      }
+      if (post.guide && post.guide.userId !== user.id) {
+        return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+      }
+      // Se não tem nem business nem guide, não pode atualizar
+      if (!post.business && !post.guide) {
+        return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+      }
     }
 
     // Deletar arquivos físicos se existirem
@@ -161,21 +184,33 @@ export async function PUT(
     // Buscar o post
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: { business: true }
+      include: { 
+        business: true,
+        guide: true
+      }
     })
 
     if (!post) {
       return NextResponse.json({ message: 'Post não encontrado' }, { status: 404 })
     }
 
-    // Verificar se o usuário é dono da empresa ou admin
-    if (!isCompany(user.roles) && !isAdmin(user.roles)) {
+    // Verificar se o usuário tem permissão (empresa, guia ou admin)
+    if (!isCompany(user.roles) && !isGuide(user.roles) && !isAdmin(user.roles)) {
       return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
     }
 
-    // Verificar se é dono da empresa (se não for admin)
-    if (!isAdmin(user.roles) && post.business.userId !== user.id) {
-      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+    // Verificar se é dono (se não for admin)
+    if (!isAdmin(user.roles)) {
+      if (post.business && post.business.userId !== user.id) {
+        return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+      }
+      if (post.guide && post.guide.userId !== user.id) {
+        return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+      }
+      // Se não tem nem business nem guide, não pode atualizar
+      if (!post.business && !post.guide) {
+        return NextResponse.json({ message: 'Acesso negado' }, { status: 403 })
+      }
     }
 
     // Validações
@@ -194,6 +229,13 @@ export async function PUT(
       },
       include: {
         business: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true
+          }
+        },
+        guide: {
           select: {
             id: true,
             name: true,
