@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log('🏢 Empresas seguidas:', businessLikes.length)
 
     // ✅ OTIMIZAÇÃO: Buscar conversas com select mínimo e apenas empresa ativa
     const existingConversations = await prisma.conversation.findMany({
@@ -104,7 +103,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log('🔍 Conversas existentes no banco:', existingConversations.length)
 
     // Criar lista de conversas com empresas seguidas
     const allConversations = []
@@ -229,7 +227,6 @@ export async function GET(request: NextRequest) {
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     )
 
-    console.log('📋 Conversas formatadas:', formattedConversations.length)
 
     return NextResponse.json({ conversations: formattedConversations }, { status: 200 })
 

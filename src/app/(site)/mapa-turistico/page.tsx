@@ -85,18 +85,19 @@ export default function MapaTuristico() {
 
   const fetchEmpresas = async () => {
     try {
-      console.log('🔍 Buscando empresas para o mapa...')
       const response = await fetch('/api/map/empresas')
       if (response.ok) {
         const data = await response.json()
-        console.log('📦 Dados recebidos da API:', data)
-        console.log('🏢 Número de empresas:', data.empresas?.length || 0)
         setEmpresas(data.empresas || [])
       } else {
-        console.error('❌ Erro na resposta da API:', response.status, response.statusText)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Erro na resposta da API:', response.status, response.statusText)
+        }
       }
     } catch (error) {
-      console.error('❌ Erro ao buscar empresas:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('❌ Erro ao buscar empresas:', error)
+      }
     } finally {
       setLoading(false)
     }
@@ -170,8 +171,6 @@ export default function MapaTuristico() {
 
   const createMarkers = async () => {
     if (!map || !window.L) return
-
-    console.log('📍 Criando markers para', empresas.length, 'empresas')
     
     // Limpar markers existentes
     markers.forEach(marker => map.removeLayer(marker))
@@ -334,7 +333,6 @@ export default function MapaTuristico() {
       
       // Primeiro, tentar encontrar o marker pela empresa ID
       const marker = empresaMarkers.get(empresa.id)
-      console.log('📍 Marker encontrado no mapa:', marker ? 'Sim' : 'Não')
       
       if (marker) {
         // Se encontrou o marker, usar suas coordenadas

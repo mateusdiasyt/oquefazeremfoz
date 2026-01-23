@@ -7,25 +7,20 @@ export async function GET(
   { params }: { params: { conversationId: string } }
 ) {
   try {
-    console.log('📨 GET /api/messages/[conversationId] - Iniciando')
     const user = await getCurrentUser()
     
     if (!user) {
-      console.log('❌ Usuário não autorizado')
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
     }
 
     const { conversationId } = params
-    console.log('🔍 Buscando mensagens para conversa:', conversationId)
 
     // Se é um ID temporário, retornar mensagens vazias
     if (conversationId.startsWith('temp-')) {
-      console.log('⏭️ ID temporário, retornando array vazio')
       return NextResponse.json({ messages: [] }, { status: 200 })
     }
 
     // Verificar se o usuário participa da conversa
-    console.log('🔍 Verificando se conversa existe:', conversationId)
     const conversation = await prisma.conversation.findFirst({
       where: {
         id: conversationId,
@@ -40,13 +35,7 @@ export async function GET(
       }
     })
 
-    console.log('💬 Conversa encontrada:', conversation ? 'Sim' : 'Não')
-    if (conversation) {
-      console.log('👥 Participantes da conversa:', conversation.user?.length || 0)
-    }
-
     if (!conversation) {
-      console.log('❌ Conversa não encontrada para o usuário')
       return NextResponse.json({ message: 'Conversa não encontrada' }, { status: 404 })
     }
 
@@ -173,11 +162,8 @@ export async function POST(
 
     const { conversationId } = params
     const { content, receiverId } = await request.json()
-    
-    console.log('📝 Dados recebidos:', { conversationId, content, receiverId, userId: user.id })
 
     if (!content || !receiverId) {
-      console.log('❌ Dados obrigatórios faltando')
       return NextResponse.json({ message: 'Conteúdo e destinatário são obrigatórios' }, { status: 400 })
     }
 
@@ -185,9 +171,7 @@ export async function POST(
 
     // Se é um ID temporário, criar uma conversa real
     if (conversationId.startsWith('temp-')) {
-      console.log('🔄 Processando ID temporário:', conversationId)
       const businessId = conversationId.replace('temp-', '')
-      console.log('🏢 Business ID extraído:', businessId)
       
       // Buscar o usuário da empresa
       const business = await prisma.business.findUnique({
@@ -195,13 +179,7 @@ export async function POST(
         include: { user: true }
       })
 
-      console.log('🏢 Business encontrado:', business ? 'Sim' : 'Não')
-      if (business) {
-        console.log('👤 Business user ID:', business.user.id)
-      }
-
       if (!business) {
-        console.log('❌ Empresa não encontrada')
         return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
       }
 
@@ -219,10 +197,8 @@ export async function POST(
       })
 
       if (existingConversation) {
-        console.log('✅ Conversa existente encontrada:', existingConversation.id)
         conversation = existingConversation
       } else {
-        console.log('🆕 Criando nova conversa entre usuários:', user.id, 'e', business.user.id)
         // Criar nova conversa
         conversation = await prisma.conversation.create({
           data: {
@@ -236,7 +212,6 @@ export async function POST(
             }
           }
         })
-        console.log('✅ Nova conversa criada:', conversation.id)
       }
     } else {
       // Verificar se o usuário participa da conversa existente

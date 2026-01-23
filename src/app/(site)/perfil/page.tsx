@@ -69,39 +69,37 @@ export default function PerfilPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true)
-      console.log('🔍 Buscando dados do usuário...')
-      console.log('👤 Usuário atual:', user)
       
       // Buscar avaliações do usuário
-      console.log('📝 Buscando avaliações...')
       const reviewsResponse = await fetch('/api/user/reviews')
-      console.log('📝 Resposta das avaliações:', reviewsResponse.status)
       
       if (reviewsResponse.ok) {
         const reviewsData = await reviewsResponse.json()
-        console.log('📝 Dados das avaliações:', reviewsData)
         setReviews(reviewsData.reviews || [])
       } else {
         const errorData = await reviewsResponse.json()
-        console.error('❌ Erro ao buscar avaliações:', errorData)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Erro ao buscar avaliações:', errorData)
+        }
       }
 
       // Buscar empresas seguidas
-      console.log('❤️ Buscando empresas seguidas...')
       const followsResponse = await fetch('/api/user/follows')
-      console.log('❤️ Resposta das empresas seguidas:', followsResponse.status)
       
       if (followsResponse.ok) {
         const followsData = await followsResponse.json()
-        console.log('❤️ Dados das empresas seguidas:', followsData)
         setFollows(followsData.follows || [])
       } else {
         const errorData = await followsResponse.json()
-        console.error('❌ Erro ao buscar empresas seguidas:', errorData)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('❌ Erro ao buscar empresas seguidas:', errorData)
+        }
       }
 
     } catch (error) {
-      console.error('Erro ao buscar dados do usuário:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Erro ao buscar dados do usuário:', error)
+      }
       showNotification('Erro ao carregar dados do perfil', 'error')
     } finally {
       setLoading(false)
