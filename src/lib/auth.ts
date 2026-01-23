@@ -40,19 +40,40 @@ export async function createSession(userId: string): Promise<string> {
 
   // Usar query raw para evitar problemas com cache do Prisma após alteração de schema
   try {
+    // Tentar inserir com updatedAt (se a coluna existir)
     await prisma.$executeRaw`
-      INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
-      VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
+      INSERT INTO session (id, "userId", token, "expiresAt", "createdAt", "updatedAt")
+      VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW(), NOW())
       ON CONFLICT (id) DO UPDATE
       SET token = ${token}, "expiresAt" = ${expiresAt}, "updatedAt" = NOW()
     `
-  } catch (error) {
-    // Se ainda der erro, tentar novamente sem ON CONFLICT
-    console.error('❌ Erro ao criar sessão, tentando novamente...', error)
-    await prisma.$executeRaw`
-      INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
-      VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
-    `
+  } catch (error: any) {
+    // Se falhar por causa de updatedAt, tentar sem updatedAt
+    if (error?.meta?.message?.includes('updatedAt') || error?.message?.includes('updatedAt')) {
+      console.log('⚠️ Coluna updatedAt não existe, criando sessão sem ela...')
+      try {
+        await prisma.$executeRaw`
+          INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
+          VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
+          ON CONFLICT (id) DO UPDATE
+          SET token = ${token}, "expiresAt" = ${expiresAt}
+        `
+      } catch (retryError) {
+        // Se ainda falhar, tentar sem ON CONFLICT
+        console.error('❌ Erro ao criar sessão, tentando novamente sem ON CONFLICT...', retryError)
+        await prisma.$executeRaw`
+          INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
+          VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
+        `
+      }
+    } else {
+      // Se ainda der erro, tentar novamente sem ON CONFLICT
+      console.error('❌ Erro ao criar sessão, tentando novamente...', error)
+      await prisma.$executeRaw`
+        INSERT INTO session (id, "userId", token, "expiresAt", "createdAt")
+        VALUES (${sessionId}, ${userId}, ${token}, ${expiresAt}, NOW())
+      `
+    }
   }
 
   return token
