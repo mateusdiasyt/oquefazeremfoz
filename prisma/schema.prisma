@@ -91,6 +91,7 @@ model guide {
   guidereview     guidereview[]
   guidegallery    guidegallery[]
   guidepost       guidepost[]
+  post            post[]
   follow_follow_followerGuideId follow[] @relation("follow_followerGuideId")
   follow_follow_followingGuideId follow[] @relation("follow_followingGuideId")
 
