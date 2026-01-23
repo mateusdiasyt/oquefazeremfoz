@@ -88,6 +88,11 @@ model guide {
   ratingAvg       Float             @default(0)
   ratingCount     Int               @default(0)
   user            user              @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Guide_userId_fkey")
+  guidereview     guidereview[]
+  guidegallery    guidegallery[]
+  guidepost       guidepost[]
+  follow_follow_followerGuideId follow[] @relation("follow_followerGuideId")
+  follow_follow_followingGuideId follow[] @relation("follow_followingGuideId")
 
   @@index([userId], map: "Guide_userId_idx")
   @@index([isApproved], map: "Guide_isApproved_idx")
@@ -256,16 +261,22 @@ model follow {
   followingId                   String
   followerBusinessId            String?   // Para seguir como empresa
   followingBusinessId           String?   // Empresa sendo seguida
+  followerGuideId               String?   // Para seguir como guia
+  followingGuideId              String?   // Guia sendo seguido
   createdAt                     DateTime  @default(now())
   user_follow_followerIdTouser  user      @relation("follow_followerIdTouser", fields: [followerId], references: [id], onDelete: Cascade, map: "Follow_followerId_fkey")
   user_follow_followingIdTouser user      @relation("follow_followingIdTouser", fields: [followingId], references: [id], onDelete: Cascade, map: "Follow_followingId_fkey")
   business_follow_followerBusinessId business? @relation("follow_followerBusinessId", fields: [followerBusinessId], references: [id], onDelete: Cascade, map: "Follow_followerBusinessId_fkey")
   business_follow_followingBusinessId business? @relation("follow_followingBusinessId", fields: [followingBusinessId], references: [id], onDelete: Cascade, map: "Follow_followingBusinessId_fkey")
+  guide_follow_followerGuideId guide? @relation("follow_followerGuideId", fields: [followerGuideId], references: [id], onDelete: Cascade, map: "Follow_followerGuideId_fkey")
+  guide_follow_followingGuideId guide? @relation("follow_followingGuideId", fields: [followingGuideId], references: [id], onDelete: Cascade, map: "Follow_followingGuideId_fkey")
 
   @@unique([followerId, followingId], map: "Follow_followerId_followingId_key")
   @@unique([followerBusinessId, followingBusinessId], map: "Follow_followerBusinessId_followingBusinessId_key")
+  @@unique([followerGuideId, followingGuideId], map: "Follow_followerGuideId_followingGuideId_key")
   @@index([followingId], map: "Follow_followingId_idx")
   @@index([followingBusinessId], map: "Follow_followingBusinessId_idx")
+  @@index([followingGuideId], map: "Follow_followingGuideId_idx")
 }
 
 model message {
@@ -317,7 +328,8 @@ model plan {
 
 model post {
   id         String     @id
-  businessId String
+  businessId String?
+  guideId    String?
   title      String
   body       String?
   imageUrl   String?
@@ -325,10 +337,12 @@ model post {
   likes      Int        @default(0)
   createdAt  DateTime   @default(now())
   comment    comment[]
-  business   business   @relation(fields: [businessId], references: [id], map: "Post_businessId_fkey")
+  business   business?  @relation(fields: [businessId], references: [id], map: "Post_businessId_fkey")
+  guide      guide?     @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "Post_guideId_fkey")
   postlike   postlike[]
 
   @@index([businessId], map: "Post_businessId_idx")
+  @@index([guideId], map: "Post_guideId_idx")
 }
 
 model postlike {
@@ -471,6 +485,7 @@ model user {
   commentlike                      commentlike[]
   notification                     notification[]
   guide                            guide[]
+  guidereview                      guidereview[]
 }
 
 model userrole {
@@ -499,4 +514,48 @@ enum order_status {
   PAID
   REFUNDED
   CANCELED
+}
+
+model guidereview {
+  id         String   @id
+  guideId    String
+  userId     String
+  rating     Int
+  comment    String?
+  imageUrl   String?
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  guide      guide    @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuideReview_guideId_fkey")
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GuideReview_userId_fkey")
+
+  @@unique([guideId, userId], map: "GuideReview_guideId_userId_key")
+  @@index([userId], map: "GuideReview_userId_idx")
+  @@index([guideId], map: "GuideReview_guideId_idx")
+}
+
+model guidegallery {
+  id         String   @id
+  guideId    String
+  imageUrl   String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt DateTime
+  guide      guide    @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuideGallery_guideId_fkey")
+
+  @@index([guideId], map: "GuideGallery_guideId_idx")
+}
+
+model guidepost {
+  id         String   @id
+  guideId    String
+  title      String
+  body       String?
+  imageUrl   String?
+  videoUrl   String?
+  likes      Int      @default(0)
+  createdAt  DateTime @default(now())
+  guide      guide    @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuidePost_guideId_fkey")
+
+  @@index([guideId], map: "GuidePost_guideId_idx")
 }

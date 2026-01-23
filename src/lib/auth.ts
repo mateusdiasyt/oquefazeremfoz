@@ -261,3 +261,7 @@ export function isCompany(userRoles: string[]): boolean {
 export function isTourist(userRoles: string[]): boolean {
   return hasRole(userRoles, 'TOURIST')
 }
+
+export function isGuide(userRoles: string[]): boolean {
+  return hasRole(userRoles, 'GUIDE')
+}
