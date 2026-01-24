@@ -21,8 +21,13 @@ export async function GET(request: NextRequest) {
     const activeBusinessId = user?.activeBusinessId || user?.businessId
 
     // Se não está filtrando por businessId específico, filtrar apenas empresas aprovadas
-    let whereClauseWithApproval: any = { ...whereClause }
-    if (!businessId) {
+    // E garantir que são posts de empresas (não de guias)
+    let whereClauseWithApproval: any = {}
+    if (businessId) {
+      // Filtrar por businessId específico e garantir que não é post de guia
+      whereClauseWithApproval.businessId = businessId
+      whereClauseWithApproval.guideId = null
+    } else {
       // Buscar IDs das empresas aprovadas
       const approvedBusinesses = await prisma.business.findMany({
         where: { isApproved: true },
@@ -34,6 +39,8 @@ export async function GET(request: NextRequest) {
         whereClauseWithApproval.businessId = {
           in: approvedBusinessIds
         }
+        // Garantir que não são posts de guias
+        whereClauseWithApproval.guideId = null
       } else {
         // Se não há empresas aprovadas, retornar array vazio
         return NextResponse.json({ posts: [] }, { status: 200 })
@@ -44,6 +51,16 @@ export async function GET(request: NextRequest) {
       where: whereClauseWithApproval,
       include: {
         business: {
+          select: {
+            id: true,
+            name: true,
+            profileImage: true,
+            isVerified: true,
+            slug: true,
+            isApproved: true
+          }
+        },
+        guide: {
           select: {
             id: true,
             name: true,

@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../lib/auth'
 
 export async function GET(req: Request) {
-  const user = await getCurrentUser()
-  const { searchParams } = new URL(req.url)
-  const slug = searchParams.get('slug') || ''
-  
-  const business = await prisma.business.findUnique({
+  try {
+    const user = await getCurrentUser()
+    const { searchParams } = new URL(req.url)
+    const slug = searchParams.get('slug') || ''
+    
+    const business = await prisma.business.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -33,6 +34,10 @@ export async function GET(req: Request) {
       userId: true,
       // presentationVideo não incluído até migração ser executada
       post: { 
+        where: {
+          businessId: business.id, // Apenas posts desta empresa
+          guideId: null // Garantir que não são posts de guias
+        },
         orderBy: { createdAt: 'desc' },
         include: {
           _count: {
@@ -132,5 +137,12 @@ export async function GET(req: Request) {
     businessWithRating.businesscoupon = []
   }
 
-  return NextResponse.json(businessWithRating)
+    return NextResponse.json(businessWithRating)
+  } catch (error) {
+    console.error('Erro ao buscar empresa:', error)
+    return NextResponse.json(
+      { message: 'Erro interno do servidor', error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined },
+      { status: 500 }
+    )
+  }
 }
