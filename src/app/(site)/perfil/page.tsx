@@ -134,7 +134,8 @@ export default function PerfilPage() {
         setProfileImage(data.profileImage)
         showNotification('Foto de perfil atualizada com sucesso!', 'success')
       } else {
-        showNotification('Erro ao atualizar foto de perfil', 'error')
+        const err = await response.json().catch(() => ({}))
+        showNotification(err?.message || 'Erro ao atualizar foto de perfil', 'error')
       }
     } catch (error) {
       console.error('Erro ao fazer upload da foto:', error)

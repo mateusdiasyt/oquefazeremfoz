@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '../../../../../lib/db'
-import { getCurrentUser } from '../../../../../lib/auth'
+import { getCurrentUser, isGuide } from '../../../../../lib/auth'
 import { put } from '@vercel/blob'
 
-// POST - Upload da foto de perfil do usuário (empresa ativa)
+// POST - Upload da foto de perfil do usuário (empresa ativa ou guia)
 // Usa Vercel Blob Storage (compatível com serverless/Vercel)
 export async function POST(request: Request) {
   try {
@@ -11,22 +11,6 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 401 })
-    }
-
-    const activeBusinessId = user.activeBusinessId || user.businessId
-    if (!activeBusinessId) {
-      return NextResponse.json({ message: 'Usuário não possui empresa' }, { status: 400 })
-    }
-
-    const business = await prisma.business.findFirst({
-      where: {
-        id: activeBusinessId,
-        userId: user.id
-      }
-    })
-
-    if (!business) {
-      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
     }
 
     const formData = await request.formData()
@@ -45,6 +29,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Arquivo muito grande. Máximo 5MB' }, { status: 400 })
     }
 
+    // Verificar se tem empresa ou guia antes de fazer upload
+    const activeBusinessId = user.activeBusinessId || user.businessId
+    const business = activeBusinessId
+      ? await prisma.business.findFirst({ where: { id: activeBusinessId, userId: user.id } })
+      : null
+    const guide = isGuide(user.roles)
+      ? await prisma.guide.findFirst({ where: { userId: user.id } })
+      : null
+
+    if (!business && !guide) {
+      return NextResponse.json({
+        message: 'Upload de foto disponível apenas para perfis de empresa ou guia.'
+      }, { status: 400 })
+    }
+
     const bytes = await file.arrayBuffer()
     const timestamp = Date.now()
     const fileExtension = file.name.split('.').pop() || 'jpg'
@@ -55,10 +54,17 @@ export async function POST(request: Request) {
       contentType: file.type
     })
 
-    await prisma.business.update({
-      where: { id: business.id },
-      data: { profileImage: blob.url }
-    })
+    if (business) {
+      await prisma.business.update({
+        where: { id: business.id },
+        data: { profileImage: blob.url }
+      })
+    } else if (guide) {
+      await prisma.guide.update({
+        where: { id: guide.id },
+        data: { profileImage: blob.url }
+      })
+    }
 
     return NextResponse.json({
       message: 'Foto de perfil atualizada com sucesso',
