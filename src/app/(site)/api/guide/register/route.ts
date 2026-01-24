@@ -97,7 +97,8 @@ export async function POST(request: NextRequest) {
         instagram,
         facebook,
         website,
-        isApproved: false,
+        isApproved: true,
+        approvedAt: new Date(),
         updatedAt: new Date()
       }
     })
