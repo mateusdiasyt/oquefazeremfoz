@@ -9,8 +9,8 @@ export async function GET(req: Request) {
     const slug = searchParams.get('slug') || ''
     
     const business = await prisma.business.findUnique({
-    where: { slug },
-    select: {
+      where: { slug },
+      select: {
       id: true,
       name: true,
       slug: true,
@@ -35,8 +35,7 @@ export async function GET(req: Request) {
       // presentationVideo não incluído até migração ser executada
       post: { 
         where: {
-          businessId: business.id, // Apenas posts desta empresa
-          guideId: null // Garantir que não são posts de guias
+          guideId: null // Apenas posts de empresas (não de guias)
         },
         orderBy: { createdAt: 'desc' },
         include: {
@@ -72,70 +71,61 @@ export async function GET(req: Request) {
       },
       businessproduct: true,
     },
-  })
+    })
 
-  if (!business) {
-    return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
-  }
+    if (!business) {
+      return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
 
-  // Tentar buscar presentationVideo usando SQL raw se a coluna existir
-  try {
-    const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
-      SELECT "presentationVideo" FROM "business" WHERE slug = ${slug}
-    `
-    ;(business as any).presentationVideo = videoResult[0]?.presentationVideo || null
-  } catch {
-    ;(business as any).presentationVideo = null
-  }
+    // Tentar buscar presentationVideo usando SQL raw se a coluna existir
+    try {
+      const videoResult = await prisma.$queryRaw<Array<{ presentationVideo: string | null }>>`
+        SELECT "presentationVideo" FROM "business" WHERE slug = ${slug}
+      `
+      ;(business as any).presentationVideo = videoResult[0]?.presentationVideo || null
+    } catch {
+      ;(business as any).presentationVideo = null
+    }
 
-  // Calcular a média das avaliações com mais precisão e realismo
-  let averageRating = 0
-  if (business.businessreview.length > 0) {
-    const totalRating = business.businessreview.reduce((sum, review) => sum + review.rating, 0)
-    const rawAverage = totalRating / business.businessreview.length
-    
-    // Criar variação baseada no ID da empresa para consistência
-    const businessIdHash = business.id.charCodeAt(business.id.length - 1)
-    const variation = (businessIdHash % 7) * 0.1 // 0.0 a 0.6
-    
-    // Aplicar lógica baseada no número de avaliações
-    if (business.businessreview.length === 1) {
-      // Com 1 avaliação, aplicar uma redução mais variada
-      averageRating = rawAverage - (0.2 + variation)
-    } else if (business.businessreview.length <= 3) {
-      // Com poucas avaliações, variação menor
-      averageRating = rawAverage - (0.1 + variation * 0.5)
-    } else {
-      // Com muitas avaliações, mais próximo da média real
-      averageRating = rawAverage - (variation * 0.3)
+    // Calcular a média das avaliações com mais precisão e realismo
+    let averageRating = 0
+    if (business.businessreview.length > 0) {
+      const totalRating = business.businessreview.reduce((sum, review) => sum + review.rating, 0)
+      const rawAverage = totalRating / business.businessreview.length
+      
+      // Criar variação baseada no ID da empresa para consistência
+      const businessIdHash = business.id.charCodeAt(business.id.length - 1)
+      const variation = (businessIdHash % 7) * 0.1 // 0.0 a 0.6
+      
+      // Aplicar lógica baseada no número de avaliações
+      if (business.businessreview.length === 1) {
+        averageRating = rawAverage - (0.2 + variation)
+      } else if (business.businessreview.length <= 3) {
+        averageRating = rawAverage - (0.1 + variation * 0.5)
+      } else {
+        averageRating = rawAverage - (variation * 0.3)
+      }
+      
+      averageRating = Math.round(averageRating * 10) / 10
+      averageRating = Math.max(1.0, Math.min(5.0, averageRating))
+    }
+
+    const transformedPosts = business.post.map(post => ({
+      ...post,
+      isLiked: post.postlike.length > 0
+    }))
+
+    const businessWithRating = {
+      ...business,
+      averageRating,
+      post: transformedPosts
     }
     
-    // Arredondar para 1 casa decimal
-    averageRating = Math.round(averageRating * 10) / 10
-    
-    // Garantir que esteja entre 1.0 e 5.0
-    averageRating = Math.max(1.0, Math.min(5.0, averageRating))
-  }
-
-  // Transformar os posts para incluir o status de curtida
-  const transformedPosts = business.post.map(post => ({
-    ...post,
-    isLiked: post.postlike.length > 0
-  }))
-
-  // Retornar dados com a média calculada e posts transformados
-  const businessWithRating = {
-    ...business,
-    averageRating,
-    post: transformedPosts
-  }
-  
-  // Se a empresa não estiver aprovada, ocultar posts, produtos e cupons
-  if (!business.isApproved) {
-    businessWithRating.post = []
-    businessWithRating.businessproduct = []
-    businessWithRating.businesscoupon = []
-  }
+    if (!business.isApproved) {
+      businessWithRating.post = []
+      businessWithRating.businessproduct = []
+      businessWithRating.businesscoupon = []
+    }
 
     return NextResponse.json(businessWithRating)
   } catch (error) {
