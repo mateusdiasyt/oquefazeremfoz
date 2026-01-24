@@ -2,15 +2,24 @@ import { prisma } from '../../../../../lib/db'
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '../../../../../lib/auth'
 
+const postSelect = (userId: string | undefined) => ({
+  orderBy: { createdAt: 'desc' as const },
+  include: {
+    _count: { select: { postlike: true, comment: true } },
+    postlike: {
+      ...(userId ? { where: { userId } } : {}),
+      select: { id: true }
+    }
+  }
+})
+
 export async function GET(req: Request) {
   try {
     const user = await getCurrentUser()
     const { searchParams } = new URL(req.url)
     const slug = searchParams.get('slug') || ''
     
-    const business = await prisma.business.findUnique({
-      where: { slug },
-      select: {
+    const baseSelect = {
       id: true,
       name: true,
       slug: true,
@@ -32,49 +41,51 @@ export async function GET(req: Request) {
       createdAt: true,
       updatedAt: true,
       userId: true,
-      // presentationVideo não incluído até migração ser executada
-      post: { 
-        where: {
-          guideId: null // Apenas posts de empresas (não de guias)
-        },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: {
-            select: {
-              postlike: true,
-              comment: true
-            }
-          },
-          postlike: {
-            where: {
-              userId: user?.id
-            },
-            select: {
-              id: true
-            }
-          }
-        }
-      },
+      post: postSelect(user?.id),
       businesscoupon: true,
-      businessreview: { 
-        take: 20, 
-        orderBy: { createdAt: 'desc' },
+      businessreview: {
+        take: 20,
+        orderBy: { createdAt: 'desc' as const },
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          }
+          user: { select: { id: true, name: true, email: true } }
         }
       },
-      businessproduct: true,
-    },
-    })
+      businessproduct: true
+    }
+
+    let business: any = null
+
+    try {
+      business = await prisma.business.findUnique({
+        where: { slug },
+        select: {
+          ...baseSelect,
+          post: {
+            where: { guideId: null },
+            ...postSelect(user?.id)
+          }
+        }
+      })
+    } catch (e: any) {
+      const isGuideIdError = e?.code === 'P2010' ||
+        /guideId|column.*does not exist/i.test(String(e?.message ?? '')) ||
+        /guideId/i.test(String(e?.meta?.message ?? ''))
+      if (isGuideIdError) {
+        business = await prisma.business.findUnique({
+          where: { slug },
+          select: baseSelect
+        })
+      } else {
+        throw e
+      }
+    }
 
     if (!business) {
       return NextResponse.json({ message: 'Empresa não encontrada' }, { status: 404 })
+    }
+
+    if (Array.isArray(business.post)) {
+      business.post = business.post.filter((p: any) => p.guideId == null)
     }
 
     // Tentar buscar presentationVideo usando SQL raw se a coluna existir
