@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { capitalizeWords } from '../../../../utils/formatters'
@@ -136,6 +136,7 @@ interface GalleryItem {
 
 export default function BusinessProfilePage() {
   const params = useParams()
+  const router = useRouter()
   const { user } = useAuth()
   const { showNotification } = useNotification()
   
