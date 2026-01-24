@@ -121,7 +121,7 @@ export async function GET(req: Request) {
       averageRating = Math.max(1.0, Math.min(5.0, averageRating))
     }
 
-    const transformedPosts = business.post.map(post => ({
+    const transformedPosts = business.post.map((post: { postlike: { length: number } }) => ({
       ...post,
       isLiked: post.postlike.length > 0
     }))
