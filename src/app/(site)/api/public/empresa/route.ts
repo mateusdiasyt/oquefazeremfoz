@@ -101,7 +101,7 @@ export async function GET(req: Request) {
     // Calcular a média das avaliações com mais precisão e realismo
     let averageRating = 0
     if (business.businessreview.length > 0) {
-      const totalRating = business.businessreview.reduce((sum, review) => sum + review.rating, 0)
+      const totalRating = business.businessreview.reduce((sum: number, review: { rating: number }) => sum + review.rating, 0)
       const rawAverage = totalRating / business.businessreview.length
       
       // Criar variação baseada no ID da empresa para consistência
