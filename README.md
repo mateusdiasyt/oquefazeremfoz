@@ -1,5 +1,7 @@
 # OQFOZ — Starter
 
+> Deploy test - 31/01/2025
+
 > **Stack**: Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui + Prisma (MySQL) + Zod.
 > **Banco**: MySQL (gerenciado no **phpMyAdmin**).
 > **Nome do site**: **oquefazeremfoz.com.br** (abreviado **OQFOZ**)
