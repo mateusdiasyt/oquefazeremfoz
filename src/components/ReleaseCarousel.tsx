@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { Newspaper } from 'lucide-react'
 
@@ -26,13 +27,32 @@ function stripHtml(html: string): string {
   return (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-function ReleaseCarouselCard({ release }: { release: Release }) {
-  const excerpt = release.lead || stripHtml(release.body).slice(0, 120) + (release.body.length > 120 ? '...' : '')
+function ReleaseCarouselCard({
+  release,
+  onHover
+}: {
+  release: Release
+  onHover: (release: Release | null, rect: DOMRect | null) => void
+}) {
+  const cardRef = useRef<HTMLAnchorElement>(null)
+
+  const handleMouseEnter = useCallback(() => {
+    if (cardRef.current) {
+      onHover(release, cardRef.current.getBoundingClientRect())
+    }
+  }, [release, onHover])
+
+  const handleMouseLeave = useCallback(() => {
+    onHover(null, null)
+  }, [onHover])
 
   return (
     <Link
+      ref={cardRef}
       href={`/empresa/${release.business.slug}/release/${release.slug}`}
       className="flex-shrink-0 w-[110px] snap-start group"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className="relative w-full aspect-[9/16] max-h-[200px] rounded-2xl overflow-hidden border-2 border-transparent group-hover:border-purple-400 transition-all shadow-sm group-hover:shadow-lg ring-2 ring-purple-200/60 group-hover:ring-purple-400/80">
         {release.featuredImageUrl ? (
@@ -61,21 +81,47 @@ function ReleaseCarouselCard({ release }: { release: Release }) {
             {release.business.name}
           </span>
         </div>
+      </div>
+    </Link>
+  )
+}
 
-        {/* Popup no hover - título e resumo */}
-        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-center p-3 overflow-hidden">
-          <h4 className="text-sm font-bold text-white line-clamp-3 mb-1.5 leading-tight">
-            {release.title}
-          </h4>
-          {excerpt && (
-            <p className="text-xs text-gray-200 line-clamp-3 leading-relaxed">
-              {excerpt}
-            </p>
-          )}
-          <span className="text-xs text-purple-300 font-medium mt-2 inline-block">
-            Clique para ler →
-          </span>
-        </div>
+function ReleasePopup({
+  release,
+  rect,
+  onMouseEnter,
+  onMouseLeave
+}: {
+  release: Release
+  rect: DOMRect
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+}) {
+  const excerpt = release.lead || stripHtml(release.body).slice(0, 200) + (release.body.length > 200 ? '...' : '')
+
+  const popupWidth = 320
+  const gap = 8
+  const left = Math.max(16, Math.min(rect.left + rect.width / 2 - popupWidth / 2, typeof window !== 'undefined' ? window.innerWidth - popupWidth - 16 : 400))
+  const top = rect.top - gap
+
+  return (
+    <Link
+      href={`/empresa/${release.business.slug}/release/${release.slug}`}
+      className="fixed z-[100] block"
+      style={{
+        left,
+        top,
+        transform: 'translateY(-100%)',
+        width: popupWidth
+      }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 hover:border-purple-200 transition-colors">
+        <div className="text-xs font-semibold text-purple-600 mb-2">{release.business.name}</div>
+        <h4 className="text-base font-bold text-gray-900 mb-2 leading-snug line-clamp-3">{release.title}</h4>
+        {excerpt && <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">{excerpt}</p>}
+        <span className="text-sm text-purple-600 font-medium mt-3 inline-block">Clique para ler →</span>
       </div>
     </Link>
   )
@@ -84,6 +130,20 @@ function ReleaseCarouselCard({ release }: { release: Release }) {
 export default function ReleaseCarousel() {
   const [releases, setReleases] = useState<Release[]>([])
   const [loading, setLoading] = useState(true)
+  const [hovered, setHovered] = useState<{ release: Release; rect: DOMRect } | null>(null)
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleHover = useCallback((release: Release | null, rect: DOMRect | null) => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current)
+      hideTimeoutRef.current = null
+    }
+    if (release && rect) {
+      setHovered({ release, rect })
+    } else {
+      hideTimeoutRef.current = setTimeout(() => setHovered(null), 80)
+    }
+  }, [])
 
   useEffect(() => {
     fetch('/api/public/releases/recent')
@@ -91,6 +151,10 @@ export default function ReleaseCarousel() {
       .then((data) => setReleases(Array.isArray(data) ? data : []))
       .catch(() => setReleases([]))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => () => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current)
   }, [])
 
   if (loading) {
@@ -119,9 +183,20 @@ export default function ReleaseCarousel() {
       </div>
       <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-1 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
         {releases.map((release) => (
-          <ReleaseCarouselCard key={release.id} release={release} />
+          <ReleaseCarouselCard key={release.id} release={release} onHover={handleHover} />
         ))}
       </div>
+
+      {hovered && typeof document !== 'undefined' &&
+        createPortal(
+          <ReleasePopup
+            release={hovered.release}
+            rect={hovered.rect}
+            onMouseEnter={() => handleHover(hovered.release, hovered.rect)}
+            onMouseLeave={() => handleHover(null, null)}
+          />,
+          document.body
+        )}
     </div>
   )
 }
