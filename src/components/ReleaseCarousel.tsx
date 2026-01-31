@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { Newspaper } from 'lucide-react'
 
@@ -187,16 +186,14 @@ export default function ReleaseCarousel() {
         ))}
       </div>
 
-      {hovered && typeof document !== 'undefined' &&
-        createPortal(
-          <ReleasePopup
-            release={hovered.release}
-            rect={hovered.rect}
-            onMouseEnter={() => handleHover(hovered.release, hovered.rect)}
-            onMouseLeave={() => handleHover(null, null)}
-          />,
-          document.body
-        )}
+      {hovered && (
+        <ReleasePopup
+          release={hovered.release}
+          rect={hovered.rect}
+          onMouseEnter={() => handleHover(hovered.release, hovered.rect)}
+          onMouseLeave={() => handleHover(null, null)}
+        />
+      )}
     </div>
   )
 }
