@@ -45,7 +45,7 @@ export async function GET(req: Request) {
       businesscoupon: true,
       businessrelease: {
         where: { isPublished: true },
-        orderBy: { publishedAt: 'desc' }
+        orderBy: { publishedAt: 'desc' as const }
       },
       businessreview: {
         take: 20,
