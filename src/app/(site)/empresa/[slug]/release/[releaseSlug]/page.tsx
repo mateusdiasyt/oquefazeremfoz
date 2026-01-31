@@ -56,6 +56,18 @@ export default function ReleaseDetailPage() {
     }
   }, [params.slug, params.releaseSlug, router])
 
+  const sanitizedBody = useMemo(() => {
+    const html = release?.body || ''
+    const safeTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote']
+    if (html.trim().startsWith('<')) {
+      if (typeof window !== 'undefined') {
+        return DOMPurify.sanitize(html, { ALLOWED_TAGS: safeTags, ALLOWED_ATTR: ['href', 'target', 'rel'] })
+      }
+      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/on\w+="[^"]*"/gi, '')
+    }
+    return html.replace(/\n/g, '<br />')
+  }, [release?.body])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -67,17 +79,6 @@ export default function ReleaseDetailPage() {
   if (!release) return null
 
   const displayDate = release.publishedAt || release.createdAt
-  const sanitizedBody = useMemo(() => {
-    const html = release.body || ''
-    const safeTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote']
-    if (html.trim().startsWith('<')) {
-      if (typeof window !== 'undefined') {
-        return DOMPurify.sanitize(html, { ALLOWED_TAGS: safeTags, ALLOWED_ATTR: ['href', 'target', 'rel'] })
-      }
-      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/on\w+="[^"]*"/gi, '')
-    }
-    return html.replace(/\n/g, '<br />')
-  }, [release.body])
 
   return (
     <div className="min-h-screen bg-white">
