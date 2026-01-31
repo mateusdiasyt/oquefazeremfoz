@@ -506,7 +506,7 @@ export function runSEOAnalysis(title: string, lead: string, bodyHtml: string): S
   const scoreEeat = eeat.status === 'ok' ? 100 : 70
   const scoreIntent = wordCount > 50 ? 100 : 50
 
-  const score = Math.round(
+  let score = Math.round(
     scoreTitle * weights.title +
       scoreMeta * weights.meta +
       scoreContent * weights.content +
@@ -516,6 +516,14 @@ export function runSEOAnalysis(title: string, lead: string, bodyHtml: string): S
       scoreEeat * weights.eeat +
       scoreIntent * weights.intent
   )
+
+  if (!title.trim() && wordCount < 20) {
+    score = Math.min(score, 25)
+  } else if (!title.trim() || wordCount < 50) {
+    score = Math.min(score, 35)
+  } else if (wordCount < 150) {
+    score = Math.min(score, 45)
+  }
 
   let grade: SEOAnalysisResult['grade'] = 'ruim'
   let gradeLabel = '❌ Ruim'
