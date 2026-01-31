@@ -95,7 +95,7 @@ export default function ReleaseCarousel() {
     )
   }
 
-  if (releases.length < 4) return null
+  if (releases.length === 0) return null
 
   return (
     <div className="py-6 px-0 md:px-4">
