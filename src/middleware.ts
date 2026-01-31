@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     '/login', 
     '/register',
-    '/empresa', // Páginas de empresas devem ser públicas para SEO
+    '/empresa', // Páginas de empresas e releases devem ser públicas para SEO
     '/empresas', // Lista de empresas pública
     '/cupons', // Cupons públicos
     '/mapa-turistico', // Mapa público

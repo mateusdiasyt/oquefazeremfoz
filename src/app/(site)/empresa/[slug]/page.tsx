@@ -11,6 +11,8 @@ import CouponForm from '../../../../components/CouponForm'
 import ReviewForm from '../../../../components/ReviewForm'
 import CreatePost from '../../../../components/CreatePost'
 import PostForm from '../../../../components/PostForm'
+import ReleaseForm from '../../../../components/ReleaseForm'
+import ReleaseCard from '../../../../components/ReleaseCard'
 import FollowersModal from '../../../../components/FollowersModal'
 import PostCard from '../../../../components/PostCard'
 import { 
@@ -37,7 +39,9 @@ import {
   Images,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Newspaper,
+  FileText
 } from 'lucide-react'
 
 // Ícone simplificado do WhatsApp
@@ -134,6 +138,18 @@ interface GalleryItem {
   createdAt: string
 }
 
+interface Release {
+  id: string
+  title: string
+  slug: string
+  lead: string | null
+  body: string
+  featuredImageUrl: string | null
+  isPublished: boolean
+  publishedAt: string | null
+  createdAt: string
+}
+
 export default function BusinessProfilePage() {
   const params = useParams()
   const router = useRouter()
@@ -143,6 +159,7 @@ export default function BusinessProfilePage() {
   const [business, setBusiness] = useState<Business | null>(null)
   const [loading, setLoading] = useState(true)
   const [posts, setPosts] = useState<Post[]>([])
+  const [releases, setReleases] = useState<Release[]>([])
   const [reviews, setReviews] = useState<Review[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [coupons, setCoupons] = useState<Coupon[]>([])
@@ -155,6 +172,8 @@ export default function BusinessProfilePage() {
   const [showCouponForm, setShowCouponForm] = useState(false)
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [showPostForm, setShowPostForm] = useState(false)
+  const [showReleaseForm, setShowReleaseForm] = useState(false)
+  const [contentTab, setContentTab] = useState<'posts' | 'releases'>('posts')
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [uploadingGallery, setUploadingGallery] = useState(false)
@@ -167,6 +186,7 @@ export default function BusinessProfilePage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null)
   const [editingPost, setEditingPost] = useState<Post | null>(null)
+  const [editingRelease, setEditingRelease] = useState<Release | null>(null)
   const [editingDescription, setEditingDescription] = useState(false)
   const [newDescription, setNewDescription] = useState('')
   const [editingInfo, setEditingInfo] = useState(false)
@@ -258,6 +278,20 @@ export default function BusinessProfilePage() {
       if (businessData.businessreview) setReviews(businessData.businessreview)
       if (businessData.businessproduct) setProducts(businessData.businessproduct.filter((p: any) => p.isActive !== false))
       if (businessData.businesscoupon) setCoupons(businessData.businesscoupon)
+      if (businessData.businessrelease) setReleases(businessData.businessrelease)
+      
+      // Dono busca releases incluindo rascunhos
+      if (user && (user.businesses?.some((b: { id: string }) => b.id === businessData.id) || user.activeBusinessId === businessData.id || user.businessId === businessData.id)) {
+        try {
+          const relRes = await fetch(`/api/business/releases?businessId=${businessData.id}`)
+          if (relRes.ok) {
+            const relData = await relRes.json()
+            setReleases(relData.releases || [])
+          }
+        } catch {
+          // usar businessrelease da API pública
+        }
+      }
       
       // Buscar galeria separadamente
       if (businessData.id) {
@@ -364,6 +398,21 @@ export default function BusinessProfilePage() {
     } catch (error) {
       console.error('Erro ao excluir post:', error)
       showNotification('Erro ao excluir post', 'error')
+    }
+  }
+
+  const handleDeleteRelease = async (releaseId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este release?')) return
+    try {
+      const response = await fetch(`/api/business/releases/${releaseId}`, { method: 'DELETE' })
+      if (response.ok) {
+        showNotification('Release excluída com sucesso', 'success')
+        setReleases(prev => prev.filter(r => r.id !== releaseId))
+      } else {
+        showNotification('Erro ao excluir release', 'error')
+      }
+    } catch {
+      showNotification('Erro ao excluir release', 'error')
     }
   }
 
@@ -1106,22 +1155,52 @@ export default function BusinessProfilePage() {
 
           {/* Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Posts Column */}
+            {/* Posts e Releases Column */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Criar Post - apenas para empresas aprovadas */}
-              {isOwner && business?.isApproved && (
-                <CreatePost onPostCreated={() => {
-                  // Recarregar dados da empresa após criar novo post
-                  fetchBusinessData()
-                }} />
-              )}
-              
-              <div className="space-y-0">
-                {posts.length === 0 ? (
-                  <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
-                    <p className="text-gray-500 text-center py-8">Nenhum post ainda.</p>
-                  </div>
-                ) : (
+              {/* Abas: Publicações | Releases */}
+              <div className="flex gap-2 border-b border-gray-200">
+                <button
+                  onClick={() => setContentTab('posts')}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                    contentTab === 'posts'
+                      ? 'border-purple-600 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Publicações
+                  {posts.length > 0 && (
+                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{posts.length}</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setContentTab('releases')}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                    contentTab === 'releases'
+                      ? 'border-purple-600 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Newspaper className="w-4 h-4" />
+                  Releases
+                  {releases.length > 0 && (
+                    <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{releases.length}</span>
+                  )}
+                </button>
+              </div>
+
+              {contentTab === 'posts' && (
+                <>
+                  {/* Criar Post - apenas para empresas aprovadas */}
+                  {isOwner && business?.isApproved && (
+                    <CreatePost onPostCreated={() => fetchBusinessData()} />
+                  )}
+                  <div className="space-y-0">
+                    {posts.length === 0 ? (
+                      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+                        <p className="text-gray-500 text-center py-8">Nenhum post ainda.</p>
+                      </div>
+                    ) : (
                   posts.map((post) => {
                     // Adaptar post para o formato do PostCard
                     const adaptedPost = {
@@ -1182,7 +1261,45 @@ export default function BusinessProfilePage() {
                     )
                   })
                 )}
-              </div>
+                  </div>
+                </>
+              )}
+
+              {contentTab === 'releases' && (
+                <>
+                  {isOwner && business?.isApproved && (
+                    <div className="mb-4">
+                      <button
+                        onClick={() => { setEditingRelease(null); setShowReleaseForm(true) }}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 font-medium text-sm shadow-sm"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Nova Release
+                      </button>
+                    </div>
+                  )}
+                  {releases.length === 0 ? (
+                    <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-6">
+                      <Newspaper className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 text-center py-8">Nenhum release publicado.</p>
+                      <p className="text-gray-400 text-sm text-center">Releases são artigos e notícias em formato editorial.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {releases.map((release) => (
+                        <ReleaseCard
+                          key={release.id}
+                          release={release}
+                          businessSlug={business?.slug || ''}
+                          isOwner={isOwner}
+                          onEdit={isOwner ? (r) => { setEditingRelease(r); setShowReleaseForm(true) } : undefined}
+                          onDelete={isOwner ? handleDeleteRelease : undefined}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -1478,6 +1595,22 @@ export default function BusinessProfilePage() {
             fetchBusinessData()
             setShowPostForm(false)
             setEditingPost(null)
+          }}
+        />
+      )}
+
+      {showReleaseForm && (
+        <ReleaseForm
+          businessId={business?.id || ''}
+          editRelease={editingRelease}
+          onClose={() => {
+            setShowReleaseForm(false)
+            setEditingRelease(null)
+          }}
+          onReleaseCreated={() => {
+            fetchBusinessData()
+            setShowReleaseForm(false)
+            setEditingRelease(null)
           }}
         />
       )}

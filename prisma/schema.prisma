@@ -45,12 +45,13 @@ model business {
   followersCount  Int               @default(0)
   followingCount  Int               @default(0)
   user            user              @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Business_userId_fkey")
-  businesscoupon  businesscoupon[]
-  businessgallery businessgallery[]
-  businesslike    businesslike[]
-  businessproduct businessproduct[]
-  businessreview  businessreview[]
-  post            post[]
+  businesscoupon   businesscoupon[]
+  businessgallery  businessgallery[]
+  businesslike     businesslike[]
+  businessproduct  businessproduct[]
+  businessrelease  businessrelease[]
+  businessreview   businessreview[]
+  post             post[]
   comment         comment[]
   postlike        postlike[]
   follow_follow_followerBusinessId follow[] @relation("follow_followerBusinessId")
@@ -155,6 +156,25 @@ model businessgallery {
   business   business @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessGallery_businessId_fkey")
 
   @@index([businessId], map: "BusinessGallery_businessId_idx")
+}
+
+model businessrelease {
+  id               String    @id
+  businessId       String
+  title            String
+  slug             String
+  lead             String?   // Resumo/chamada (1-2 frases)
+  body             String    @db.Text
+  featuredImageUrl String?
+  isPublished      Boolean   @default(true)
+  publishedAt      DateTime? @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  business         business  @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessRelease_businessId_fkey")
+
+  @@unique([businessId, slug], map: "BusinessRelease_businessId_slug_key")
+  @@index([businessId], map: "BusinessRelease_businessId_idx")
+  @@index([publishedAt], map: "BusinessRelease_publishedAt_idx")
 }
 
 model businessreview {

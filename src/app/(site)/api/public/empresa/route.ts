@@ -43,6 +43,10 @@ export async function GET(req: Request) {
       userId: true,
       post: postSelect(user?.id),
       businesscoupon: true,
+      businessrelease: {
+        where: { isPublished: true },
+        orderBy: { publishedAt: 'desc' }
+      },
       businessreview: {
         take: 20,
         orderBy: { createdAt: 'desc' as const },
@@ -70,11 +74,20 @@ export async function GET(req: Request) {
       const isGuideIdError = e?.code === 'P2010' ||
         /guideId|column.*does not exist/i.test(String(e?.message ?? '')) ||
         /guideId/i.test(String(e?.meta?.message ?? ''))
-      if (isGuideIdError) {
+      const isReleaseError = /businessrelease/i.test(String(e?.message ?? ''))
+      if (isGuideIdError || isReleaseError) {
+        const { businessrelease: _, ...rest } = baseSelect as any
         business = await prisma.business.findUnique({
           where: { slug },
-          select: baseSelect
+          select: {
+            ...rest,
+            post: {
+              where: { guideId: null },
+              ...postSelect(user?.id)
+            }
+          }
         })
+        if (business) (business as any).businessrelease = []
       } else {
         throw e
       }
@@ -86,6 +99,10 @@ export async function GET(req: Request) {
 
     if (Array.isArray(business.post)) {
       business.post = business.post.filter((p: any) => p.guideId == null)
+    }
+
+    if (!Array.isArray(business.businessrelease)) {
+      business.businessrelease = []
     }
 
     // Tentar buscar presentationVideo usando SQL raw se a coluna existir
@@ -136,6 +153,7 @@ export async function GET(req: Request) {
       businessWithRating.post = []
       businessWithRating.businessproduct = []
       businessWithRating.businesscoupon = []
+      businessWithRating.businessrelease = []
     }
 
     return NextResponse.json(businessWithRating)
