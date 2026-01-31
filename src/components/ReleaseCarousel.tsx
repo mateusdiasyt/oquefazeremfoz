@@ -22,7 +22,13 @@ interface Release {
   }
 }
 
+function stripHtml(html: string): string {
+  return (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 function ReleaseCarouselCard({ release }: { release: Release }) {
+  const excerpt = release.lead || stripHtml(release.body).slice(0, 120) + (release.body.length > 120 ? '...' : '')
+
   return (
     <Link
       href={`/empresa/${release.business.slug}/release/${release.slug}`}
@@ -53,6 +59,21 @@ function ReleaseCarouselCard({ release }: { release: Release }) {
         <div className="absolute bottom-0 left-0 right-0 p-2 text-center">
           <span className="text-xs font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] line-clamp-2 block">
             {release.business.name}
+          </span>
+        </div>
+
+        {/* Popup no hover - título e resumo */}
+        <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-center p-3 overflow-hidden">
+          <h4 className="text-sm font-bold text-white line-clamp-3 mb-1.5 leading-tight">
+            {release.title}
+          </h4>
+          {excerpt && (
+            <p className="text-xs text-gray-200 line-clamp-3 leading-relaxed">
+              {excerpt}
+            </p>
+          )}
+          <span className="text-xs text-purple-300 font-medium mt-2 inline-block">
+            Clique para ler →
           </span>
         </div>
       </div>
