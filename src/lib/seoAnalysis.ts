@@ -275,34 +275,35 @@ function analyzeContentLength(wordCount: number): ContentLengthAnalysis {
 
 function analyzeStructure(html: string, hasPageTitle: boolean): StructureAnalysis {
   const h = getHeadingStructure(html || '')
+  const wordCount = getWordCount(stripHtml(html || ''))
   const suggestions: string[] = []
 
   let status: StructureAnalysis['status'] = 'ok'
 
-  if (hasPageTitle && h.h1 > 0) {
+  const hasStructure = h.h1 > 0 || h.h2 > 0 || h.h3 > 0
+
+  if (wordCount < 30) {
+    status = 'bad'
+    suggestions.push('Escreva o conteúdo e use H2, H3 para organizar as seções.')
+  } else if (!hasStructure) {
+    status = 'warn'
+    suggestions.push('Adicione H2 e H3 para organizar o texto. Facilita leitura e SEO.')
+  } else if (hasPageTitle && h.h1 > 0) {
     suggestions.push('O título da página já é o H1. Use H2 e H3 no texto para seções.')
   }
 
-  if (h.h2 === 0 && h.h3 === 0 && getWordCount(stripHtml(html)) > 100) {
+  if (h.h2 === 0 && h.h3 === 0 && wordCount > 100) {
     status = 'warn'
     suggestions.push('Divida o texto em seções com H2. Ex: "Benefícios", "Como funciona".')
   }
 
-  if (h.h2 > 0 && h.h3 === 0 && getWordCount(stripHtml(html)) > 300) {
+  if (h.h2 > 0 && h.h3 === 0 && wordCount > 300) {
     suggestions.push('Use H3 para aprofundar tópicos dentro das seções.')
   }
 
   if (h.h1 > 1) {
     status = 'warn'
     suggestions.push('Use apenas 1 H1 por página. O restante deve ser H2 ou H3.')
-  }
-
-  const hasStructure = h.h1 > 0 || h.h2 > 0 || h.h3 > 0
-  if (!hasStructure && getWordCount(stripHtml(html)) > 50) {
-    status = 'warn'
-    if (suggestions.length === 0) {
-      suggestions.push('Adicione H2 e H3 para organizar o texto. Facilita leitura e SEO.')
-    }
   }
 
   return {
@@ -387,6 +388,19 @@ function analyzeLegibility(html: string): LegibilityAnalysis {
   let status: LegibilityAnalysis['status'] = 'ok'
   let feedback = ''
 
+  if (words.length < 30) {
+    status = 'bad'
+    feedback = 'Adicione conteúdo para avaliar a legibilidade.'
+    return {
+      status,
+      statusLabel: '❌ Difícil',
+      avgSentenceLength: 0,
+      hasLists,
+      hasBold,
+      feedback
+    }
+  }
+
   if (avgSentenceLength > 25 && sentences.length > 3) {
     status = 'warn'
     feedback = 'Algumas frases podem estar longas. Ideal: 15-20 palavras por frase.'
@@ -420,7 +434,16 @@ function analyzeLegibility(html: string): LegibilityAnalysis {
 
 function analyzeEEAT(html: string): EEATAnalysis {
   const text = stripHtml(html || '').toLowerCase()
-  const title = ''
+  const wordCount = text.split(/\s+/).filter(Boolean).length
+
+  if (wordCount < 30) {
+    return {
+      status: 'bad',
+      statusLabel: '❌ Ruim',
+      hasExaggerated: false,
+      feedback: 'Adicione conteúdo para avaliar credibilidade.'
+    }
+  }
 
   const hasExaggerated = EXAGGERATED_PHRASES.some((p) => text.includes(p))
 
