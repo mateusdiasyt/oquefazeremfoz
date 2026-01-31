@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import DOMPurify from 'dompurify'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar } from 'lucide-react'
@@ -66,6 +67,17 @@ export default function ReleaseDetailPage() {
   if (!release) return null
 
   const displayDate = release.publishedAt || release.createdAt
+  const sanitizedBody = useMemo(() => {
+    const html = release.body || ''
+    const safeTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote']
+    if (html.trim().startsWith('<')) {
+      if (typeof window !== 'undefined') {
+        return DOMPurify.sanitize(html, { ALLOWED_TAGS: safeTags, ALLOWED_ATTR: ['href', 'target', 'rel'] })
+      }
+      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/on\w+="[^"]*"/gi, '')
+    }
+    return html.replace(/\n/g, '<br />')
+  }, [release.body])
 
   return (
     <div className="min-h-screen bg-white">
@@ -108,11 +120,10 @@ export default function ReleaseDetailPage() {
         )}
 
         <div
-          className="prose prose-lg max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap"
+          className="prose prose-lg max-w-none text-gray-700 leading-relaxed [&_a]:text-purple-600 [&_a]:underline [&_a:hover]:text-purple-700"
           style={{ letterSpacing: '-0.01em' }}
-        >
-          {release.body}
-        </div>
+          dangerouslySetInnerHTML={{ __html: sanitizedBody }}
+        />
       </article>
     </div>
   )

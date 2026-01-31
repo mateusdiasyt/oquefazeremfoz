@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import RichTextEditor from './RichTextEditor'
+import SEOPanel from './SEOPanel'
 
 interface Release {
   id: string
@@ -37,7 +39,8 @@ export default function ReleaseForm({ businessId, editRelease, onClose, onReleas
     if (editRelease) {
       setTitle(editRelease.title)
       setLead(editRelease.lead || '')
-      setBody(editRelease.body)
+      const b = editRelease.body
+      setBody(b && b.trim().startsWith('<') ? b : (b ? `<p>${b.replace(/\n/g, '</p><p>')}</p>` : ''))
       setIsPublished(editRelease.isPublished)
       setFeaturedImagePreview(editRelease.featuredImageUrl || '')
     } else {
@@ -75,7 +78,8 @@ export default function ReleaseForm({ businessId, editRelease, onClose, onReleas
       setError('Título é obrigatório')
       return
     }
-    if (!body.trim()) {
+    const bodyText = body.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    if (!bodyText) {
       setError('Corpo do texto é obrigatório')
       return
     }
@@ -131,7 +135,7 @@ export default function ReleaseForm({ businessId, editRelease, onClose, onReleas
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
           <h2 className="text-2xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>
             {editRelease ? 'Editar Release' : 'Nova Release'}
@@ -168,14 +172,16 @@ export default function ReleaseForm({ businessId, editRelease, onClose, onReleas
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Corpo do texto *</label>
-            <textarea
+            <RichTextEditor
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={setBody}
               placeholder="Escreva o conteúdo completo da notícia ou artigo..."
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-              rows={8}
+              minHeight="220px"
               disabled={loading}
             />
+            <div className="mt-3">
+              <SEOPanel title={title} lead={lead} bodyHtml={body} />
+            </div>
           </div>
 
           <div>
