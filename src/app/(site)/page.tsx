@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
+import ReleaseCarousel from '@/components/ReleaseCarousel'
 import FloatingChat from '@/components/FloatingChat'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
 import { capitalizeWords } from '@/utils/formatters'
@@ -552,6 +553,9 @@ export default function HomePage() {
             {user && user.roles.includes('COMPANY') && (
               <CreatePost onPostCreated={handlePostCreated} />
             )}
+
+            {/* Carrossel de releases recentes (1 por empresa) */}
+            <ReleaseCarousel />
 
             {/* Lista de Posts */}
             {loading ? (
