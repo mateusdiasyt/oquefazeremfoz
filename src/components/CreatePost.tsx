@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../contexts/AuthContext'
 import UrlPreview from './UrlPreview'
+import RichTextEditor from './RichTextEditor'
+import SEOPanel from './SEOPanel'
 import { extractUrlsFromText } from '../utils/urlDetector'
 
 interface CreatePostProps {
@@ -199,8 +201,9 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
         setError('Título da release é obrigatório')
         return
       }
-      if (!releaseBody.trim()) {
-        setError('Conteúdo da release é obrigatório')
+      const bodyText = releaseBody.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      if (!bodyText) {
+        setError('Corpo do texto é obrigatório')
         return
       }
       if (!selectedBusinessId) {
@@ -396,47 +399,50 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
             {publishType === 'release' ? (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Título da notícia *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Título *</label>
                   <input
                     type="text"
                     value={releaseTitle}
                     onChange={(e) => setReleaseTitle(e.target.value)}
-                    placeholder="Ex: Eco Park oferece frutas congeladas aos animais"
+                    placeholder="Ex: Reabertura do restaurante com novo cardápio"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm"
                     disabled={loading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Resumo / chamada</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Chamada / Resumo</label>
                   <input
                     type="text"
                     value={releaseLead}
                     onChange={(e) => setReleaseLead(e.target.value)}
-                    placeholder="Uma frase que resume a notícia"
+                    placeholder="1-2 frases que aparecem no card (opcional)"
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm"
                     disabled={loading}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Conteúdo *</label>
-                  <textarea
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Corpo do texto *</label>
+                  <RichTextEditor
                     value={releaseBody}
-                    onChange={(e) => setReleaseBody(e.target.value)}
-                    placeholder="Escreva o texto da release..."
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 text-sm"
-                    rows={5}
+                    onChange={setReleaseBody}
+                    placeholder="Escreva o conteúdo completo da notícia ou artigo..."
+                    minHeight="220px"
                     disabled={loading}
                   />
+                  <div className="mt-3">
+                    <SEOPanel title={releaseTitle} lead={releaseLead} bodyHtml={releaseBody} />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Imagem destacada</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Imagem de destaque</label>
                   <input
                     type="file"
                     accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     onChange={handleReleaseImageChange}
-                    className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700"
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-purple-200 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-50 file:text-purple-700 file:font-semibold hover:border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     disabled={loading || uploading}
                   />
+                  <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF ou WebP. Máximo 5MB.</p>
                   {releaseImagePreview && (
                     <div className="mt-3 relative rounded-2xl overflow-hidden border border-gray-200" style={{ maxHeight: 200 }}>
                       <img src={releaseImagePreview} alt="Preview" className="w-full h-full object-cover" style={{ maxHeight: 200 }} />
