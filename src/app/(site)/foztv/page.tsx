@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Play, Tv, X } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { Play, Tv, X, Heart, MessageCircle, Share2 } from 'lucide-react'
+import { useAuth } from '../../../contexts/AuthContext'
 
 interface FozTVVideo {
   id: string
@@ -12,6 +13,18 @@ interface FozTVVideo {
   thumbnailUrl: string | null
   publishedAt: string | null
   order: number
+  likeCount?: number
+}
+
+interface VideoDetails extends FozTVVideo {
+  userLiked?: boolean
+}
+
+interface FozTVComment {
+  id: string
+  body: string
+  createdAt: string
+  user: { id: string; name: string; profileImage: string | null } | null
 }
 
 // Converte URL do YouTube (watch ou youtu.be) em URL de embed
@@ -38,10 +51,26 @@ function isYouTubeUrl(url: string): boolean {
   return /youtube\.com|youtu\.be/i.test(url.trim())
 }
 
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - d.getTime()
+  if (diff < 60000) return 'Agora'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} min atrás`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} h atrás`
+  return d.toLocaleDateString('pt-BR')
+}
+
 export default function FozTVPage() {
+  const { user } = useAuth()
   const [videos, setVideos] = useState<FozTVVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [playing, setPlaying] = useState<FozTVVideo | null>(null)
+  const [details, setDetails] = useState<VideoDetails | null>(null)
+  const [comments, setComments] = useState<FozTVComment[]>([])
+  const [commentText, setCommentText] = useState('')
+  const [sendingComment, setSendingComment] = useState(false)
+  const [togglingLike, setTogglingLike] = useState(false)
 
   useEffect(() => {
     fetch('/api/public/foztv', { cache: 'no-store' })
@@ -55,15 +84,95 @@ export default function FozTVPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Fechar popup ao pressionar Escape
+  const fetchDetailsAndComments = useCallback((videoId: string) => {
+    Promise.all([
+      fetch(`/api/public/foztv/${videoId}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/public/foztv/${videoId}/comments`, { cache: 'no-store' }).then((r) => r.json())
+    ]).then(([detailRes, commentsRes]) => {
+      if (detailRes.id) setDetails(detailRes)
+      if (commentsRes.comments) setComments(commentsRes.comments)
+    }).catch(() => {
+      setDetails(null)
+      setComments([])
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!playing) {
+      setDetails(null)
+      setComments([])
+      setCommentText('')
+      return
+    }
+    setDetails({ ...playing, likeCount: playing.likeCount ?? 0, userLiked: false })
+    fetchDetailsAndComments(playing.id)
+  }, [playing?.id, fetchDetailsAndComments, playing])
+
+  const handleClose = useCallback(() => setPlaying(null), [])
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) handleClose()
+  }
+
   useEffect(() => {
     if (!playing) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPlaying(null)
+      if (e.key === 'Escape') handleClose()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [playing])
+  }, [playing, handleClose])
+
+  const handleLike = async () => {
+    if (!playing || !user) return
+    setTogglingLike(true)
+    try {
+      const res = await fetch(`/api/public/foztv/${playing.id}/like`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok && details) {
+        setDetails((d) => d ? { ...d, userLiked: data.liked, likeCount: data.likeCount } : null)
+      }
+    } finally {
+      setTogglingLike(false)
+    }
+  }
+
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}/foztv` : ''
+    if (navigator.share && playing) {
+      try {
+        await navigator.share({
+          title: playing.title,
+          text: playing.description || playing.title,
+          url
+        })
+      } catch {
+        await navigator.clipboard.writeText(url)
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!playing || !user || !commentText.trim()) return
+    setSendingComment(true)
+    try {
+      const res = await fetch(`/api/public/foztv/${playing.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: commentText.trim() })
+      })
+      const data = await res.json()
+      if (res.ok && data.comment) {
+        setComments((c) => [...c, data.comment])
+        setCommentText('')
+      }
+    } finally {
+      setSendingComment(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -85,7 +194,6 @@ export default function FozTVPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Cabeçalho da seção */}
       <section className="pt-6 pb-4 px-4 md:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">FozTV</h1>
@@ -93,7 +201,6 @@ export default function FozTVPage() {
         </div>
       </section>
 
-      {/* Grade de vídeos */}
       <section className="pb-12 px-4 md:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
@@ -128,6 +235,9 @@ export default function FozTVPage() {
                     <p className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-purple-600 transition-colors">
                       {video.title}
                     </p>
+                    {typeof video.likeCount === 'number' && (
+                      <p className="text-xs text-gray-500 mt-1">{video.likeCount} curtida{video.likeCount !== 1 ? 's' : ''}</p>
+                    )}
                   </div>
                 </button>
               )
@@ -136,48 +246,133 @@ export default function FozTVPage() {
         </div>
       </section>
 
-      {/* Popup do vídeo */}
       {playing && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label="Assistir vídeo"
+          onClick={handleOverlayClick}
         >
-          <button
-            type="button"
-            onClick={() => setPlaying(null)}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors shadow-lg"
-            aria-label="Fechar"
+          <div
+            className="relative w-full max-w-4xl my-auto"
+            onClick={(e) => e.stopPropagation()}
           >
-            <X className="w-5 h-5" />
-          </button>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="absolute -top-2 -right-2 z-20 w-10 h-10 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center text-gray-700 shadow-lg"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
-            {isYouTubeUrl(playing.videoUrl) ? (
-              <iframe
-                src={getEmbedUrl(playing.videoUrl)}
-                title={playing.title}
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <video
-                src={playing.videoUrl}
-                controls
-                autoPlay
-                className="absolute inset-0 w-full h-full object-contain bg-black"
-                playsInline
-              />
-            )}
-          </div>
+            <div className="relative w-full aspect-video bg-black rounded-t-xl overflow-hidden shadow-2xl">
+              {isYouTubeUrl(playing.videoUrl) ? (
+                <iframe
+                  src={getEmbedUrl(playing.videoUrl)}
+                  title={playing.title}
+                  className="absolute inset-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  src={playing.videoUrl}
+                  controls
+                  autoPlay
+                  className="absolute inset-0 w-full h-full object-contain bg-black"
+                  playsInline
+                />
+              )}
+            </div>
 
-          <div className="absolute bottom-4 left-4 right-20 max-w-4xl bg-white/95 backdrop-blur rounded-lg px-4 py-3 shadow-lg">
-            <h2 className="text-lg font-bold text-gray-900">{playing.title}</h2>
-            {playing.description && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{playing.description}</p>
-            )}
+            <div className="bg-white rounded-b-xl shadow-2xl p-4 md:p-5 space-y-4">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">{playing.title}</h2>
+                {playing.description && (
+                  <p className="text-sm text-gray-600 mt-1">{playing.description}</p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={handleLike}
+                    disabled={togglingLike}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      details?.userLiked
+                        ? 'text-purple-600 bg-purple-50'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${details?.userLiked ? 'fill-current' : ''}`}
+                    />
+                    <span>{details?.likeCount ?? 0}</span>
+                  </button>
+                ) : (
+                  <span className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
+                    <Heart className="w-5 h-5" />
+                    {details?.likeCount ?? 0} curtida{(details?.likeCount ?? 0) !== 1 ? 's' : ''}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <Share2 className="w-5 h-5" />
+                  Compartilhar
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  Comentários ({comments.length})
+                </h3>
+                {user ? (
+                  <form onSubmit={handleSubmitComment} className="mb-4">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        placeholder="Escreva um comentário..."
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        maxLength={500}
+                      />
+                      <button
+                        type="submit"
+                        disabled={!commentText.trim() || sendingComment}
+                        className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                      >
+                        Enviar
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <p className="text-sm text-gray-500 mb-3">Faça login para comentar.</p>
+                )}
+                <ul className="space-y-3 max-h-48 overflow-y-auto">
+                  {comments.length === 0 ? (
+                    <li className="text-sm text-gray-500">Nenhum comentário ainda.</li>
+                  ) : (
+                    comments.map((c) => (
+                      <li key={c.id} className="text-sm">
+                        <span className="font-medium text-gray-900">
+                          {c.user?.name || 'Usuário'}
+                        </span>
+                        <span className="text-gray-600"> {c.body}</span>
+                        <span className="text-gray-400 text-xs ml-1">{formatDate(c.createdAt)}</span>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       )}

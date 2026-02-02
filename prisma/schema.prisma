@@ -508,6 +508,8 @@ model user {
   notification                     notification[]
   guide                            guide[]
   guidereview                      guidereview[]
+  foztvvideolike                   foztvvideolike[]
+  foztvvideocomment                foztvvideocomment[]
 }
 
 model userrole {
@@ -596,6 +598,35 @@ model foztvvideo {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime
 
+  foztvvideolike    foztvvideolike[]
+  foztvvideocomment foztvvideocomment[]
+
   @@index([isPublished], map: "FozTVVideo_isPublished_idx")
   @@index([order], map: "FozTVVideo_order_idx")
+}
+
+model foztvvideolike {
+  id        String     @id
+  videoId   String
+  userId    String
+  createdAt DateTime   @default(now())
+  video     foztvvideo @relation(fields: [videoId], references: [id], onDelete: Cascade, map: "FozTVVideoLike_videoId_fkey")
+  user      user       @relation(fields: [userId], references: [id], onDelete: Cascade, map: "FozTVVideoLike_userId_fkey")
+
+  @@unique([videoId, userId], map: "FozTVVideoLike_videoId_userId_key")
+  @@index([videoId], map: "FozTVVideoLike_videoId_idx")
+  @@index([userId], map: "FozTVVideoLike_userId_idx")
+}
+
+model foztvvideocomment {
+  id        String     @id
+  videoId   String
+  userId    String
+  body      String     @db.Text
+  createdAt DateTime   @default(now())
+  video     foztvvideo @relation(fields: [videoId], references: [id], onDelete: Cascade, map: "FozTVVideoComment_videoId_fkey")
+  user      user       @relation(fields: [userId], references: [id], onDelete: Cascade, map: "FozTVVideoComment_userId_fkey")
+
+  @@index([videoId], map: "FozTVVideoComment_videoId_idx")
+  @@index([userId], map: "FozTVVideoComment_userId_idx")
 }

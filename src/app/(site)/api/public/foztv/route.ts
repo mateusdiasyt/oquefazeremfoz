@@ -21,11 +21,24 @@ export async function GET() {
         videoUrl: true,
         thumbnailUrl: true,
         publishedAt: true,
-        order: true
+        order: true,
+        _count: { select: { foztvvideolike: true } }
       }
     })
 
-    const res = NextResponse.json(videos)
+    const list = videos.map((v) => ({
+      id: v.id,
+      title: v.title,
+      slug: v.slug,
+      description: v.description,
+      videoUrl: v.videoUrl,
+      thumbnailUrl: v.thumbnailUrl,
+      publishedAt: v.publishedAt,
+      order: v.order,
+      likeCount: v._count.foztvvideolike
+    }))
+
+    const res = NextResponse.json(list)
     res.headers.set('Cache-Control', 'no-store, max-age=0')
     return res
   } catch (error) {
