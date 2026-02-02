@@ -67,29 +67,29 @@ export default function FozTVPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-red-600 border-t-transparent" />
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-purple-500 border-t-transparent" />
       </main>
     )
   }
 
   if (videos.length === 0) {
     return (
-      <main className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center text-white px-4">
-        <Tv className="w-16 h-16 text-gray-500 mb-4" />
-        <h1 className="text-2xl font-bold mb-2">FozTV</h1>
-        <p className="text-gray-400 text-center">Em breve: vídeos sobre Foz do Iguaçu.</p>
+      <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-700 px-4">
+        <Tv className="w-16 h-16 text-gray-300 mb-4" />
+        <h1 className="text-2xl font-bold mb-2 text-gray-900">FozTV</h1>
+        <p className="text-gray-500 text-center">Em breve: vídeos sobre Foz do Iguaçu.</p>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[#0f0f0f] text-white">
+    <main className="min-h-screen bg-gray-50 text-gray-900">
       {/* Cabeçalho da seção */}
       <section className="pt-6 pb-4 px-4 md:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold text-white">FozTV</h1>
-          <p className="text-gray-400 text-sm mt-1">Vídeos sobre Foz do Iguaçu</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">FozTV</h1>
+          <p className="text-gray-600 text-sm mt-1">Vídeos sobre Foz do Iguaçu</p>
         </div>
       </section>
 
@@ -104,9 +104,9 @@ export default function FozTVPage() {
                   key={video.id}
                   type="button"
                   onClick={() => setPlaying(video)}
-                  className="group text-left rounded-lg overflow-hidden bg-gray-900/80 hover:ring-2 hover:ring-red-500 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                  className="group text-left rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-200 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
                 >
-                  <div className="relative aspect-video bg-gray-800">
+                  <div className="relative aspect-video bg-gray-100">
                     {thumb ? (
                       <img
                         src={thumb}
@@ -114,18 +114,18 @@ export default function FozTVPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                        <Play className="w-12 h-12 text-gray-600" />
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <Play className="w-12 h-12 text-gray-300" />
                       </div>
                     )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
-                      <span className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
+                      <span className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                         <Play className="w-7 h-7 text-white ml-1" fill="white" />
                       </span>
                     </div>
                   </div>
                   <div className="p-3">
-                    <p className="font-medium text-white text-sm line-clamp-2 group-hover:text-red-400 transition-colors">
+                    <p className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-purple-600 transition-colors">
                       {video.title}
                     </p>
                   </div>
@@ -139,7 +139,7 @@ export default function FozTVPage() {
       {/* Popup do vídeo */}
       {playing && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
           role="dialog"
           aria-modal="true"
           aria-label="Assistir vídeo"
@@ -147,13 +147,13 @@ export default function FozTVPage() {
           <button
             type="button"
             onClick={() => setPlaying(null)}
-            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors shadow-lg"
             aria-label="Fechar"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
             {isYouTubeUrl(playing.videoUrl) ? (
               <iframe
                 src={getEmbedUrl(playing.videoUrl)}
@@ -173,10 +173,10 @@ export default function FozTVPage() {
             )}
           </div>
 
-          <div className="absolute bottom-4 left-4 right-16 max-w-4xl">
-            <h2 className="text-lg font-bold text-white drop-shadow-md">{playing.title}</h2>
+          <div className="absolute bottom-4 left-4 right-20 max-w-4xl bg-white/95 backdrop-blur rounded-lg px-4 py-3 shadow-lg">
+            <h2 className="text-lg font-bold text-gray-900">{playing.title}</h2>
             {playing.description && (
-              <p className="text-sm text-gray-300 mt-1 line-clamp-2">{playing.description}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{playing.description}</p>
             )}
           </div>
         </div>
