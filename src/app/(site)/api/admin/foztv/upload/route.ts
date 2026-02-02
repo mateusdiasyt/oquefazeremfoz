@@ -38,6 +38,9 @@ export async function POST(request: Request) {
           addRandomSuffix: true,
         }
       },
+      onUploadCompleted: async () => {
+        // Chamado pela Vercel quando o upload do cliente termina (opcional para FozTV)
+      },
     })
 
     return NextResponse.json(jsonResponse)
