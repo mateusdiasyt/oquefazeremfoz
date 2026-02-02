@@ -17,13 +17,15 @@ import {
   Settings,
   Menu,
   X,
-  ExternalLink
+  ExternalLink,
+  Tv
 } from 'lucide-react'
 
 const menuItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/empresas', label: 'Gerenciar Empresas', icon: Building2 },
   { href: '/admin/guias', label: 'Gerenciar Guias', icon: MapPin },
+  { href: '/admin/foztv', label: 'FozTV', icon: Tv },
   { href: '/admin/conteudo', label: 'Gerenciar Conteúdo', icon: FileText },
   { href: '/admin/planos', label: 'Gerenciar Planos', icon: CreditCard },
   { href: '/admin/vendas', label: 'Relatórios de Vendas', icon: BarChart3 },

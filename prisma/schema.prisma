@@ -581,3 +581,21 @@ model guidepost {
 
   @@index([guideId], map: "GuidePost_guideId_idx")
 }
+
+// Vídeos do canal FozTV (publicados pelo admin)
+model foztvvideo {
+  id           String    @id
+  title        String
+  slug         String    @unique(map: "FozTVVideo_slug_key")
+  description  String?   @db.Text
+  videoUrl     String    // URL do vídeo (YouTube/Vimeo) para embed
+  thumbnailUrl String?
+  isPublished  Boolean   @default(false)
+  order        Int       @default(0)
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+
+  @@index([isPublished], map: "FozTVVideo_isPublished_idx")
+  @@index([order], map: "FozTVVideo_order_idx")
+}

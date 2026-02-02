@@ -65,6 +65,8 @@ export async function middleware(request: NextRequest) {
     '/cupons', // Cupons públicos
     '/mapa-turistico', // Mapa público
     '/selo-verificado', // Selo verificados públicos
+    '/cameras-ao-vivo', // Câmeras ao vivo - público e indexável
+    '/foztv', // FozTV - vídeos sobre Foz do Iguaçu
     '/post' // Páginas de posts individuais (para compartilhamento)
   ]
   const isPublicRoute = publicRoutes.some(route => 

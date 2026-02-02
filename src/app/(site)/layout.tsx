@@ -27,6 +27,7 @@ export default function SiteLayout({
     '/mapa-turistico',
     '/selo-verificado',
     '/cameras-ao-vivo',
+    '/foztv', // FozTV - vídeos sobre Foz do Iguaçu
     '/post' // Páginas de posts individuais (para compartilhamento)
   ]
   const isPublicRoute = publicRoutes.some(route => 

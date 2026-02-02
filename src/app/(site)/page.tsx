@@ -605,6 +605,14 @@ export default function HomePage() {
                 <Video className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
                 <span className="font-medium">Câmeras ao vivo</span>
               </Link>
+              <Link
+                href="/foztv"
+                className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <Video className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <span className="font-medium">FozTV</span>
+              </Link>
             </nav>
           </aside>
 
