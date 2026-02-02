@@ -56,10 +56,10 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
   const excerpt = release.lead || stripHtml(release.body).slice(0, 180) + (release.body.length > 180 ? '...' : '')
 
   return (
-    <article className="bg-white border border-gray-200 rounded-3xl shadow-lg overflow-hidden hover:border-purple-200 transition-colors">
+    <article className="bg-white border-b-2 border-gray-200 md:border md:border-gray-100 md:rounded-3xl md:shadow-sm hover:md:shadow-md transition-all duration-200 overflow-hidden p-4 md:p-6 mb-0 md:mb-6">
       <Link href={href} className="block">
         {/* Cabeçalho: logo, nome, verificado, data */}
-        <div className="flex items-start gap-3 p-4 pb-2">
+        <div className="flex items-start gap-3 pb-2">
           <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-purple-100">
             {release.business.profileImage ? (
               <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
@@ -88,12 +88,12 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
         </div>
 
         {/* URL em destaque */}
-        <div className="px-4 pb-3">
+        <div className="pb-3">
           <span className="text-sm text-blue-600 hover:underline break-all font-medium">{displayUrl}</span>
         </div>
 
         {/* Card de conteúdo: imagem, título, lead, fonte */}
-        <div className="border-t border-gray-100 bg-gray-50/50 mx-4 mb-4 rounded-2xl overflow-hidden border border-gray-200">
+        <div className="border-t border-gray-100 bg-white rounded-2xl overflow-hidden border border-gray-100">
           {release.featuredImageUrl && (
             <div className="relative w-full aspect-[16/10] bg-gray-200">
               <img
