@@ -26,7 +26,12 @@ export async function GET() {
     return NextResponse.json({ videos })
   } catch (error) {
     console.error('Erro ao listar vídeos FozTV:', error)
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Erro interno'
+    const isSchemaError = /relation|table|does not exist|foztvvideo/i.test(String(error))
+    return NextResponse.json(
+      { message: isSchemaError ? 'Tabela FozTV não existe no banco. Rode no projeto: npx prisma db push' : msg },
+      { status: isSchemaError ? 503 : 500 }
+    )
   }
 }
 
@@ -79,6 +84,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ video }, { status: 201 })
   } catch (error) {
     console.error('Erro ao criar vídeo FozTV:', error)
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Erro interno'
+    const isSchemaError = /relation|table|does not exist|foztvvideo/i.test(String(error))
+    return NextResponse.json(
+      { message: isSchemaError ? 'Tabela FozTV não existe no banco. Rode: npx prisma db push' : msg },
+      { status: isSchemaError ? 503 : 500 }
+    )
   }
 }
