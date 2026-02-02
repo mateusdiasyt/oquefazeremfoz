@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
-import ReleasesRecentSection from '@/components/ReleasesRecentSection'
+import ReleaseCarousel from '@/components/ReleaseCarousel'
+import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
 import FloatingChat from '@/components/FloatingChat'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
@@ -214,6 +215,7 @@ export default function HomePage() {
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [businessToUnfollow, setBusinessToUnfollow] = useState<Business | null>(null)
   const [releasesRefreshKey, setReleasesRefreshKey] = useState(0)
+  const [releases, setReleases] = useState<ReleaseNewsCardRelease[]>([])
   
   // Estados removidos - busca agora está no header
   
@@ -231,6 +233,10 @@ export default function HomePage() {
     fetchCoupons()
     fetchWeather()
   }, [])
+
+  useEffect(() => {
+    fetchReleases()
+  }, [releasesRefreshKey])
 
   // Hook para scroll infinito
   useEffect(() => {
@@ -317,6 +323,19 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Erro ao buscar dados do clima:', error)
+    }
+  }
+
+  const fetchReleases = async () => {
+    try {
+      const response = await fetch('/api/public/releases/recent')
+      if (response.ok) {
+        const data = await response.json()
+        setReleases(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar releases:', error)
+      setReleases([])
     }
   }
 
@@ -590,54 +609,66 @@ export default function HomePage() {
               <CreatePost onPostCreated={handlePostCreated} onReleaseCreated={handleReleaseCreated} />
             )}
 
-            {/* Releases recentes em cards estilo notícia */}
-            <ReleasesRecentSection refreshKey={releasesRefreshKey} />
+            {/* Releases recentes – cards estilo stories (carrossel) */}
+            <ReleaseCarousel key={releasesRefreshKey} />
 
-            {/* Lista de Posts */}
+            {/* Timeline: posts + releases (releases com card de link) */}
             {loading ? (
               <div className="card p-12 text-center">
                 <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-gray-600 text-lg">Carregando publicações...</p>
               </div>
-            ) : posts.length === 0 ? (
-              <div className="card p-12 text-center">
-                <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Nenhuma publicação ainda
-                </h3>
-                <p className="text-gray-500">
-                  As empresas ainda não compartilharam conteúdo
-                </p>
-              </div>
-            ) : (
-              <>
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-                
-                {/* Indicador de carregamento */}
-                {loadingMore && (
-                  <div className="flex justify-center py-8">
-                    <div className="flex items-center space-x-3">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-                      <span className="text-gray-600 text-sm">Carregando mais posts...</span>
-                    </div>
+            ) : (() => {
+              type FeedItem = { type: 'post'; date: string; item: Post } | { type: 'release'; date: string; item: ReleaseNewsCardRelease }
+              const feedItems: FeedItem[] = [
+                ...posts.map((p) => ({ type: 'post' as const, date: p.createdAt, item: p })),
+                ...releases.map((r) => ({ type: 'release' as const, date: r.publishedAt || r.createdAt, item: r }))
+              ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+              if (feedItems.length === 0) {
+                return (
+                  <div className="card p-12 text-center">
+                    <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                      Nenhuma publicação ainda
+                    </h3>
+                    <p className="text-gray-500">
+                      As empresas ainda não compartilharam conteúdo
+                    </p>
                   </div>
-                )}
-                
-                {/* Indicador de fim dos posts */}
-                {!hasMorePosts && posts.length > 0 && (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                )
+              }
+
+              return (
+                <>
+                  {feedItems.map((entry) =>
+                    entry.type === 'post' ? (
+                      <PostCard key={`post-${entry.item.id}`} post={entry.item} />
+                    ) : (
+                      <ReleaseNewsCard key={`release-${entry.item.id}`} release={entry.item} />
+                    )
+                  )}
+                  {loadingMore && (
+                    <div className="flex justify-center py-8">
+                      <div className="flex items-center space-x-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                        <span className="text-gray-600 text-sm">Carregando mais...</span>
+                      </div>
                     </div>
-                    <p className="text-gray-500 text-sm">Você viu todos os posts disponíveis!</p>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+                  {!hasMorePosts && posts.length > 0 && (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-sm">Você viu todas as publicações!</p>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </div>
 
           {/* Sidebar Direita */}
