@@ -8,7 +8,7 @@ import CreatePost from '@/components/CreatePost'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
 import FloatingChat from '@/components/FloatingChat'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 
@@ -571,35 +571,33 @@ export default function HomePage() {
               )
             })()}
 
-            {/* Mini menu - Guias, Cupons, Selo verificado (só texto) */}
-            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-4 md:p-5">
-              <h4 className="text-base font-semibold text-gray-900 mb-4" style={{ letterSpacing: '-0.01em' }}>
-                Menu
-              </h4>
-              <nav className="space-y-0.5">
-                <Link
-                  href="/guias"
-                  className="block py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-purple-50/50 hover:text-purple-700 transition-colors"
-                  style={{ letterSpacing: '-0.01em' }}
-                >
-                  Guias
-                </Link>
-                <Link
-                  href="/cupons"
-                  className="block py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-purple-50/50 hover:text-purple-700 transition-colors"
-                  style={{ letterSpacing: '-0.01em' }}
-                >
-                  Cupons
-                </Link>
-                <Link
-                  href="/selo-verificado"
-                  className="block py-2.5 px-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-purple-50/50 hover:text-purple-700 transition-colors"
-                  style={{ letterSpacing: '-0.01em' }}
-                >
-                  Selo Verificado
-                </Link>
-              </nav>
-            </div>
+            {/* Menu rápido - estilo minimalista, ícones simples (terceira imagem) */}
+            <nav className="rounded-xl border border-gray-100 bg-white/50 py-2 px-3">
+              <Link
+                href="/guias"
+                className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <BookOpen className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <span className="font-medium">Guias</span>
+              </Link>
+              <Link
+                href="/cupons"
+                className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <Gift className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <span className="font-medium">Cupons</span>
+              </Link>
+              <Link
+                href="/selo-verificado"
+                className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <BadgeCheck className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <span className="font-medium">Selo Verificado</span>
+              </Link>
+            </nav>
           </aside>
 
           {/* Feed */}

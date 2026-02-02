@@ -125,7 +125,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center min-h-[4.5rem] py-2">
           {/* Logo */}
           <div className="flex-shrink-0">
             <a href="/" className="flex items-center space-x-3 group">
@@ -138,29 +138,31 @@ export default function Header() {
             </a>
           </div>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          {/* Navigation - ícone + nome da aba (estilo primeira imagem) */}
+          <nav className="hidden md:flex items-end space-x-1">
             <a 
               href="/" 
-              className={`p-2.5 rounded-xl transition-all duration-200 ${
+              className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 min-w-[4rem] ${
                 pathname === '/'
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
               title="Início"
             >
-              <Home className="w-5 h-5" />
+              <Home className="w-5 h-5 flex-shrink-0" />
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Início</span>
             </a>
             
             {/* Campo de Pesquisa Expansível */}
-            <div className="relative" ref={searchRef}>
+            <div className="relative flex flex-col items-center" ref={searchRef}>
               {!searchExpanded ? (
                 <button
                   onClick={() => setSearchExpanded(true)}
-                  className="p-2.5 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-600 hover:bg-purple-50/50"
+                  className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 min-w-[4rem]"
                   title="Pesquisar empresas"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Pesquisar</span>
                 </button>
               ) : (
                 <div className="relative">
@@ -235,25 +237,27 @@ export default function Header() {
 
             <a 
               href="/empresas" 
-              className={`p-2.5 rounded-xl transition-all duration-200 ${
+              className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 min-w-[4rem] ${
                 pathname === '/empresas'
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
               title="Descubra"
             >
-              <Compass className="w-5 h-5" />
+              <Compass className="w-5 h-5 flex-shrink-0" />
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Descubra</span>
             </a>
             <a 
               href="/mapa-turistico" 
-              className={`p-2.5 rounded-xl transition-all duration-200 ${
+              className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 min-w-[4rem] ${
                 pathname === '/mapa-turistico'
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
               title="Mapa Turístico"
             >
-              <MapPin className="w-5 h-5" />
+              <MapPin className="w-5 h-5 flex-shrink-0" />
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Mapa</span>
             </a>
           </nav>
 
@@ -261,8 +265,13 @@ export default function Header() {
           <div className="flex items-center space-x-3">
             {user ? (
               <>
-                {/* Notificações - apenas para empresas */}
-                <NotificationBell />
+                {/* Notificações - ícone + nome (apenas para empresas) */}
+                {isCompany() && (
+                  <div className="hidden md:flex flex-col items-center gap-0.5 min-w-[4rem]">
+                    <NotificationBell />
+                    <span className="text-xs font-medium text-gray-700" style={{ letterSpacing: '-0.01em' }}>Notificações</span>
+                  </div>
+                )}
                 
                 {/* Dropdown do usuário */}
               <div 
