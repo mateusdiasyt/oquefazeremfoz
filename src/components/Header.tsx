@@ -302,19 +302,22 @@ export default function Header() {
                 }}
               >
                 <button
-                  className="flex items-center space-x-2.5 bg-gray-50 hover:bg-gray-100 px-3 py-2 rounded-xl text-gray-700 hover:text-gray-900 transition-all duration-200 border border-gray-200 hover:border-gray-300"
+                  className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-2 rounded-xl text-gray-700 hover:text-gray-900 transition-all duration-200 border border-gray-200 hover:border-gray-300"
                   style={{ letterSpacing: '-0.01em' }}
+                  title={user.name || user.email || 'Perfil'}
+                  aria-label="Abrir menu do perfil"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-medium text-xs" style={{ letterSpacing: '-0.01em' }}>
-                      {(user.name || user.email)?.charAt(0).toUpperCase()}
-                    </span>
+                  <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
+                    {user.profileImage ? (
+                      <img src={user.profileImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-medium text-xs" style={{ letterSpacing: '-0.01em' }}>
+                        {(user.name || user.email)?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-sm font-medium">
-                    {user.name || user.email}
-                  </span>
                   <svg 
-                    className={`w-4 h-4 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} 
+                    className={`w-4 h-4 transition-transform duration-200 flex-shrink-0 ${showDropdown ? 'rotate-180' : ''}`} 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -386,6 +389,16 @@ export default function Header() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
                           <span>Mensagens</span>
+                        </a>
+                        <a
+                          href="/perfil"
+                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200"
+                          style={{ letterSpacing: '-0.01em' }}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span>Meu Perfil</span>
                         </a>
                       </>
                     )}

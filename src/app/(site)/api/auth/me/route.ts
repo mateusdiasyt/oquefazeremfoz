@@ -107,11 +107,29 @@ export async function GET(request: NextRequest) {
     // Determinar businessId ativo (usa activeBusinessId ou primeira empresa)
     const activeBusinessId = (user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined) as string | undefined
 
+    // Buscar profileImage: da empresa ativa ou do guia
+    let profileImage: string | null = null
+    if (activeBusinessId) {
+      const business = await prisma.business.findFirst({
+        where: { id: activeBusinessId, userId: session.userId },
+        select: { profileImage: true }
+      })
+      profileImage = business?.profileImage ?? null
+    }
+    if (!profileImage) {
+      const guide = await prisma.guide.findFirst({
+        where: { userId: session.userId },
+        select: { profileImage: true }
+      })
+      profileImage = guide?.profileImage ?? null
+    }
+
     // Retornar dados do usuário
     const userData = {
       id: user.id,
       email: user.email,
       name: user.name,
+      profileImage,
       roles: user.userrole.map((ur: any) => ur.role),
       businessId: activeBusinessId, // Mantém compatibilidade
       activeBusinessId: activeBusinessId,

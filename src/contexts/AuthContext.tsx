@@ -18,6 +18,7 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
+  refreshUser: () => Promise<void>
   isAdmin: () => boolean
   isCompany: () => boolean
   isTourist: () => boolean
@@ -63,6 +64,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const refreshUser = async () => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include',
+        cache: 'no-store'
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.user) setUser(data.user)
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error)
+    }
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const response = await fetch('/api/auth/login', {
@@ -78,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok && data.success) {
         setUser(data.user)
-        setHasChecked(true) // Marcar como verificado após login bem-sucedido
+        setHasChecked(true)
+        await refreshUser() // Atualiza com profileImage (empresa/guia) do /api/auth/me
         return { success: true }
       } else {
         return { success: false, error: data.error || 'Erro no login' }
@@ -121,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading, 
       login, 
       logout, 
+      refreshUser, 
       isAdmin, 
       isCompany, 
       isTourist 

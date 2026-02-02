@@ -46,7 +46,7 @@ interface UserFollow {
 
 
 export default function PerfilPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { showNotification } = useNotification()
   
   const [reviews, setReviews] = useState<UserReview[]>([])
@@ -132,6 +132,7 @@ export default function PerfilPage() {
       if (response.ok) {
         const data = await response.json()
         setProfileImage(data.profileImage)
+        await refreshUser()
         showNotification('Foto de perfil atualizada com sucesso!', 'success')
       } else {
         const err = await response.json().catch(() => ({}))
