@@ -332,6 +332,7 @@ export default function BusinessProfilePage() {
   const handleFollow = async () => {
     if (!user) {
       showNotification('Faça login para seguir empresas', 'error')
+      router.push('/login')
       return
     }
 

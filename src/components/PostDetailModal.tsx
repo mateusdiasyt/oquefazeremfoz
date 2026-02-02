@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { X, Heart, MessageCircle, Share2, Copy, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getTimeAgo, capitalizeWords } from '../utils/formatters'
@@ -37,6 +38,7 @@ interface PostDetailModalProps {
 }
 
 export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostDetailModalProps) {
+  const router = useRouter()
   const { user } = useAuth()
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
@@ -157,8 +159,10 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
   }
 
   const handleLike = async () => {
-    if (!user) return
-
+    if (!user) {
+      router.push('/login')
+      return
+    }
     try {
       const response = await fetch(`/api/posts/${post.id}/like`, {
         method: 'POST',
@@ -180,7 +184,11 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim() || !user) return
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    if (!newComment.trim()) return
 
     setCommentLoading(true)
     try {
@@ -209,6 +217,10 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
   }
 
   const copyPostUrl = async () => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
     const url = `${window.location.origin}/post/${post.id}`
     try {
       await navigator.clipboard.writeText(url)

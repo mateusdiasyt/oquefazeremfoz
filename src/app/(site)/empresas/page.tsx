@@ -125,6 +125,10 @@ export default function EmpresasPage() {
   }
 
   const handleFollowBusiness = async (businessId: string) => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
     const business = businesses.find(b => b.id === businessId)
     
     if (business?.isFollowing) {

@@ -56,50 +56,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
-  // Rotas públicas (acessíveis sem login) - IMPORTANTE PARA SEO
-  const publicRoutes = [
-    '/login', 
-    '/register',
-    '/empresa', // Páginas de empresas e releases devem ser públicas para SEO
-    '/empresas', // Lista de empresas pública
-    '/cupons', // Cupons públicos
-    '/mapa-turistico', // Mapa público
-    '/selo-verificado', // Selo verificados públicos
-    '/cameras-ao-vivo', // Câmeras ao vivo - público e indexável
-    '/foztv', // FozTV - vídeos sobre Foz do Iguaçu
-    '/post' // Páginas de posts individuais (para compartilhamento)
+  // Rotas que EXIGEM login para visualizar (resto do site é público)
+  const protectedRoutes = [
+    '/admin',
+    '/perfil',
+    '/minhas-empresas',
+    '/empresa/dashboard',
+    '/cadastrar-empresa',
+    '/messages'
   ]
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname === route || 
-    pathname.startsWith(route + '/') ||
-    pathname.match(/^\/empresa\/[^\/]+$/) // Páginas individuais de empresas
+  const isProtectedRoute = protectedRoutes.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
   )
-  
-  // Se for rota pública, permitir acesso (importante para crawlers do Google)
-  if (isPublicRoute) {
+
+  if (!isProtectedRoute) {
     return NextResponse.next()
   }
-  
-  // Verificar autenticação para rotas protegidas
+
   const token = request.cookies.get('auth-token')?.value
-  
   if (!token) {
-    // Redirecionar para login se não estiver autenticado
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   try {
-    const decoded = await verifyJWT(token, JWT_SECRET)
-    
-    // Verificação adicional para rotas admin
-    if (pathname.startsWith('/admin')) {
-      // Verificar se o usuário tem role ADMIN (isso será verificado no layout do admin também)
-      return NextResponse.next()
-    }
-    
+    await verifyJWT(token, JWT_SECRET)
     return NextResponse.next()
-  } catch (error) {
-    // Token inválido, redirecionar para login
+  } catch {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 }

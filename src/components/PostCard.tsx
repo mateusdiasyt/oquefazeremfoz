@@ -133,6 +133,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   }
 
   const handleLike = async () => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
     try {
       const response = await fetch(`/api/posts/${post.id}/like`, {
         method: 'POST',
@@ -160,7 +164,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+    if (!user) {
+      router.push('/login')
+      return
+    }
     if (!newComment.trim()) return
 
     setCommentLoading(true)
@@ -685,7 +692,13 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         </button>
 
         <button
-          onClick={() => setShowShareModal(true)}
+          onClick={() => {
+            if (!user) {
+              router.push('/login')
+              return
+            }
+            setShowShareModal(true)
+          }}
           className="flex items-center space-x-1.5 text-gray-500 hover:text-purple-600 transition-all duration-200"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
