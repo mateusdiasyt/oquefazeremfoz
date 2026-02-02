@@ -443,7 +443,7 @@ export default function HomePage() {
           <aside className="hidden lg:flex flex-col gap-6">
             {/* Agrupar empresas por categoria */}
             {(() => {
-              const categories = ['Hotel', 'Restaurante', 'Pousada', 'Atração Turística', 'Loja', 'Serviço', 'Evento', 'Outro']
+              const categories = ['Hotel', 'Restaurante', 'Pousada', 'Atração Turística', 'Loja', 'Serviço', 'Evento', 'Portais', 'Influencers', 'Outro']
               const businessesByCategory: Record<string, Business[]> = {}
               
               // Agrupar empresas aprovadas por categoria

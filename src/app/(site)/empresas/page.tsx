@@ -81,6 +81,8 @@ export default function EmpresasPage() {
     'Loja',
     'Serviço',
     'Evento',
+    'Portais',
+    'Influencers',
     'Outro'
   ]
 

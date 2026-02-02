@@ -14,6 +14,8 @@ const categories = [
   'Loja',
   'Serviço',
   'Evento',
+  'Portais',
+  'Influencers',
   'Outro'
 ]
 
