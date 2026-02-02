@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma@6.15.0 generate && npx prisma@6.15.0 db push && next build",
+    "build": "npx prisma@6.15.0 generate && next build",
     "start": "next start",
     "postinstall": "npx prisma@6.15.0 generate",
     "prisma:gen": "prisma generate",
