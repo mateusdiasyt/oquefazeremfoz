@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../contexts/AuthContext'
 import UrlPreview from './UrlPreview'
@@ -44,6 +44,8 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
   const [releaseBody, setReleaseBody] = useState('')
   const [releaseImageFile, setReleaseImageFile] = useState<File | null>(null)
   const [releaseImagePreview, setReleaseImagePreview] = useState('')
+  const [selectorOpen, setSelectorOpen] = useState(false)
+  const selectorRef = useRef<HTMLDivElement>(null)
 
   // Não renderizar para admins (admins não precisam criar posts)
   if (user?.roles?.includes('ADMIN') && !user?.roles?.includes('COMPANY')) {
@@ -86,6 +88,17 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
       }
     }
   }, [selectedBusinessId, businesses])
+
+  // Fechar seletor ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) {
+        setSelectorOpen(false)
+      }
+    }
+    if (selectorOpen) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [selectorOpen])
 
   const handleImageClick = () => {
     setShowImageInput(!showImageInput)
@@ -315,17 +328,15 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
     }
   }
 
+  const approvedBusinesses = businesses.filter((b: any) => b.isApproved)
+
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl shadow-lg p-6 mb-6">
+    <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 mb-6">
       <div className="flex items-start space-x-4">
         {/* Avatar da empresa */}
         <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
           {business?.profileImage ? (
-            <img
-              src={business.profileImage}
-              alt={business.name}
-              className="w-full h-full object-cover"
-            />
+            <img src={business.profileImage} alt={business?.name || ''} className="w-full h-full object-cover" />
           ) : business?.name ? (
             <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-bold text-lg border-2 border-purple-200">
               {business.name.charAt(0).toUpperCase()}
@@ -336,36 +347,88 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
             </div>
           )}
         </div>
-        
         <div className="flex-1 min-w-0">
-          {/* Seletor de Empresa (se tiver múltiplas) - Design moderno e minimalista */}
-          {businesses.length > 1 && (
-            <div className="mb-3">
-              <div className="relative inline-block">
-                <select
-                  value={selectedBusinessId || ''}
-                  onChange={(e) => setSelectedBusinessId(e.target.value)}
-                  className="appearance-none bg-transparent border-0 text-sm font-bold text-gray-900 pr-6 focus:outline-none cursor-pointer hover:text-purple-600 transition-colors"
+          {/* Seletor de página / empresa - moderno e visível */}
+          {approvedBusinesses.length > 0 && (
+            <div className="mb-4" ref={selectorRef}>
+              <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2" style={{ letterSpacing: '0.05em' }}>
+                Publicar como
+              </span>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => approvedBusinesses.length > 1 && setSelectorOpen(!selectorOpen)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all duration-200 text-left ${
+                    selectorOpen
+                      ? 'border-purple-400 bg-purple-50/80 ring-2 ring-purple-200'
+                      : 'border-gray-200 bg-gray-50 hover:border-purple-200 hover:bg-purple-50/50'
+                  } ${approvedBusinesses.length === 1 ? 'cursor-default' : 'cursor-pointer'}`}
                 >
-                  {businesses
-                    .filter((b: any) => b.isApproved) // Apenas empresas aprovadas
-                    .map((b: Business) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
+                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-white">
+                    {business?.profileImage ? (
+                      <img src={business.profileImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-purple-600 font-bold text-sm">
+                        {business?.name?.charAt(0).toUpperCase() || 'E'}
+                      </div>
+                    )}
+                  </div>
+                  <span className="flex-1 font-semibold text-gray-900 truncate" style={{ letterSpacing: '-0.01em' }}>
+                    {business?.name || 'Selecione uma empresa'}
+                  </span>
+                  {approvedBusinesses.length > 1 && (
+                    <svg
+                      className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${selectorOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
+
+                {selectorOpen && approvedBusinesses.length > 1 && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 py-1.5 bg-white border-2 border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                    {approvedBusinesses.map((b: Business) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedBusinessId(b.id)
+                          setSelectorOpen(false)
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                          selectedBusinessId === b.id ? 'bg-purple-50 text-purple-700' : 'hover:bg-gray-50 text-gray-800'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-gray-50">
+                          {b.profileImage ? (
+                            <img src={b.profileImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-purple-600 font-bold text-xs">
+                              {b.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-medium truncate text-sm">{b.name}</span>
+                        {selectedBusinessId === b.id && (
+                          <svg className="w-4 h-4 text-purple-500 ml-auto flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
                     ))}
-                </select>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
+                  </div>
+                )}
               </div>
-              {businesses.filter((b: any) => b.isApproved).length === 0 && (
-                <p className="text-xs text-amber-500 mt-1.5 font-normal">
-                  Nenhuma empresa aprovada. Aguarde a aprovação para publicar.
-                </p>
-              )}
+            </div>
+          )}
+          {approvedBusinesses.length === 0 && (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-800 font-medium">
+                Nenhuma empresa aprovada. Aguarde a aprovação para publicar.
+              </p>
             </div>
           )}
 
