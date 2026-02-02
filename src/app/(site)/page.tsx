@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
-import ReleaseCarousel from '@/components/ReleaseCarousel'
+import ReleasesRecentSection from '@/components/ReleasesRecentSection'
 import FloatingChat from '@/components/FloatingChat'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
@@ -213,6 +213,7 @@ export default function HomePage() {
   }
   const [showUnfollowModal, setShowUnfollowModal] = useState(false)
   const [businessToUnfollow, setBusinessToUnfollow] = useState<Business | null>(null)
+  const [releasesRefreshKey, setReleasesRefreshKey] = useState(0)
   
   // Estados removidos - busca agora está no header
   
@@ -321,6 +322,10 @@ export default function HomePage() {
 
   const handlePostCreated = () => {
     fetchPosts()
+  }
+
+  const handleReleaseCreated = () => {
+    setReleasesRefreshKey((k) => k + 1)
   }
 
   const handleFollowBusiness = async (businessId: string) => {
@@ -582,11 +587,11 @@ export default function HomePage() {
           <div className="lg:col-span-2 flex flex-col gap-0 md:gap-6 px-0 md:px-0">
             {/* Criar Post - apenas para empresas (admins não precisam criar posts) */}
             {user && user.roles.includes('COMPANY') && (
-              <CreatePost onPostCreated={handlePostCreated} />
+              <CreatePost onPostCreated={handlePostCreated} onReleaseCreated={handleReleaseCreated} />
             )}
 
-            {/* Carrossel de releases recentes (1 por empresa) */}
-            <ReleaseCarousel />
+            {/* Releases recentes em cards estilo notícia */}
+            <ReleasesRecentSection refreshKey={releasesRefreshKey} />
 
             {/* Lista de Posts */}
             {loading ? (

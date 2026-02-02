@@ -8,6 +8,7 @@ import { extractUrlsFromText } from '../utils/urlDetector'
 
 interface CreatePostProps {
   onPostCreated?: () => void
+  onReleaseCreated?: () => void
 }
 
 interface Business {
@@ -17,9 +18,12 @@ interface Business {
   isApproved?: boolean
 }
 
-export default function CreatePost({ onPostCreated }: CreatePostProps) {
+type PublishType = 'post' | 'release'
+
+export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePostProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const [publishType, setPublishType] = useState<PublishType>('post')
   const [content, setContent] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
@@ -32,6 +36,12 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
   const [business, setBusiness] = useState<Business | null>(null)
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  // Release
+  const [releaseTitle, setReleaseTitle] = useState('')
+  const [releaseLead, setReleaseLead] = useState('')
+  const [releaseBody, setReleaseBody] = useState('')
+  const [releaseImageFile, setReleaseImageFile] = useState<File | null>(null)
+  const [releaseImagePreview, setReleaseImagePreview] = useState('')
 
   // Não renderizar para admins (admins não precisam criar posts)
   if (user?.roles?.includes('ADMIN') && !user?.roles?.includes('COMPANY')) {
@@ -182,14 +192,61 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setError('')
+
+    if (publishType === 'release') {
+      if (!releaseTitle.trim()) {
+        setError('Título da release é obrigatório')
+        return
+      }
+      if (!releaseBody.trim()) {
+        setError('Conteúdo da release é obrigatório')
+        return
+      }
+      if (!selectedBusinessId) {
+        setError('Selecione uma empresa para publicar')
+        return
+      }
+      setLoading(true)
+      try {
+        const formData = new FormData()
+        formData.append('businessId', selectedBusinessId)
+        formData.append('title', releaseTitle.trim())
+        formData.append('lead', releaseLead.trim())
+        formData.append('body', releaseBody.trim())
+        formData.append('isPublished', 'true')
+        if (releaseImageFile) formData.append('featuredImage', releaseImageFile)
+
+        const response = await fetch('/api/business/releases', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (response.ok) {
+          setReleaseTitle('')
+          setReleaseLead('')
+          setReleaseBody('')
+          setReleaseImageFile(null)
+          setReleaseImagePreview('')
+          onReleaseCreated?.()
+        } else {
+          const data = await response.json()
+          setError(data.message || 'Erro ao publicar release')
+        }
+      } catch {
+        setError('Erro ao publicar release')
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
     if (!content.trim() && !imageUrl.trim() && !videoUrl.trim()) {
       setError('Escreva algo ou adicione uma mídia para publicar')
       return
     }
 
     setLoading(true)
-    setError('')
 
     try {
       if (!selectedBusinessId) {
@@ -219,9 +276,7 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
         setShowImageInput(false)
         setShowVideoInput(false)
         setMediaType(null)
-        if (onPostCreated) {
-          onPostCreated()
-        }
+        onPostCreated?.()
       } else {
         const text = await response.text()
         if (text) {
@@ -235,6 +290,25 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
       setError('Erro ao publicar')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleReleaseImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Apenas imagens são permitidas')
+        return
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Imagem muito grande. Máximo 5MB')
+        return
+      }
+      setReleaseImageFile(file)
+      const reader = new FileReader()
+      reader.onload = () => setReleaseImagePreview(reader.result as string)
+      reader.readAsDataURL(file)
+      setError('')
     }
   }
 
@@ -291,7 +365,94 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               )}
             </div>
           )}
+
+          {/* Abas Post | Release */}
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mb-4 w-fit">
+            <button
+              type="button"
+              onClick={() => setPublishType('post')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                publishType === 'post'
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Post
+            </button>
+            <button
+              type="button"
+              onClick={() => setPublishType('release')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                publishType === 'release'
+                  ? 'bg-white text-purple-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Release
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            {publishType === 'release' ? (
+              <>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Título da notícia *</label>
+                  <input
+                    type="text"
+                    value={releaseTitle}
+                    onChange={(e) => setReleaseTitle(e.target.value)}
+                    placeholder="Ex: Eco Park oferece frutas congeladas aos animais"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Resumo / chamada</label>
+                  <input
+                    type="text"
+                    value={releaseLead}
+                    onChange={(e) => setReleaseLead(e.target.value)}
+                    placeholder="Uma frase que resume a notícia"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-400 text-sm"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Conteúdo *</label>
+                  <textarea
+                    value={releaseBody}
+                    onChange={(e) => setReleaseBody(e.target.value)}
+                    placeholder="Escreva o texto da release..."
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 text-sm"
+                    rows={5}
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Imagem destacada</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    onChange={handleReleaseImageChange}
+                    className="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700"
+                    disabled={loading || uploading}
+                  />
+                  {releaseImagePreview && (
+                    <div className="mt-3 relative rounded-2xl overflow-hidden border border-gray-200" style={{ maxHeight: 200 }}>
+                      <img src={releaseImagePreview} alt="Preview" className="w-full h-full object-cover" style={{ maxHeight: 200 }} />
+                      <button
+                        type="button"
+                        onClick={() => { setReleaseImagePreview(''); setReleaseImageFile(null) }}
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-lg text-xs font-medium hover:bg-black/70"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -415,6 +576,9 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
               </div>
             )}
 
+              </>
+            )}
+
             {error && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
                 <p className="text-red-600 text-sm font-medium">{error}</p>
@@ -423,6 +587,8 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div className="flex items-center space-x-3">
+                {publishType === 'post' && (
+                <>
                 <button
                   type="button"
                   onClick={handleImageClick}
@@ -454,11 +620,17 @@ export default function CreatePost({ onPostCreated }: CreatePostProps) {
                   </svg>
                   <span className="text-sm font-semibold">Vídeo</span>
                 </button>
+                </>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={loading || uploading || (!content.trim() && !imageUrl.trim() && !videoUrl.trim())}
+                disabled={
+                  loading || uploading ||
+                  (publishType === 'post' && !content.trim() && !imageUrl.trim() && !videoUrl.trim()) ||
+                  (publishType === 'release' && (!releaseTitle.trim() || !releaseBody.trim()))
+                }
                 className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg shadow-purple-500/30 text-sm"
                 style={{ letterSpacing: '-0.01em' }}
               >
