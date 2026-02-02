@@ -49,8 +49,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Buscar usuário no banco
-    // Primeiro tentar buscar com activeBusinessId, se falhar, buscar sem
+    // Buscar usuário no banco (inclui profileImage do dono — aba Perfil)
     let user: any = null
     try {
       user = await prisma.user.findUnique({
@@ -59,6 +58,7 @@ export async function GET(request: NextRequest) {
           id: true,
           email: true,
           name: true,
+          profileImage: true,
           activeBusinessId: true,
           userrole: {
             select: {
@@ -74,25 +74,16 @@ export async function GET(request: NextRequest) {
         }
       })
     } catch (error) {
-      // Se falhar (campo não existe), buscar sem activeBusinessId
-      console.log('⚠️ Campo activeBusinessId não existe, buscando sem ele...')
+      console.log('⚠️ Erro ao buscar user com profileImage, tentando sem...')
       user = await prisma.user.findUnique({
         where: { id: session.userId },
         select: {
           id: true,
           email: true,
           name: true,
-          userrole: {
-            select: {
-              role: true
-            }
-          },
-          business: {
-            select: {
-              id: true
-            },
-            orderBy: { createdAt: 'desc' }
-          }
+          activeBusinessId: true,
+          userrole: { select: { role: true } },
+          business: { select: { id: true }, orderBy: { createdAt: 'desc' } }
         }
       })
     }
@@ -104,12 +95,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Determinar businessId ativo (usa activeBusinessId ou primeira empresa)
     const activeBusinessId = (user.activeBusinessId || (user.business && user.business.length > 0 ? user.business[0]?.id : undefined) || undefined) as string | undefined
 
-    // Buscar profileImage: da empresa ativa ou do guia
-    let profileImage: string | null = null
-    if (activeBusinessId) {
+    // profileImage: priorizar user.profileImage (dono), depois empresa ativa, depois guia
+    let profileImage: string | null = user.profileImage ?? null
+    if (!profileImage && activeBusinessId) {
       const business = await prisma.business.findFirst({
         where: { id: activeBusinessId, userId: session.userId },
         select: { profileImage: true }
@@ -124,14 +114,13 @@ export async function GET(request: NextRequest) {
       profileImage = guide?.profileImage ?? null
     }
 
-    // Retornar dados do usuário
     const userData = {
       id: user.id,
       email: user.email,
       name: user.name,
       profileImage,
       roles: user.userrole.map((ur: any) => ur.role),
-      businessId: activeBusinessId, // Mantém compatibilidade
+      businessId: activeBusinessId,
       activeBusinessId: activeBusinessId,
       businesses: (user.business || []).map((b: any) => ({ id: b.id }))
     }

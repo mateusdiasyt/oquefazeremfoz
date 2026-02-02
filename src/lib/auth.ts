@@ -219,10 +219,10 @@ export async function getCurrentUser(): Promise<{ id: string; email: string; nam
       ? (session.user.business || []).find((b: any) => b.id === activeBusinessId) 
       : (session.user.business && session.user.business.length > 0 ? session.user.business[0] : null)
 
-    // Buscar foto de perfil: priorizar empresa, depois guia
+    // Foto de perfil: priorizar user.profileImage (aba Perfil), depois empresa/guia (fallback)
     const userRoles = session.user.userrole.map((ur: any) => ur.role)
     const guide = (session.user as any).guide?.[0] || null
-    const profileImage = activeBusiness?.profileImage || guide?.profileImage || null
+    const profileImage = (session.user as any).profileImage ?? activeBusiness?.profileImage ?? guide?.profileImage ?? null
 
     const userData = {
       id: session.user.id,

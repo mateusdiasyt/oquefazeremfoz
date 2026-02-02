@@ -486,6 +486,7 @@ model user {
   email                            String           @unique(map: "User_email_key")
   password                         String
   name                             String?
+  profileImage                     String?          // Foto de perfil do dono/responsável (aba Perfil)
   activeBusinessId                 String?
   createdAt                        DateTime         @default(now())
   updatedAt                        DateTime
