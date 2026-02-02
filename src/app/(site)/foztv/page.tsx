@@ -255,19 +255,11 @@ export default function FozTVPage() {
           onClick={handleOverlayClick}
         >
           <div
-            className="relative w-full max-w-4xl my-auto"
+            className="relative flex flex-col md:flex-row w-full max-w-5xl max-h-[90vh] my-auto bg-white rounded-xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={handleClose}
-              className="absolute -top-2 -right-2 z-20 w-10 h-10 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center text-gray-700 shadow-lg"
-              aria-label="Fechar"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="relative w-full aspect-video bg-black rounded-t-xl overflow-hidden shadow-2xl">
+            {/* Vídeo à esquerda (ou em cima no mobile) */}
+            <div className="relative flex-1 min-w-0 min-h-[200px] aspect-video md:aspect-auto md:min-h-0 bg-black">
               {isYouTubeUrl(playing.videoUrl) ? (
                 <iframe
                   src={getEmbedUrl(playing.videoUrl)}
@@ -287,54 +279,80 @@ export default function FozTVPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-b-xl shadow-2xl p-4 md:p-5 space-y-4">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">{playing.title}</h2>
+            {/* Painel à direita (ou embaixo no mobile): título, ícones e comentários */}
+            <div className="relative flex flex-col w-full md:w-[320px] lg:w-[360px] md:border-l border-t md:border-t-0 border-gray-200 max-h-[50vh] md:max-h-none min-h-0">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"
+                aria-label="Fechar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="p-4 pb-2 flex-shrink-0">
+                <h2 className="text-base font-bold text-gray-900 pr-8 line-clamp-2">{playing.title}</h2>
                 {playing.description && (
-                  <p className="text-sm text-gray-600 mt-1">{playing.description}</p>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">{playing.description}</p>
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
+              {/* Ícones de ação (curtir, comentar, compartilhar) */}
+              <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-100 flex-shrink-0">
                 {user ? (
                   <button
                     type="button"
                     onClick={handleLike}
                     disabled={togglingLike}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      details?.userLiked
-                        ? 'text-purple-600 bg-purple-50'
-                        : 'text-gray-600 hover:bg-gray-100'
+                    className={`flex flex-col items-center gap-0.5 min-w-[56px] py-1 rounded-lg transition-colors ${
+                      details?.userLiked ? 'text-purple-600' : 'text-gray-600 hover:bg-gray-100'
                     }`}
+                    title="Curtir"
                   >
-                    <Heart
-                      className={`w-5 h-5 ${details?.userLiked ? 'fill-current' : ''}`}
-                    />
-                    <span>{details?.likeCount ?? 0}</span>
+                    <Heart className={`w-6 h-6 ${details?.userLiked ? 'fill-current' : ''}`} />
+                    <span className="text-xs font-medium">{details?.likeCount ?? 0}</span>
                   </button>
                 ) : (
-                  <span className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
-                    <Heart className="w-5 h-5" />
-                    {details?.likeCount ?? 0} curtida{(details?.likeCount ?? 0) !== 1 ? 's' : ''}
-                  </span>
+                  <div className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-gray-500">
+                    <Heart className="w-6 h-6" />
+                    <span className="text-xs">{details?.likeCount ?? 0}</span>
+                  </div>
                 )}
+                <div className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-gray-600">
+                  <MessageCircle className="w-6 h-6" />
+                  <span className="text-xs font-medium">{comments.length}</span>
+                </div>
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Compartilhar"
                 >
-                  <Share2 className="w-5 h-5" />
-                  Compartilhar
+                  <Share2 className="w-6 h-6" />
+                  <span className="text-xs font-medium">Compartilhar</span>
                 </button>
               </div>
 
-              <div className="pt-4 border-t border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4" />
-                  Comentários ({comments.length})
+              {/* Comentários */}
+              <div className="flex flex-col flex-1 min-h-0 border-t border-gray-100">
+                <h3 className="px-4 py-2 text-sm font-semibold text-gray-900 flex-shrink-0">
+                  Comentários {comments.length > 0 && `(${comments.length})`}
                 </h3>
+                <ul className="flex-1 overflow-y-auto px-4 py-2 space-y-3 min-h-0">
+                  {comments.length === 0 ? (
+                    <li className="text-sm text-gray-500 py-4">Nenhum comentário ainda.</li>
+                  ) : (
+                    comments.map((c) => (
+                      <li key={c.id} className="text-sm">
+                        <span className="font-medium text-gray-900">{c.user?.name || 'Usuário'}</span>
+                        <span className="text-gray-600"> {c.body}</span>
+                        <span className="text-gray-400 text-xs ml-1 block">{formatDate(c.createdAt)}</span>
+                      </li>
+                    ))
+                  )}
+                </ul>
                 {user ? (
-                  <form onSubmit={handleSubmitComment} className="mb-4">
+                  <form onSubmit={handleSubmitComment} className="p-4 pt-2 flex-shrink-0 border-t border-gray-100">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -347,30 +365,17 @@ export default function FozTVPage() {
                       <button
                         type="submit"
                         disabled={!commentText.trim() || sendingComment}
-                        className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                        className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 flex-shrink-0"
                       >
                         Enviar
                       </button>
                     </div>
                   </form>
                 ) : (
-                  <p className="text-sm text-gray-500 mb-3">Faça login para comentar.</p>
+                  <p className="px-4 py-3 text-sm text-gray-500 flex-shrink-0 border-t border-gray-100">
+                    Faça login para comentar.
+                  </p>
                 )}
-                <ul className="space-y-3 max-h-48 overflow-y-auto">
-                  {comments.length === 0 ? (
-                    <li className="text-sm text-gray-500">Nenhum comentário ainda.</li>
-                  ) : (
-                    comments.map((c) => (
-                      <li key={c.id} className="text-sm">
-                        <span className="font-medium text-gray-900">
-                          {c.user?.name || 'Usuário'}
-                        </span>
-                        <span className="text-gray-600"> {c.body}</span>
-                        <span className="text-gray-400 text-xs ml-1">{formatDate(c.createdAt)}</span>
-                      </li>
-                    ))
-                  )}
-                </ul>
               </div>
             </div>
           </div>
