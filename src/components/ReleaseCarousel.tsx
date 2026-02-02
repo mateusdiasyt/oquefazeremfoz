@@ -76,8 +76,8 @@ function ReleaseCarouselCard({
           )}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-2 text-center">
-          <span className="text-xs font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] line-clamp-2 block">
-            {release.business.name}
+          <span className="text-xs font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] line-clamp-2 block" title={release.title}>
+            {release.title}
           </span>
         </div>
       </div>
