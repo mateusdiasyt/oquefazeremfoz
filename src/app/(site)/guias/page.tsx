@@ -5,18 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '../../../contexts/AuthContext'
 import { 
   Search, 
-  Filter, 
-  MapPin, 
-  Phone, 
   Globe, 
   Instagram, 
-  Heart,
   Users,
   Star,
-  CheckCircle,
-  ExternalLink,
   UserCircle,
-  Languages,
   Award
 } from 'lucide-react'
 import { capitalizeWords } from '../../../utils/formatters'
@@ -122,55 +115,49 @@ export default function GuiasPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-slate-50/80">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Guias Turísticos
+        <div className="mb-8 sm:mb-10">
+          <p className="text-sm font-semibold uppercase tracking-wider text-violet-600 mb-2">OQFOZ</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">
+            Guias turísticos
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-slate-600 max-w-xl">
             Encontre os melhores guias para explorar Foz do Iguaçu
           </p>
         </div>
 
         {/* Filtros e Busca */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Busca */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Buscar guia..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
+        <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 p-4 sm:p-6 mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar guia por nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800 placeholder-slate-400"
+              />
             </div>
-
-            {/* Filtro por especialidade */}
-            <div className="md:w-64">
+            <div className="sm:w-56">
               <select
                 value={selectedSpecialty}
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800 bg-white"
               >
                 <option value="">Todas as especialidades</option>
-                {specialties.map(specialty => (
+                {specialties.map((specialty) => (
                   <option key={specialty} value={specialty}>{specialty}</option>
                 ))}
               </select>
             </div>
-
-            {/* Ordenação */}
-            <div className="md:w-48">
+            <div className="sm:w-44">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800 bg-white"
               >
                 <option value="rating">Melhor avaliação</option>
                 <option value="followers">Mais seguidores</option>
@@ -182,99 +169,91 @@ export default function GuiasPage() {
 
         {/* Lista de Guias */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex justify-center items-center py-24">
+            <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : guides.length === 0 ? (
-          <div className="text-center py-20">
-            <UserCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum guia encontrado</h3>
-            <p className="text-gray-600">Tente ajustar os filtros de busca</p>
+          <div className="text-center py-24 bg-white rounded-3xl border border-slate-100">
+            <UserCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhum guia encontrado</h3>
+            <p className="text-slate-600">Tente ajustar os filtros de busca</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {guides.map((guide) => (
               <div
                 key={guide.id}
                 onClick={() => handleGuideClick(guide)}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group"
+                className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden hover:shadow-xl hover:shadow-slate-200/60 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group"
               >
-                {/* Imagem de perfil */}
-                <div className="relative h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                <div className="relative h-44 sm:h-48 bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center overflow-hidden">
                   {guide.profileImage ? (
                     <img
                       src={guide.profileImage}
                       alt={guide.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg">
-                      <UserCircle className="w-16 h-16 text-purple-600" />
+                    <div className="w-20 h-20 rounded-2xl bg-white/90 shadow-lg flex items-center justify-center">
+                      <UserCircle className="w-12 h-12 text-violet-500" />
                     </div>
                   )}
                   {guide.isVerified && (
-                    <div className="absolute top-4 right-4">
-                      <img src="/icons/verificado.png" alt="Verificado" className="w-6 h-6" />
+                    <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-md">
+                      <img src="/icons/verificado.png" alt="Verificado" className="w-4 h-4 object-contain" />
                     </div>
                   )}
                 </div>
-
-                {/* Informações */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                      {capitalizeWords(guide.name)}
-                    </h3>
-                  </div>
-
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-violet-600 transition-colors mb-2">
+                    {capitalizeWords(guide.name)}
+                  </h3>
                   {guide.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-sm text-slate-600 mb-3 line-clamp-2">
                       {guide.description}
                     </p>
                   )}
-
-                  {/* Especialidades */}
                   {guide.specialties && (
-                    <div className="flex items-center gap-2 mb-3">
-                      <Award className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                      <span className="text-xs text-gray-600 truncate">{guide.specialties}</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Award className="w-4 h-4 text-violet-500 flex-shrink-0" />
+                      <span className="text-xs text-slate-600 truncate">{guide.specialties}</span>
                     </div>
                   )}
-
-                  {/* Idiomas */}
                   {guide.languages && (
-                    <div className="flex items-center gap-2 mb-4">
-                      <Languages className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                      <span className="text-xs text-gray-600 truncate">{guide.languages}</span>
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {guide.languages.split(/[,;]/).slice(0, 3).map((lang) => (
+                        <span
+                          key={lang}
+                          className="inline-flex px-2 py-0.5 rounded-md text-xs font-medium bg-violet-50 text-violet-700"
+                        >
+                          {lang.trim()}
+                        </span>
+                      ))}
                     </div>
                   )}
-
-                  {/* Avaliação e Seguidores */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-sm font-semibold text-gray-900">
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5">
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span className="text-sm font-semibold text-slate-900">
                         {guide.ratingAvg > 0 ? guide.ratingAvg.toFixed(1) : 'Novo'}
                       </span>
                       {guide.ratingCount > 0 && (
-                        <span className="text-xs text-gray-500">({guide.ratingCount})</span>
+                        <span className="text-xs text-slate-500">({guide.ratingCount})</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <Users className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                      <Users className="w-4 h-4 text-slate-400" />
                       <span className="text-sm">{guide.followersCount}</span>
                     </div>
                   </div>
-
-                  {/* Contatos */}
-                  <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
                     {guide.whatsapp && (
                       <a
                         href={`https://wa.me/${guide.whatsapp.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                        className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors"
                         title="WhatsApp"
                       >
                         <WhatsAppIcon size={18} />
@@ -286,7 +265,7 @@ export default function GuiasPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="p-2 bg-pink-50 text-pink-600 rounded-lg hover:bg-pink-100 transition-colors"
+                        className="p-2 bg-pink-50 text-pink-600 rounded-xl hover:bg-pink-100 transition-colors"
                         title="Instagram"
                       >
                         <Instagram className="w-4 h-4" />
@@ -298,7 +277,7 @@ export default function GuiasPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                        className="p-2 bg-violet-50 text-violet-600 rounded-xl hover:bg-violet-100 transition-colors"
                         title="Website"
                       >
                         <Globe className="w-4 h-4" />

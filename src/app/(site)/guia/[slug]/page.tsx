@@ -5,16 +5,15 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { capitalizeWords } from '../../../../utils/formatters'
-import { 
-  Phone, 
-  Globe, 
-  Instagram, 
+import {
+  Phone,
+  Globe,
+  Instagram,
   Facebook,
   Mail,
   Star,
   Users,
   Award,
-  Languages,
   ArrowLeft,
   Camera,
   Edit3,
@@ -22,26 +21,17 @@ import {
   Heart,
   MessageCircle,
   Image as ImageIcon,
-  Video,
   Plus,
-  Trash2
+  Trash2,
+  Send,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
-// Ícone simplificado do WhatsApp
-const WhatsAppIcon = ({ size = 20, className = "" }: { size?: number; className?: string }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-    <path d="M8 12h.01M12 12h.01M16 12h.01"/>
+const WhatsAppIcon = ({ size = 20, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
   </svg>
 )
 
@@ -74,11 +64,7 @@ interface Review {
   rating: number
   comment?: string
   imageUrl?: string
-  user: {
-    id: string
-    name: string
-    email: string
-  }
+  user: { id: string; name: string; email: string }
   createdAt: string
 }
 
@@ -100,12 +86,20 @@ interface Post {
 
 type Tab = 'sobre' | 'galeria' | 'avaliacoes' | 'posts' | 'contato'
 
+const TAB_LABELS: Record<Tab, string> = {
+  sobre: 'Sobre',
+  galeria: 'Galeria',
+  avaliacoes: 'Avaliações',
+  posts: 'Posts',
+  contato: 'Contato',
+}
+
 export default function GuideProfilePage() {
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
   const { showNotification } = useNotification()
-  
+
   const [guide, setGuide] = useState<Guide | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [gallery, setGallery] = useState<GalleryItem[]>([])
@@ -114,8 +108,7 @@ export default function GuideProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>('sobre')
   const [isFollowing, setIsFollowing] = useState(false)
   const [isFollowingLoading, setIsFollowingLoading] = useState(false)
-  
-  // Estados de edição
+
   const [editingDescription, setEditingDescription] = useState(false)
   const [newDescription, setNewDescription] = useState('')
   const [editingInfo, setEditingInfo] = useState(false)
@@ -123,15 +116,13 @@ export default function GuideProfilePage() {
   const [editWebsite, setEditWebsite] = useState('')
   const [editSpecialties, setEditSpecialties] = useState('')
   const [editLanguages, setEditLanguages] = useState('')
-  
-  // Estados de modais
+
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [showGalleryPreview, setShowGalleryPreview] = useState(false)
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0)
   const [uploadingGallery, setUploadingGallery] = useState(false)
   const [showPostForm, setShowPostForm] = useState(false)
-  
-  // Estados de post
+
   const [postTitle, setPostTitle] = useState('')
   const [postBody, setPostBody] = useState('')
   const [postImageFile, setPostImageFile] = useState<File | null>(null)
@@ -141,9 +132,7 @@ export default function GuideProfilePage() {
   const [uploadingPost, setUploadingPost] = useState(false)
 
   useEffect(() => {
-    if (params.slug) {
-      fetchGuideData()
-    }
+    if (params.slug) fetchGuideData()
   }, [params.slug, user])
 
   useEffect(() => {
@@ -159,7 +148,6 @@ export default function GuideProfilePage() {
     try {
       setLoading(true)
       const response = await fetch(`/api/guide/${params.slug}`)
-      
       if (!response.ok) {
         if (response.status === 404) {
           showNotification('Guia não encontrado', 'error')
@@ -168,7 +156,6 @@ export default function GuideProfilePage() {
         }
         throw new Error('Erro ao carregar guia')
       }
-
       const guideData = await response.json()
       setGuide(guideData)
       setNewDescription(guideData.description || '')
@@ -237,15 +224,13 @@ export default function GuideProfilePage() {
       showNotification('Faça login para seguir este guia', 'error')
       return
     }
-
     setIsFollowingLoading(true)
     try {
       const response = await fetch('/api/guide/follow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guideId: guide.id })
+        body: JSON.stringify({ guideId: guide.id }),
       })
-
       if (response.ok) {
         const data = await response.json()
         setIsFollowing(data.isFollowing)
@@ -268,12 +253,10 @@ export default function GuideProfilePage() {
       const response = await fetch(`/api/guide/info?id=${guide.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: newDescription })
+        body: JSON.stringify({ description: newDescription }),
       })
-
       if (response.ok) {
-        const data = await response.json()
-        setGuide(prev => prev ? { ...prev, description: newDescription } : null)
+        setGuide((prev) => (prev ? { ...prev, description: newDescription } : null))
         setEditingDescription(false)
         showNotification('Descrição atualizada com sucesso!', 'success')
       } else {
@@ -289,7 +272,6 @@ export default function GuideProfilePage() {
     if (!guide?.id) return
     try {
       const cleanWhatsapp = editWhatsapp.replace(/\D/g, '')
-      
       const response = await fetch(`/api/guide/info?id=${guide.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -297,13 +279,12 @@ export default function GuideProfilePage() {
           whatsapp: cleanWhatsapp || null,
           website: editWebsite || null,
           specialties: editSpecialties || null,
-          languages: editLanguages || null
-        })
+          languages: editLanguages || null,
+        }),
       })
-
       if (response.ok) {
         const data = await response.json()
-        setGuide(prev => prev ? { ...prev, ...data.guide } : null)
+        setGuide((prev) => (prev ? { ...prev, ...data.guide } : null))
         setEditingInfo(false)
         showNotification('Informações atualizadas com sucesso!', 'success')
       } else {
@@ -326,20 +307,14 @@ export default function GuideProfilePage() {
   const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !guide?.id) return
-
     const formData = new FormData()
     formData.append('profilePhoto', file)
     formData.append('guideId', guide.id)
-
     try {
-      const response = await fetch('/api/guide/profile-photo', {
-        method: 'POST',
-        body: formData
-      })
-
+      const response = await fetch('/api/guide/profile-photo', { method: 'POST', body: formData })
       if (response.ok) {
         const data = await response.json()
-        setGuide(prev => prev ? { ...prev, profileImage: data.profileImage } : null)
+        setGuide((prev) => (prev ? { ...prev, profileImage: data.profileImage } : null))
         showNotification('Foto de perfil atualizada com sucesso!', 'success')
       } else {
         const error = await response.json()
@@ -353,20 +328,14 @@ export default function GuideProfilePage() {
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !guide?.id) return
-
     const formData = new FormData()
     formData.append('cover', file)
     formData.append('guideId', guide.id)
-
     try {
-      const response = await fetch('/api/guide/cover', {
-        method: 'POST',
-        body: formData
-      })
-
+      const response = await fetch('/api/guide/cover', { method: 'POST', body: formData })
       if (response.ok) {
         const data = await response.json()
-        setGuide(prev => prev ? { ...prev, coverImage: data.coverImage } : null)
+        setGuide((prev) => (prev ? { ...prev, coverImage: data.coverImage } : null))
         showNotification('Capa atualizada com sucesso!', 'success')
       } else {
         const error = await response.json()
@@ -380,21 +349,15 @@ export default function GuideProfilePage() {
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !guide?.id) return
-
     setUploadingGallery(true)
     try {
       const formData = new FormData()
       formData.append('image', file)
       formData.append('guideId', guide.id)
-
-      const response = await fetch('/api/guide/gallery', {
-        method: 'POST',
-        body: formData
-      })
-
+      const response = await fetch('/api/guide/gallery', { method: 'POST', body: formData })
       if (response.ok) {
         const data = await response.json()
-        setGallery(prev => [...prev, data.galleryItem])
+        setGallery((prev) => [...prev, data.galleryItem])
         showNotification('Foto adicionada à galeria com sucesso!', 'success')
       } else {
         const error = await response.json()
@@ -409,14 +372,10 @@ export default function GuideProfilePage() {
 
   const handleGalleryDelete = async (galleryId: string) => {
     if (!confirm('Tem certeza que deseja remover esta foto da galeria?')) return
-
     try {
-      const response = await fetch(`/api/guide/gallery?id=${galleryId}`, {
-        method: 'DELETE'
-      })
-
+      const response = await fetch(`/api/guide/gallery?id=${galleryId}`, { method: 'DELETE' })
       if (response.ok) {
-        setGallery(prev => prev.filter(item => item.id !== galleryId))
+        setGallery((prev) => prev.filter((item) => item.id !== galleryId))
         showNotification('Foto removida da galeria com sucesso!', 'success')
       } else {
         const error = await response.json()
@@ -430,7 +389,6 @@ export default function GuideProfilePage() {
   const handlePostSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!guide?.id || !postTitle.trim()) return
-
     setUploadingPost(true)
     try {
       const formData = new FormData()
@@ -439,15 +397,10 @@ export default function GuideProfilePage() {
       formData.append('body', postBody)
       if (postImageFile) formData.append('image', postImageFile)
       if (postVideoFile) formData.append('video', postVideoFile)
-
-      const response = await fetch('/api/guide/posts', {
-        method: 'POST',
-        body: formData
-      })
-
+      const response = await fetch('/api/guide/posts', { method: 'POST', body: formData })
       if (response.ok) {
         const data = await response.json()
-        setPosts(prev => [data.post, ...prev])
+        setPosts((prev) => [data.post, ...prev])
         setPostTitle('')
         setPostBody('')
         setPostImageFile(null)
@@ -469,14 +422,10 @@ export default function GuideProfilePage() {
 
   const handlePostDelete = async (postId: string) => {
     if (!confirm('Tem certeza que deseja deletar este post?')) return
-
     try {
-      const response = await fetch(`/api/guide/posts?postId=${postId}`, {
-        method: 'DELETE'
-      })
-
+      const response = await fetch(`/api/guide/posts?postId=${postId}`, { method: 'DELETE' })
       if (response.ok) {
-        setPosts(prev => prev.filter(p => p.id !== postId))
+        setPosts((prev) => prev.filter((p) => p.id !== postId))
         showNotification('Post deletado com sucesso!', 'success')
       } else {
         const error = await response.json()
@@ -489,41 +438,43 @@ export default function GuideProfilePage() {
 
   const getYouTubeEmbedUrl = (url: string | null | undefined): string | null => {
     if (!url) return null
-    
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
     ]
-    
     for (const pattern of patterns) {
       const match = url.match(pattern)
-      if (match && match[1]) {
-        return `https://www.youtube.com/embed/${match[1]}`
-      }
+      if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
     }
-    
     return null
   }
 
   const isOwner = user && guide && guide.userId === user.id
   const embedUrl = getYouTubeEmbedUrl(guide?.presentationVideo)
 
+  const languageChips = guide?.languages
+    ? guide.languages.split(/[,;]/).map((l) => l.trim()).filter(Boolean)
+    : []
+  const specialtyChips = guide?.specialties
+    ? guide.specialties.split(/[,;]/).map((s) => s.trim()).filter(Boolean)
+    : []
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!guide) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Guia não encontrado</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Guia não encontrado</h1>
           <button
             onClick={() => router.push('/guias')}
-            className="text-purple-600 hover:text-purple-700"
+            className="text-violet-600 hover:text-violet-700 font-medium"
           >
             Voltar para lista de guias
           </button>
@@ -533,203 +484,199 @@ export default function GuideProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header com imagem de capa */}
-      <div className="relative h-64 md:h-80 bg-gradient-to-br from-purple-600 to-pink-600 group">
-        {guide.coverImage && (
-          <img
-            src={guide.coverImage}
-            alt={guide.name}
-            className="w-full h-full object-cover"
-          />
+    <div className="min-h-screen bg-slate-50/80">
+      {/* Hero */}
+      <div className="relative h-56 sm:h-72 md:h-80 overflow-hidden group">
+        {guide.coverImage ? (
+          <img src={guide.coverImage} alt="" className="w-full h-full object-cover object-center" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-violet-600 via-fuchsia-600 to-violet-700" />
         )}
-        <div className="absolute inset-0 bg-black/20"></div>
-        
-        {/* Botão voltar */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute top-4 left-4">
           <button
             onClick={() => router.push('/guias')}
-            className="p-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm text-slate-800 hover:bg-white transition-all duration-200 shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-900" />
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Voltar</span>
           </button>
         </div>
-
-        {/* Botão editar capa (apenas para dono) */}
         {isOwner && (
-          <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleCoverUpload}
-            />
+          <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
             <div className="text-white text-center">
               <Camera className="w-8 h-8 mx-auto mb-2" />
-              <span className="text-sm font-medium">Alterar Capa</span>
+              <span className="text-sm font-medium">Alterar capa</span>
             </div>
           </label>
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
-        {/* Card principal com perfil */}
-        <div className="bg-white rounded-3xl shadow-lg p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            {/* Imagem de perfil */}
-            <div className="relative flex-shrink-0 group">
-              {guide.profileImage ? (
-                <img
-                  src={guide.profileImage}
-                  alt={guide.name}
-                  className="w-28 h-28 md:w-36 md:h-36 rounded-2xl border-4 border-white shadow-md object-cover"
-                />
-              ) : (
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl border-4 border-white shadow-md bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                  <span className="text-3xl md:text-4xl font-bold text-purple-600">
-                    {guide.name?.charAt(0)?.toUpperCase()}
-                  </span>
-                </div>
-              )}
-              {guide.isVerified && (
-                <div className="absolute -bottom-2 -right-2">
-                  <img src="/icons/verificado.png" alt="Verificado" className="w-8 h-8" />
-                </div>
-              )}
-              {isOwner && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleProfilePhotoUpload}
-                  />
-                  <Camera className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                </label>
-              )}
-            </div>
-
-            {/* Informações principais */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-                  {capitalizeWords(guide.name)}
-                </h1>
-              </div>
-
-              {/* Estatísticas */}
-              <div className="flex items-center gap-6 mb-4">
-                <div className="flex items-center gap-1">
-                  <Star className="w-5 h-5 text-yellow-500 fill-current" />
-                  <span className="text-lg font-semibold text-gray-900">
-                    {guide.ratingAvg > 0 ? guide.ratingAvg.toFixed(1) : 'Novo'}
-                  </span>
-                  {guide.ratingCount > 0 && (
-                    <span className="text-sm text-gray-500">({guide.ratingCount} avaliações)</span>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-16 relative z-10 pb-16">
+        {/* Card perfil */}
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+          <div className="p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-6">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0 -mt-20 sm:-mt-24">
+                <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden ring-4 ring-white shadow-xl group">
+                  {guide.profileImage ? (
+                    <img src={guide.profileImage} alt={guide.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-violet-400 to-fuchsia-500 flex items-center justify-center">
+                      <span className="text-4xl sm:text-5xl font-bold text-white">
+                        {guide.name?.charAt(0)?.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  {guide.isVerified && (
+                    <div className="absolute -bottom-1 -right-1 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white flex items-center justify-center shadow-md">
+                      <img src="/icons/verificado.png" alt="Verificado" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                    </div>
+                  )}
+                  {isOwner && (
+                    <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <input type="file" accept="image/*" className="hidden" onChange={handleProfilePhotoUpload} />
+                      <Camera className="w-6 h-6 text-white" />
+                    </label>
                   )}
                 </div>
-                <div className="flex items-center gap-1 text-gray-600">
-                  <Users className="w-5 h-5" />
-                  <span className="text-lg font-semibold">{guide.followersCount}</span>
-                  <span className="text-sm">seguidores</span>
-                </div>
               </div>
 
-              {/* Botão seguir */}
-              {!isOwner && user && (
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-600 mb-1">Guia turístico</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-3">
+                  {capitalizeWords(guide.name)}
+                </h1>
+
+                {/* Stats */}
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6 mb-4">
+                  <div className="flex items-center gap-1.5">
+                    <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                    <span className="font-semibold text-slate-900">
+                      {guide.ratingAvg > 0 ? guide.ratingAvg.toFixed(1) : 'Novo'}
+                    </span>
+                    {guide.ratingCount > 0 && (
+                      <span className="text-slate-500 text-sm">({guide.ratingCount})</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-600">
+                    <Users className="w-5 h-5 text-slate-400" />
+                    <span className="font-medium">{guide.followersCount}</span>
+                    <span className="text-sm">seguidores</span>
+                  </div>
+                </div>
+
+                {/* Idiomas chips */}
+                {languageChips.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {languageChips.map((lang) => (
+                      <span
+                        key={lang}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100"
+                      >
+                        {lang}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Ações: Seguir + CTAs */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {!isOwner && user && (
+                    <button
+                      onClick={handleFollow}
+                      disabled={isFollowingLoading}
+                      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 disabled:opacity-50 ${
+                        isFollowing
+                          ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          : 'bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/30'
+                      }`}
+                    >
+                      <Heart
+                        className={`w-4 h-4 ${isFollowing ? 'fill-current' : ''}`}
+                      />
+                      {isFollowingLoading ? '...' : isFollowing ? 'Seguindo' : 'Seguir'}
+                    </button>
+                  )}
+                  {guide.whatsapp && (
+                    <a
+                      href={`https://wa.me/${guide.whatsapp.replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+                    >
+                      <Send className="w-4 h-4" />
+                      Enviar mensagem
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setActiveTab('contato')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all duration-200"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Ver contato
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs pill */}
+          <div className="px-4 sm:px-6 pb-4">
+            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
+              {(Object.keys(TAB_LABELS) as Tab[]).map((tab) => (
                 <button
-                  onClick={handleFollow}
-                  disabled={isFollowingLoading}
-                  className={`px-6 py-2 rounded-xl font-medium transition-colors mb-4 ${
-                    isFollowing
-                      ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      : 'bg-purple-600 text-white hover:bg-purple-700'
-                  } disabled:opacity-50`}
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    activeTab === tab
+                      ? 'bg-white text-violet-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
                 >
-                  {isFollowingLoading ? 'Carregando...' : isFollowing ? 'Seguindo' : 'Seguir'}
+                  {TAB_LABELS[tab]}
+                  {(tab === 'avaliacoes' && reviews.length > 0) || (tab === 'posts' && posts.length > 0)
+                    ? ` (${tab === 'avaliacoes' ? reviews.length : posts.length})`
+                    : ''}
                 </button>
-              )}
-
-              {/* Especialidades */}
-              {guide.specialties && (
-                <div className="flex items-start gap-2 mb-3">
-                  <Award className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-sm font-semibold text-gray-700">Especialidades:</span>
-                    <p className="text-sm text-gray-600">{guide.specialties}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Idiomas */}
-              {guide.languages && (
-                <div className="flex items-start gap-2 mb-4">
-                  <Languages className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-sm font-semibold text-gray-700">Idiomas:</span>
-                    <p className="text-sm text-gray-600">{guide.languages}</p>
-                  </div>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Abas de navegação */}
-        <div className="bg-white rounded-3xl shadow-lg mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px">
-              {(['sobre', 'galeria', 'avaliacoes', 'posts', 'contato'] as Tab[]).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab === 'sobre' && 'Sobre'}
-                  {tab === 'galeria' && 'Galeria'}
-                  {tab === 'avaliacoes' && `Avaliações (${reviews.length})`}
-                  {tab === 'posts' && `Posts (${posts.length})`}
-                  {tab === 'contato' && 'Contato'}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Conteúdo das abas */}
-          <div className="p-8">
-            {/* Aba Sobre */}
+        {/* Conteúdo das abas */}
+        <div className="mt-6 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden">
+          <div className="p-6 sm:p-8">
+            {/* Sobre */}
             {activeTab === 'sobre' && (
-              <div className="space-y-6">
-                {/* Descrição */}
+              <div className="space-y-8">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">Descrição</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold text-slate-900">Descrição</h2>
                     {isOwner && !editingDescription && (
                       <button
                         onClick={() => setEditingDescription(true)}
-                        className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
                     )}
                   </div>
                   {editingDescription ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <textarea
                         value={newDescription}
                         onChange={(e) => setNewDescription(e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        placeholder="Descreva sobre você..."
+                        rows={5}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800"
+                        placeholder="Conte um pouco sobre você..."
                       />
                       <div className="flex gap-2">
                         <button
                           onClick={handleUpdateDescription}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                          className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition-colors"
                         >
                           Salvar
                         </button>
@@ -738,27 +685,45 @@ export default function GuideProfilePage() {
                             setEditingDescription(false)
                             setNewDescription(guide.description || '')
                           }}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                          className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-colors"
                         >
                           Cancelar
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-gray-700 leading-relaxed">
+                    <p className="text-slate-600 leading-relaxed">
                       {guide.description || 'Nenhuma descrição disponível.'}
                     </p>
                   )}
                 </div>
 
-                {/* Vídeo de apresentação */}
+                {specialtyChips.length > 0 && (
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                      <Award className="w-5 h-5 text-violet-500" />
+                      Especialidades
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                      {specialtyChips.map((s) => (
+                        <span
+                          key={s}
+                          className="inline-flex px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-100 text-slate-700"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {embedUrl && (
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Vídeo de Apresentação</h3>
-                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-3">Vídeo de apresentação</h2>
+                    <div className="relative w-full rounded-2xl overflow-hidden bg-slate-900" style={{ paddingBottom: '56.25%' }}>
                       <iframe
                         src={embedUrl}
-                        className="absolute top-0 left-0 w-full h-full rounded-2xl"
+                        className="absolute inset-0 w-full h-full"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
@@ -766,94 +731,68 @@ export default function GuideProfilePage() {
                   </div>
                 )}
 
-                {/* Informações editáveis */}
                 {isOwner && (
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">Informações</h3>
-                      {!editingInfo && (
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-lg font-semibold text-slate-900">Informações (editar)</h2>
+                      {!editingInfo ? (
                         <button
                           onClick={startEditingInfo}
-                          className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          className="p-2 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
-                      )}
+                      ) : null}
                     </div>
                     {editingInfo ? (
-                      <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">WhatsApp</label>
-                          <input
-                            type="text"
-                            value={editWhatsapp}
-                            onChange={(e) => setEditWhatsapp(e.target.value)}
-                            placeholder="Ex: 5545999999999"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Website</label>
-                          <input
-                            type="url"
-                            value={editWebsite}
-                            onChange={(e) => setEditWebsite(e.target.value)}
-                            placeholder="Ex: https://www.example.com"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Especialidades</label>
-                          <input
-                            type="text"
-                            value={editSpecialties}
-                            onChange={(e) => setEditSpecialties(e.target.value)}
-                            placeholder="Ex: Cataratas, Aventura, História"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Idiomas</label>
-                          <input
-                            type="text"
-                            value={editLanguages}
-                            onChange={(e) => setEditLanguages(e.target.value)}
-                            placeholder="Ex: Português, Inglês, Espanhol"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
-                          />
-                        </div>
+                      <div className="space-y-3 bg-slate-50 p-4 rounded-2xl">
+                        <input
+                          type="text"
+                          value={editWhatsapp}
+                          onChange={(e) => setEditWhatsapp(e.target.value)}
+                          placeholder="WhatsApp"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
+                        />
+                        <input
+                          type="url"
+                          value={editWebsite}
+                          onChange={(e) => setEditWebsite(e.target.value)}
+                          placeholder="Website"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={editSpecialties}
+                          onChange={(e) => setEditSpecialties(e.target.value)}
+                          placeholder="Especialidades"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
+                        />
+                        <input
+                          type="text"
+                          value={editLanguages}
+                          onChange={(e) => setEditLanguages(e.target.value)}
+                          placeholder="Idiomas"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm"
+                        />
                         <div className="flex gap-2">
                           <button
                             onClick={handleUpdateInfo}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                            className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
                           >
                             Salvar
                           </button>
                           <button
-                            onClick={() => {
-                              setEditingInfo(false)
-                              startEditingInfo()
-                            }}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                            onClick={() => setEditingInfo(false)}
+                            className="px-4 py-2.5 bg-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-300"
                           >
                             Cancelar
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-2 text-gray-700">
-                        {guide.specialties && (
-                          <div>
-                            <span className="font-semibold">Especialidades: </span>
-                            {guide.specialties}
-                          </div>
-                        )}
-                        {guide.languages && (
-                          <div>
-                            <span className="font-semibold">Idiomas: </span>
-                            {guide.languages}
-                          </div>
-                        )}
+                      <div className="text-slate-600 text-sm space-y-1">
+                        {guide.specialties && <p><span className="font-medium text-slate-700">Especialidades:</span> {guide.specialties}</p>}
+                        {guide.languages && <p><span className="font-medium text-slate-700">Idiomas:</span> {guide.languages}</p>}
                       </div>
                     )}
                   </div>
@@ -861,46 +800,44 @@ export default function GuideProfilePage() {
               </div>
             )}
 
-            {/* Aba Galeria */}
+            {/* Galeria */}
             {activeTab === 'galeria' && (
               <div>
                 {isOwner && (
-                  <div className="mb-6">
-                    <label className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 cursor-pointer">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Adicionar Foto
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleGalleryUpload}
-                        disabled={uploadingGallery}
-                      />
-                    </label>
-                  </div>
+                  <label className="inline-flex items-center gap-2 px-4 py-2.5 mb-6 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 cursor-pointer transition-colors">
+                    <Plus className="w-4 h-4" />
+                    Adicionar foto
+                    <input type="file" accept="image/*" className="hidden" onChange={handleGalleryUpload} disabled={uploadingGallery} />
+                  </label>
                 )}
                 {gallery.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <ImageIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p>Nenhuma foto na galeria ainda.</p>
+                  <div className="text-center py-16">
+                    <ImageIcon className="w-14 h-14 mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-500">Nenhuma foto na galeria ainda.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {gallery.map((item, index) => (
-                      <div key={item.id} className="relative group">
+                      <div
+                        key={item.id}
+                        className="relative aspect-square rounded-2xl overflow-hidden group cursor-pointer bg-slate-100"
+                        onClick={() => {
+                          setSelectedGalleryIndex(index)
+                          setShowGalleryPreview(true)
+                        }}
+                      >
                         <img
                           src={item.imageUrl}
-                          alt={`Galeria ${index + 1}`}
-                          className="w-full h-48 object-cover rounded-lg cursor-pointer"
-                          onClick={() => {
-                            setSelectedGalleryIndex(index)
-                            setShowGalleryPreview(true)
-                          }}
+                          alt=""
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                         {isOwner && (
                           <button
-                            onClick={() => handleGalleryDelete(item.id)}
-                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleGalleryDelete(item.id)
+                            }}
+                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -912,62 +849,51 @@ export default function GuideProfilePage() {
               </div>
             )}
 
-            {/* Aba Avaliações */}
+            {/* Avaliações */}
             {activeTab === 'avaliacoes' && (
               <div>
                 {!isOwner && user && (
-                  <div className="mb-6">
-                    <button
-                      onClick={() => setShowReviewForm(true)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                    >
-                      Avaliar Guia
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowReviewForm(true)}
+                    className="mb-6 inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition-colors"
+                  >
+                    <Star className="w-4 h-4" />
+                    Avaliar guia
+                  </button>
                 )}
                 {reviews.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <Star className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p>Nenhuma avaliação ainda.</p>
+                  <div className="text-center py-16">
+                    <Star className="w-14 h-14 mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-500">Nenhuma avaliação ainda.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {reviews.map((review) => (
-                      <div key={review.id} className="border-b border-gray-200 pb-6">
+                      <div key={review.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                         <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                            <span className="text-purple-600 font-semibold">
+                          <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+                            <span className="text-violet-600 font-semibold">
                               {review.user.name?.charAt(0)?.toUpperCase() || 'U'}
                             </span>
                           </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-gray-900">{review.user.name}</span>
-                              <div className="flex items-center gap-1">
-                                {[...Array(5)].map((_, i) => (
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="font-semibold text-slate-900">{review.user.name}</span>
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((i) => (
                                   <Star
                                     key={i}
-                                    className={`w-4 h-4 ${
-                                      i < review.rating
-                                        ? 'text-yellow-500 fill-current'
-                                        : 'text-gray-300'
-                                    }`}
+                                    className={`w-4 h-4 ${i <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}`}
                                   />
                                 ))}
                               </div>
-                              <span className="text-sm text-gray-500">
+                              <span className="text-xs text-slate-400">
                                 {new Date(review.createdAt).toLocaleDateString('pt-BR')}
                               </span>
                             </div>
-                            {review.comment && (
-                              <p className="text-gray-700 mb-2">{review.comment}</p>
-                            )}
+                            {review.comment && <p className="text-slate-600 text-sm leading-relaxed">{review.comment}</p>}
                             {review.imageUrl && (
-                              <img
-                                src={review.imageUrl}
-                                alt="Avaliação"
-                                className="w-full max-w-md rounded-lg"
-                              />
+                              <img src={review.imageUrl} alt="" className="mt-2 rounded-xl max-w-xs w-full object-cover" />
                             )}
                           </div>
                         </div>
@@ -978,103 +904,99 @@ export default function GuideProfilePage() {
               </div>
             )}
 
-            {/* Aba Posts */}
+            {/* Posts */}
             {activeTab === 'posts' && (
               <div>
                 {isOwner && (
-                  <div className="mb-6">
-                    <button
-                      onClick={() => setShowPostForm(true)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                    >
-                      <Plus className="w-4 h-4 inline mr-2" />
-                      Criar Post
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowPostForm(true)}
+                    className="mb-6 inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Criar post
+                  </button>
                 )}
                 {posts.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500">
-                    <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p>Nenhum post ainda.</p>
+                  <div className="text-center py-16">
+                    <MessageCircle className="w-14 h-14 mx-auto text-slate-300 mb-4" />
+                    <p className="text-slate-500">Nenhum post ainda.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-5">
                     {posts.map((post) => (
-                      <div key={post.id} className="bg-gray-50 rounded-lg p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h4 className="font-semibold text-gray-900 mb-1">{post.title}</h4>
-                            <span className="text-sm text-gray-500">
-                              {new Date(post.createdAt).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                          {isOwner && (
-                            <button
-                              onClick={() => handlePostDelete(post.id)}
-                              className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                        {post.body && <p className="text-gray-700 mb-4">{post.body}</p>}
+                      <article key={post.id} className="rounded-2xl border border-slate-100 overflow-hidden bg-slate-50/50">
                         {post.imageUrl && (
-                          <img
-                            src={post.imageUrl}
-                            alt={post.title}
-                            className="w-full rounded-lg mb-4"
-                          />
+                          <img src={post.imageUrl} alt="" className="w-full h-48 object-cover" />
                         )}
-                        {post.videoUrl && (
-                          <video
-                            src={post.videoUrl}
-                            controls
-                            className="w-full rounded-lg mb-4"
-                          />
-                        )}
-                        <div className="flex items-center gap-4 text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Heart className="w-4 h-4" />
-                            <span>{post.likes}</span>
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-slate-900">{post.title}</h3>
+                            {isOwner && (
+                              <button
+                                onClick={() => handlePostDelete(post.id)}
+                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
+                          {post.body && <p className="text-slate-600 text-sm mt-1 line-clamp-2">{post.body}</p>}
+                          <p className="text-xs text-slate-400 mt-2">
+                            {new Date(post.createdAt).toLocaleDateString('pt-BR')} · {post.likes} curtida{post.likes !== 1 ? 's' : ''}
+                          </p>
                         </div>
-                      </div>
+                      </article>
                     ))}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Aba Contato */}
+            {/* Contato */}
             {activeTab === 'contato' && (
-              <div className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
                 {guide.whatsapp && (
                   <a
                     href={`https://wa.me/${guide.whatsapp.replace(/\D/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-6 py-3 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 hover:bg-emerald-100/80 transition-colors group"
                   >
-                    <WhatsAppIcon size={24} />
-                    <span className="font-medium">WhatsApp</span>
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+                      <WhatsAppIcon size={24} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">WhatsApp</p>
+                      <p className="text-sm text-slate-600">Enviar mensagem</p>
+                    </div>
                   </a>
                 )}
                 {guide.phone && (
                   <a
                     href={`tel:${guide.phone}`}
-                    className="flex items-center gap-3 px-6 py-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
                   >
-                    <Phone className="w-5 h-5" />
-                    <span className="font-medium">{guide.phone}</span>
+                    <div className="w-12 h-12 rounded-xl bg-slate-600 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Telefone</p>
+                      <p className="text-sm text-slate-600">{guide.phone}</p>
+                    </div>
                   </a>
                 )}
                 {guide.email && (
                   <a
                     href={`mailto:${guide.email}`}
-                    className="flex items-center gap-3 px-6 py-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
                   >
-                    <Mail className="w-5 h-5" />
-                    <span className="font-medium">{guide.email}</span>
+                    <div className="w-12 h-12 rounded-xl bg-slate-600 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">E-mail</p>
+                      <p className="text-sm text-slate-600 truncate">{guide.email}</p>
+                    </div>
                   </a>
                 )}
                 {guide.instagram && (
@@ -1082,10 +1004,15 @@ export default function GuideProfilePage() {
                     href={`https://instagram.com/${guide.instagram.replace('@', '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-6 py-3 bg-pink-50 text-pink-700 rounded-xl hover:bg-pink-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-pink-50 border border-pink-100 hover:bg-pink-100/80 transition-colors group"
                   >
-                    <Instagram className="w-5 h-5" />
-                    <span className="font-medium">Instagram</span>
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+                      <Instagram className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Instagram</p>
+                      <p className="text-sm text-slate-600">@{guide.instagram.replace('@', '')}</p>
+                    </div>
                   </a>
                 )}
                 {guide.facebook && (
@@ -1093,10 +1020,15 @@ export default function GuideProfilePage() {
                     href={guide.facebook.startsWith('http') ? guide.facebook : `https://facebook.com/${guide.facebook}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-6 py-3 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 hover:bg-blue-100/80 transition-colors group"
                   >
-                    <Facebook className="w-5 h-5" />
-                    <span className="font-medium">Facebook</span>
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+                      <Facebook className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Facebook</p>
+                      <p className="text-sm text-slate-600">Ver perfil</p>
+                    </div>
                   </a>
                 )}
                 {guide.website && (
@@ -1104,70 +1036,81 @@ export default function GuideProfilePage() {
                     href={guide.website.startsWith('http') ? guide.website : `https://${guide.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 px-6 py-3 bg-purple-50 text-purple-700 rounded-xl hover:bg-purple-100 transition-colors"
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-violet-50 border border-violet-100 hover:bg-violet-100/80 transition-colors group"
                   >
-                    <Globe className="w-5 h-5" />
-                    <span className="font-medium">Website</span>
+                    <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center text-white group-hover:scale-105 transition-transform">
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Website</p>
+                      <p className="text-sm text-slate-600 truncate">{guide.website}</p>
+                    </div>
                   </a>
                 )}
                 {!guide.whatsapp && !guide.phone && !guide.email && !guide.instagram && !guide.facebook && !guide.website && (
-                  <p className="text-gray-500 text-center py-8">Nenhuma informação de contato disponível.</p>
+                  <p className="col-span-full text-center py-8 text-slate-500">Nenhuma informação de contato disponível.</p>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Mensagem se não estiver aprovado */}
         {!guide.isApproved && isOwner && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
-            <p className="text-amber-800">
-              <strong>Atenção:</strong> Seu perfil está aguardando aprovação. Você poderá visualizar todas as informações assim que for aprovado.
-            </p>
+          <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+            <strong>Atenção:</strong> Seu perfil está aguardando aprovação.
           </div>
         )}
       </div>
 
-      {/* Modal de preview da galeria */}
+      {/* Modal galeria */}
       {showGalleryPreview && gallery.length > 0 && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
           <button
             onClick={() => setShowGalleryPreview(false)}
-            className="absolute top-4 right-4 p-2 bg-white/20 text-white rounded-lg hover:bg-white/30"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
           >
             <X className="w-6 h-6" />
           </button>
+          {gallery.length > 1 && (
+            <>
+              <button
+                onClick={() => setSelectedGalleryIndex((prev) => (prev - 1 + gallery.length) % gallery.length)}
+                className="absolute left-4 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={() => setSelectedGalleryIndex((prev) => (prev + 1) % gallery.length)}
+                className="absolute right-4 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </>
+          )}
           <img
             src={gallery[selectedGalleryIndex].imageUrl}
-            alt={`Galeria ${selectedGalleryIndex + 1}`}
+            alt=""
             className="max-w-full max-h-full object-contain rounded-lg"
           />
-          {gallery.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-              {gallery.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedGalleryIndex(index)}
-                  className={`w-2 h-2 rounded-full ${
-                    index === selectedGalleryIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+            {gallery.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedGalleryIndex(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${i === selectedGalleryIndex ? 'bg-white' : 'bg-white/40'}`}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Modal de formulário de avaliação */}
+      {/* Modal avaliação */}
       {showReviewForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Avaliar Guia</h3>
-              <button
-                onClick={() => setShowReviewForm(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
+              <h3 className="text-xl font-bold text-slate-900">Avaliar guia</h3>
+              <button onClick={() => setShowReviewForm(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1175,14 +1118,9 @@ export default function GuideProfilePage() {
               onSubmit={async (e) => {
                 e.preventDefault()
                 const formData = new FormData(e.currentTarget)
-                formData.append('guideId', guide.id)
-                
+                formData.append('guideId', guide!.id)
                 try {
-                  const response = await fetch('/api/guide/reviews', {
-                    method: 'POST',
-                    body: formData
-                  })
-                  
+                  const response = await fetch('/api/guide/reviews', { method: 'POST', body: formData })
                   if (response.ok) {
                     showNotification('Avaliação criada com sucesso!', 'success')
                     setShowReviewForm(false)
@@ -1196,154 +1134,122 @@ export default function GuideProfilePage() {
                   showNotification('Erro ao criar avaliação', 'error')
                 }
               }}
+              className="space-y-4"
             >
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avaliação</label>
-                  <select
-                    name="rating"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="5">5 Estrelas</option>
-                    <option value="4">4 Estrelas</option>
-                    <option value="3">3 Estrelas</option>
-                    <option value="2">2 Estrelas</option>
-                    <option value="1">1 Estrela</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Comentário</label>
-                  <textarea
-                    name="comment"
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Deixe seu comentário..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Foto (opcional)</label>
-                  <input
-                    type="file"
-                    name="image"
-                    accept="image/*"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                  >
-                    Enviar Avaliação
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowReviewForm(false)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                  >
-                    Cancelar
-                  </button>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Nota</label>
+                <select
+                  name="rating"
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                >
+                  <option value="">Selecione...</option>
+                  {[5, 4, 3, 2, 1].map((n) => (
+                    <option key={n} value={n}>{n} estrela{n > 1 ? 's' : ''}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Comentário</label>
+                <textarea
+                  name="comment"
+                  rows={4}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  placeholder="Deixe seu comentário..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Foto (opcional)</label>
+                <input type="file" name="image" accept="image/*" className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-violet-50 file:text-violet-700" />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">
+                  Enviar avaliação
+                </button>
+                <button type="button" onClick={() => setShowReviewForm(false)} className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200">
+                  Cancelar
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal de formulário de post */}
+      {/* Modal post */}
       {showPostForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 max-w-2xl w-full my-8 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Criar Post</h3>
-              <button
-                onClick={() => setShowPostForm(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
+              <h3 className="text-xl font-bold text-slate-900">Criar post</h3>
+              <button onClick={() => setShowPostForm(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handlePostSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Título *</label>
-                  <input
-                    type="text"
-                    value={postTitle}
-                    onChange={(e) => setPostTitle(e.target.value)}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Título do post..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Conteúdo</label>
-                  <textarea
-                    value={postBody}
-                    onChange={(e) => setPostBody(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    placeholder="Escreva seu post..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Imagem (opcional)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        setPostImageFile(file)
-                        const reader = new FileReader()
-                        reader.onload = (e) => setPostImagePreview(e.target?.result as string)
-                        reader.readAsDataURL(file)
-                      }
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  />
-                  {postImagePreview && (
-                    <img src={postImagePreview} alt="Preview" className="mt-2 w-full max-w-md rounded-lg" />
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Vídeo (opcional)</label>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        setPostVideoFile(file)
-                        const reader = new FileReader()
-                        reader.onload = (e) => setPostVideoPreview(e.target?.result as string)
-                        reader.readAsDataURL(file)
-                      }
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  />
-                  {postVideoPreview && (
-                    <video src={postVideoPreview} controls className="mt-2 w-full max-w-md rounded-lg" />
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={uploadingPost}
-                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-                  >
-                    {uploadingPost ? 'Publicando...' : 'Publicar'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowPostForm(false)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                  >
-                    Cancelar
-                  </button>
-                </div>
+            <form onSubmit={handlePostSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Título *</label>
+                <input
+                  type="text"
+                  value={postTitle}
+                  onChange={(e) => setPostTitle(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  placeholder="Título do post..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Conteúdo</label>
+                <textarea
+                  value={postBody}
+                  onChange={(e) => setPostBody(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                  placeholder="Escreva seu post..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Imagem (opcional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setPostImageFile(file)
+                      const reader = new FileReader()
+                      reader.onload = (e) => setPostImagePreview(e.target?.result as string)
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                  className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-violet-50 file:text-violet-700"
+                />
+                {postImagePreview && <img src={postImagePreview} alt="Preview" className="mt-2 w-full max-w-md rounded-xl object-cover h-40" />}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Vídeo (opcional)</label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setPostVideoFile(file)
+                      const reader = new FileReader()
+                      reader.onload = (e) => setPostVideoPreview(e.target?.result as string)
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                  className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-violet-50 file:text-violet-700"
+                />
+                {postVideoPreview && <video src={postVideoPreview} controls className="mt-2 w-full max-w-md rounded-xl" />}
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={uploadingPost} className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 disabled:opacity-50">
+                  {uploadingPost ? 'Publicando...' : 'Publicar'}
+                </button>
+                <button type="button" onClick={() => setShowPostForm(false)} className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200">
+                  Cancelar
+                </button>
               </div>
             </form>
           </div>
