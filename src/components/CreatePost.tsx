@@ -46,6 +46,8 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
   const [releaseImagePreview, setReleaseImagePreview] = useState('')
   const [selectorOpen, setSelectorOpen] = useState(false)
   const selectorRef = useRef<HTMLDivElement>(null)
+  const [expanded, setExpanded] = useState(false)
+  const createPostRef = useRef<HTMLDivElement>(null)
 
   // Não renderizar para admins (admins não precisam criar posts)
   if (user?.roles?.includes('ADMIN') && !user?.roles?.includes('COMPANY')) {
@@ -99,6 +101,18 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
     if (selectorOpen) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [selectorOpen])
+
+  // Fechar área expandida ao clicar fora, só se o formulário estiver vazio
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!expanded) return
+      if (createPostRef.current?.contains(e.target as Node)) return
+      const isEmpty = !content.trim() && !imageUrl && !videoUrl && !releaseTitle.trim() && !releaseLead.trim() && !releaseBody.trim() && !releaseImagePreview
+      if (isEmpty) setExpanded(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [expanded, content, imageUrl, videoUrl, releaseTitle, releaseLead, releaseBody, releaseImagePreview])
 
   const handleImageClick = () => {
     setShowImageInput(!showImageInput)
@@ -244,6 +258,7 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
           setReleaseBody('')
           setReleaseImageFile(null)
           setReleaseImagePreview('')
+          setExpanded(false)
           onReleaseCreated?.()
         } else {
           const data = await response.json()
@@ -292,6 +307,7 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
         setShowImageInput(false)
         setShowVideoInput(false)
         setMediaType(null)
+        setExpanded(false)
         onPostCreated?.()
       } else {
         const text = await response.text()
@@ -330,8 +346,43 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
 
   const approvedBusinesses = businesses.filter((b: any) => b.isApproved)
 
+  // Vista compacta: só avatar + "No que você está pensando?" — ao clicar expande
+  if (!expanded) {
+    return (
+      <div ref={createPostRef} className="bg-white border border-gray-200 rounded-3xl shadow-sm p-4 md:p-5 mb-6">
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="w-full flex items-center gap-3 text-left rounded-2xl border-2 border-gray-200 bg-gray-50 hover:border-purple-200 hover:bg-purple-50/40 transition-all duration-200 px-4 py-3"
+        >
+          <div className="w-11 h-11 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
+            {business?.profileImage ? (
+              <img src={business.profileImage} alt={business?.name || ''} className="w-full h-full object-cover" />
+            ) : business?.name ? (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-bold text-lg border-2 border-purple-200">
+                {business.name.charAt(0).toUpperCase()}
+              </div>
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-bold text-lg border-2 border-purple-200">
+                E
+              </div>
+            )}
+          </div>
+          <span className="flex-1 text-gray-500 text-sm" style={{ letterSpacing: '-0.01em' }}>
+            No que você está pensando?
+          </span>
+        </button>
+        {approvedBusinesses.length === 0 && (
+          <p className="text-xs text-amber-600 font-medium mt-2 px-1">
+            Nenhuma empresa aprovada. Aguarde a aprovação para publicar.
+          </p>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 mb-6">
+    <div ref={createPostRef} className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 mb-6">
       <div className="flex items-start space-x-4">
         {/* Avatar da empresa */}
         <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
@@ -348,6 +399,16 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
           )}
         </div>
         <div className="flex-1 min-w-0">
+          {/* Botão minimizar */}
+          <div className="flex justify-end mb-1">
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="text-xs font-medium text-gray-500 hover:text-gray-700"
+            >
+              Minimizar
+            </button>
+          </div>
           {/* Seletor de página / empresa - moderno e visível */}
           {approvedBusinesses.length > 0 && (
             <div className="mb-4" ref={selectorRef}>
