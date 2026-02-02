@@ -26,6 +26,7 @@ export default function SiteLayout({
     '/cupons',
     '/mapa-turistico',
     '/selo-verificado',
+    '/cameras-ao-vivo',
     '/post' // Páginas de posts individuais (para compartilhamento)
   ]
   const isPublicRoute = publicRoutes.some(route => 
