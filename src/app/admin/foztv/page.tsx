@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { upload } from '@vercel/blob/client'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { Plus, Edit2, Trash2, Play, CheckCircle2, XCircle, X, ExternalLink } from 'lucide-react'
+import { Plus, Edit2, Trash2, Play, CheckCircle2, XCircle, X, ExternalLink, Upload, Image as ImageIcon } from 'lucide-react'
 
 interface FozTVVideo {
   id: string
@@ -32,6 +33,8 @@ export default function AdminFozTVPage() {
     isPublished: true,
     order: 0
   })
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [uploadingThumb, setUploadingThumb] = useState(false)
 
   useEffect(() => {
     fetchVideos()
@@ -52,10 +55,60 @@ export default function AdminFozTVPage() {
     }
   }
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('video/')) {
+      showNotification('Selecione um arquivo de vídeo (MP4, WebM, etc.)', 'error')
+      return
+    }
+    setUploadingVideo(true)
+    try {
+      // Upload direto do navegador para o Vercel Blob (sem limite de 4 MB)
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/admin/foztv/upload',
+        multipart: true, // permite vídeos grandes (até 5 TB)
+      })
+      setFormData((p) => ({ ...p, videoUrl: blob.url }))
+      showNotification('Vídeo enviado com sucesso', 'success')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao enviar vídeo'
+      showNotification(msg, 'error')
+    } finally {
+      setUploadingVideo(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      showNotification('Selecione uma imagem para a thumbnail', 'error')
+      return
+    }
+    setUploadingThumb(true)
+    try {
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/admin/foztv/upload',
+      })
+      setFormData((p) => ({ ...p, thumbnailUrl: blob.url }))
+      showNotification('Thumbnail enviada', 'success')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao enviar thumbnail'
+      showNotification(msg, 'error')
+    } finally {
+      setUploadingThumb(false)
+      e.target.value = ''
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim() || !formData.videoUrl.trim()) {
-      showNotification('Título e URL do vídeo são obrigatórios', 'error')
+      showNotification('Título e vídeo são obrigatórios (envie um arquivo ou cole um link)', 'error')
       return
     }
     try {
@@ -179,16 +232,33 @@ export default function AdminFozTVPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">URL do vídeo (YouTube) *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vídeo *</label>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg hover:border-indigo-400 cursor-pointer transition-colors">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    disabled={uploadingVideo}
+                    className="hidden"
+                  />
+                  {uploadingVideo ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent" />
+                  ) : (
+                    <Upload className="w-4 h-4 text-indigo-600" />
+                  )}
+                  <span className="text-sm text-gray-600">{uploadingVideo ? 'Enviando…' : 'Enviar vídeo (sem limite de 4 MB)'}</span>
+                </label>
+              </div>
               <input
                 type="url"
                 value={formData.videoUrl}
                 onChange={(e) => setFormData((p) => ({ ...p, videoUrl: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="Ou cole link do YouTube ou URL do vídeo"
                 required
               />
-              <p className="mt-1 text-xs text-gray-500">Cole o link do YouTube. A thumbnail será gerada automaticamente se não informar uma.</p>
+              <p className="mt-1 text-xs text-gray-500">Envie um arquivo de vídeo (qualquer tamanho) ou cole o link do YouTube.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Descrição (opcional)</label>
@@ -201,13 +271,42 @@ export default function AdminFozTVPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">URL da thumbnail (opcional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail (opcional)</label>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg hover:border-indigo-400 cursor-pointer transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailUpload}
+                    disabled={uploadingThumb}
+                    className="hidden"
+                  />
+                  {uploadingThumb ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent" />
+                  ) : (
+                    <ImageIcon className="w-4 h-4 text-indigo-600" />
+                  )}
+                  <span className="text-sm text-gray-600">Enviar imagem</span>
+                </label>
+                {formData.thumbnailUrl && (
+                  <>
+                    <img src={formData.thumbnailUrl} alt="" className="w-20 h-12 object-cover rounded border" />
+                    <button
+                      type="button"
+                      onClick={() => setFormData((p) => ({ ...p, thumbnailUrl: '' }))}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      Remover
+                    </button>
+                  </>
+                )}
+              </div>
               <input
                 type="url"
                 value={formData.thumbnailUrl}
                 onChange={(e) => setFormData((p) => ({ ...p, thumbnailUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Deixe em branco para usar a do YouTube"
+                className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                placeholder="Ou cole URL da imagem"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

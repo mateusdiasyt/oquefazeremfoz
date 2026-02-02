@@ -32,6 +32,12 @@ function getYouTubeThumbnail(url: string): string | null {
   return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : null
 }
 
+// Verifica se é link do YouTube (embed) ou vídeo próprio (upload/link direto)
+function isYouTubeUrl(url: string): boolean {
+  if (!url?.trim()) return false
+  return /youtube\.com|youtu\.be/i.test(url.trim())
+}
+
 export default function FozTVPage() {
   const [videos, setVideos] = useState<FozTVVideo[]>([])
   const [loading, setLoading] = useState(true)
@@ -72,13 +78,23 @@ export default function FozTVPage() {
       <section className="relative w-full aspect-video max-h-[85vh] bg-gray-900">
         {playing ? (
           <>
-            <iframe
-              src={getEmbedUrl(playing.videoUrl)}
-              title={playing.title}
-              className="absolute inset-0 w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            {isYouTubeUrl(playing.videoUrl) ? (
+              <iframe
+                src={getEmbedUrl(playing.videoUrl)}
+                title={playing.title}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                src={playing.videoUrl}
+                controls
+                autoPlay
+                className="absolute inset-0 w-full h-full object-contain bg-black"
+                playsInline
+              />
+            )}
             <button
               type="button"
               onClick={() => setPlaying(null)}
