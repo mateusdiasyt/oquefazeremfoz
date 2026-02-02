@@ -44,9 +44,13 @@ export default function FozTVPage() {
   const [playing, setPlaying] = useState<FozTVVideo | null>(null)
 
   useEffect(() => {
-    fetch('/api/public/foztv')
-      .then((res) => res.ok && res.json())
-      .then((data) => setVideos(Array.isArray(data) ? data : []))
+    fetch('/api/public/foztv', { cache: 'no-store' })
+      .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) return setVideos([])
+        const list = Array.isArray(data) ? data : (data?.videos ?? [])
+        setVideos(Array.isArray(list) ? list : [])
+      })
       .catch(() => setVideos([]))
       .finally(() => setLoading(false))
   }, [])
