@@ -42,51 +42,53 @@ interface ReleaseNewsCardProps {
 }
 
 export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardProps) {
-  const href = `/empresa/${release.business.slug}/release/${release.slug}`
-  const [displayUrl, setDisplayUrl] = useState(baseUrl ? `${baseUrl.replace(/\/$/, '')}${href}` : href)
+  const releaseHref = `/empresa/${release.business.slug}/release/${release.slug}`
+  const companyHref = `/empresa/${release.business.slug}`
+  const [displayUrl, setDisplayUrl] = useState(baseUrl ? `${baseUrl.replace(/\/$/, '')}${releaseHref}` : releaseHref)
   const [domain, setDomain] = useState(baseUrl ? (() => { try { return new URL(baseUrl).host } catch { return 'Portal' } })() : 'Portal')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setDisplayUrl(`${window.location.origin}${href}`)
+      setDisplayUrl(`${window.location.origin}${releaseHref}`)
       setDomain(window.location.host)
     }
-  }, [href])
+  }, [releaseHref])
 
   const excerpt = release.lead || stripHtml(release.body).slice(0, 180) + (release.body.length > 180 ? '...' : '')
 
   return (
     <article className="bg-white border-b-2 border-gray-200 md:border md:border-gray-100 md:rounded-3xl md:shadow-sm hover:md:shadow-md transition-all duration-200 overflow-hidden p-4 md:p-6 mb-0 md:mb-6">
-      <Link href={href} className="block">
-        {/* Cabeçalho: logo, nome, verificado, data */}
-        <div className="flex items-start gap-3 pb-2">
-          <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-purple-100">
-            {release.business.profileImage ? (
-              <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-purple-600 font-bold text-sm">
-                {release.business.name.charAt(0).toUpperCase()}
-              </div>
+      {/* Cabeçalho: clique no nome/logo vai para a página da empresa */}
+      <Link href={companyHref} className="flex items-start gap-3 pb-2 hover:opacity-90 transition-opacity">
+        <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0 bg-purple-100">
+          {release.business.profileImage ? (
+            <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-purple-600 font-bold text-sm">
+              {release.business.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-bold text-gray-900 text-sm" style={{ letterSpacing: '-0.01em' }}>
+              {release.business.name}
+            </span>
+            {release.business.isVerified && (
+              <img
+                src="/icons/verificado.png"
+                alt="Verificado"
+                className="w-4 h-4 object-contain"
+                title="Verificado"
+              />
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-gray-900 text-sm" style={{ letterSpacing: '-0.01em' }}>
-                {release.business.name}
-              </span>
-              {release.business.isVerified && (
-                <img
-                  src="/icons/verificado.png"
-                  alt="Verificado"
-                  className="w-4 h-4 object-contain"
-                  title="Verificado"
-                />
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5">{formatDate(release.publishedAt || release.createdAt)}</p>
-          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{formatDate(release.publishedAt || release.createdAt)}</p>
         </div>
+      </Link>
 
+      {/* Conteúdo do post: clique vai para o link da release */}
+      <Link href={releaseHref} className="block">
         {/* URL em destaque */}
         <div className="pb-3">
           <span className="text-sm text-blue-600 hover:underline break-all font-medium">{displayUrl}</span>
