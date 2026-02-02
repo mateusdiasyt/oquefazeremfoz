@@ -104,14 +104,24 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
 
   // Fechar área expandida ao clicar fora, só se o formulário estiver vazio
   useEffect(() => {
+    const isBodyEmpty = (html: string) => !html || !html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
     const handleClickOutside = (e: MouseEvent) => {
       if (!expanded) return
-      if (createPostRef.current?.contains(e.target as Node)) return
-      const isEmpty = !content.trim() && !imageUrl && !videoUrl && !releaseTitle.trim() && !releaseLead.trim() && !releaseBody.trim() && !releaseImagePreview
+      const target = e.target as Node
+      if (createPostRef.current?.contains(target)) return
+      const releaseBodyEmpty = isBodyEmpty(releaseBody)
+      const isEmpty =
+        !content.trim() &&
+        !imageUrl &&
+        !videoUrl &&
+        !releaseTitle.trim() &&
+        !releaseLead.trim() &&
+        releaseBodyEmpty &&
+        !releaseImagePreview
       if (isEmpty) setExpanded(false)
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
   }, [expanded, content, imageUrl, videoUrl, releaseTitle, releaseLead, releaseBody, releaseImagePreview])
 
   const handleImageClick = () => {
