@@ -55,20 +55,27 @@ export default function FozTVPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const featured = videos[0]
-  const rest = videos.slice(1)
+  // Fechar popup ao pressionar Escape
+  useEffect(() => {
+    if (!playing) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPlaying(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [playing])
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-2 border-white border-t-transparent" />
+      <main className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-red-600 border-t-transparent" />
       </main>
     )
   }
 
   if (videos.length === 0) {
     return (
-      <main className="min-h-screen bg-black flex flex-col items-center justify-center text-white px-4">
+      <main className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center text-white px-4">
         <Tv className="w-16 h-16 text-gray-500 mb-4" />
         <h1 className="text-2xl font-bold mb-2">FozTV</h1>
         <p className="text-gray-400 text-center">Em breve: vídeos sobre Foz do Iguaçu.</p>
@@ -77,11 +84,76 @@ export default function FozTVPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      {/* Hero – vídeo em destaque */}
-      <section className="relative w-full aspect-video max-h-[85vh] bg-gray-900">
-        {playing ? (
-          <>
+    <main className="min-h-screen bg-[#0f0f0f] text-white">
+      {/* Cabeçalho da seção */}
+      <section className="pt-6 pb-4 px-4 md:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">FozTV</h1>
+          <p className="text-gray-400 text-sm mt-1">Vídeos sobre Foz do Iguaçu</p>
+        </div>
+      </section>
+
+      {/* Grade de vídeos */}
+      <section className="pb-12 px-4 md:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+            {videos.map((video) => {
+              const thumb = video.thumbnailUrl || getYouTubeThumbnail(video.videoUrl)
+              return (
+                <button
+                  key={video.id}
+                  type="button"
+                  onClick={() => setPlaying(video)}
+                  className="group text-left rounded-lg overflow-hidden bg-gray-900/80 hover:ring-2 hover:ring-red-500 focus:ring-2 focus:ring-red-500 focus:outline-none transition-all"
+                >
+                  <div className="relative aspect-video bg-gray-800">
+                    {thumb ? (
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                        <Play className="w-12 h-12 text-gray-600" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
+                      <span className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                        <Play className="w-7 h-7 text-white ml-1" fill="white" />
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <p className="font-medium text-white text-sm line-clamp-2 group-hover:text-red-400 transition-colors">
+                      {video.title}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Popup do vídeo */}
+      {playing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Assistir vídeo"
+        >
+          <button
+            type="button"
+            onClick={() => setPlaying(null)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
             {isYouTubeUrl(playing.videoUrl) ? (
               <iframe
                 src={getEmbedUrl(playing.videoUrl)}
@@ -99,91 +171,16 @@ export default function FozTVPage() {
                 playsInline
               />
             )}
-            <button
-              type="button"
-              onClick={() => setPlaying(null)}
-              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors"
-              aria-label="Fechar vídeo"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/90 to-transparent">
-              <h2 className="text-xl md:text-2xl font-bold drop-shadow">{playing.title}</h2>
-              {playing.description && (
-                <p className="text-sm text-gray-300 mt-1 line-clamp-2">{playing.description}</p>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setPlaying(featured)}
-              className="absolute inset-0 w-full h-full group flex items-center justify-center bg-cover bg-center"
-              style={{
-                backgroundImage: `url(${featured.thumbnailUrl || getYouTubeThumbnail(featured.videoUrl) || ''})`,
-              }}
-            >
-              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
-              <span className="relative z-10 w-20 h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                <Play className="w-10 h-10 text-white ml-1" fill="white" />
-              </span>
-            </button>
-            <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-black/90 to-transparent">
-              <h2 className="text-xl md:text-2xl font-bold drop-shadow">{featured.title}</h2>
-              {featured.description && (
-                <p className="text-sm text-gray-300 mt-1 line-clamp-2">{featured.description}</p>
-              )}
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Prateleiras */}
-      <section className="py-6 px-4 md:px-6 lg:px-8">
-        {rest.length > 0 && (
-          <div className="max-w-7xl mx-auto">
-            <h3 className="text-lg font-semibold text-white mb-4 px-1">Mais vídeos</h3>
-            <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-gray-900 [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full">
-              {rest.map((video) => {
-                const thumb = video.thumbnailUrl || getYouTubeThumbnail(video.videoUrl)
-                return (
-                  <button
-                    key={video.id}
-                    type="button"
-                    onClick={() => setPlaying(video)}
-                    className="flex-shrink-0 w-[280px] md:w-[320px] group text-left rounded-lg overflow-hidden bg-gray-900 hover:ring-2 hover:ring-red-500 transition-all"
-                  >
-                    <div className="relative aspect-video bg-gray-800">
-                      {thumb ? (
-                        <img
-                          src={thumb}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Play className="w-12 h-12 text-gray-600" />
-                        </div>
-                      )}
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
-                        <span className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Play className="w-7 h-7 text-white ml-1" fill="white" />
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <p className="font-medium text-white line-clamp-2 group-hover:text-red-400 transition-colors">
-                        {video.title}
-                      </p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
           </div>
-        )}
-      </section>
+
+          <div className="absolute bottom-4 left-4 right-16 max-w-4xl">
+            <h2 className="text-lg font-bold text-white drop-shadow-md">{playing.title}</h2>
+            {playing.description && (
+              <p className="text-sm text-gray-300 mt-1 line-clamp-2">{playing.description}</p>
+            )}
+          </div>
+        </div>
+      )}
     </main>
   )
 }
