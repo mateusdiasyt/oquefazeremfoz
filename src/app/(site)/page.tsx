@@ -7,7 +7,8 @@ import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import FloatingChat from '@/components/FloatingChat'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, UserCircle } from 'lucide-react'
+import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 
 interface Post {
@@ -545,6 +546,47 @@ export default function HomePage() {
                 </div>
               )
             })()}
+
+            {/* Mini menu - Guias, Cupons, Selo verificado */}
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-4 md:p-5">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">≡</span>
+                </div>
+                <h4 className="text-base font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>
+                  Menu
+                </h4>
+              </div>
+              <nav className="space-y-1">
+                <Link
+                  href="/guias"
+                  className="flex items-center space-x-3 p-3 rounded-xl hover:bg-purple-50/50 transition-colors border border-transparent hover:border-purple-100 text-gray-700 hover:text-purple-700 group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 group-hover:bg-purple-200 transition-colors">
+                    <UserCircle className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-medium" style={{ letterSpacing: '-0.01em' }}>Guias</span>
+                </Link>
+                <Link
+                  href="/cupons"
+                  className="flex items-center space-x-3 p-3 rounded-xl hover:bg-purple-50/50 transition-colors border border-transparent hover:border-purple-100 text-gray-700 hover:text-purple-700 group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600 group-hover:bg-pink-200 transition-colors">
+                    <Gift className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-medium" style={{ letterSpacing: '-0.01em' }}>Cupons</span>
+                </Link>
+                <Link
+                  href="/selo-verificado"
+                  className="flex items-center space-x-3 p-3 rounded-xl hover:bg-purple-50/50 transition-colors border border-transparent hover:border-purple-100 text-gray-700 hover:text-purple-700 group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <img src="/icons/verificado.png" alt="" className="w-5 h-5 object-contain" />
+                  </div>
+                  <span className="text-sm font-medium" style={{ letterSpacing: '-0.01em' }}>Selo Verificado</span>
+                </Link>
+              </nav>
+            </div>
           </aside>
 
           {/* Feed */}

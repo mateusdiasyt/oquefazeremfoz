@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Gift, MapPin, Compass, X, UserCircle } from 'lucide-react'
+import { Home, Search, MapPin, Compass, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { capitalizeWords } from '../utils/formatters'
 import NotificationBell from './NotificationBell'
@@ -245,17 +245,6 @@ export default function Header() {
               <Compass className="w-5 h-5" />
             </a>
             <a 
-              href="/cupons" 
-              className={`p-2.5 rounded-xl transition-all duration-200 ${
-                pathname === '/cupons'
-                  ? 'text-purple-600 bg-purple-50'
-                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
-              }`}
-              title="Cupons"
-            >
-              <Gift className="w-5 h-5" />
-            </a>
-            <a 
               href="/mapa-turistico" 
               className={`p-2.5 rounded-xl transition-all duration-200 ${
                 pathname === '/mapa-turistico'
@@ -265,32 +254,6 @@ export default function Header() {
               title="Mapa Turístico"
             >
               <MapPin className="w-5 h-5" />
-            </a>
-            <a 
-              href="/guias" 
-              className={`p-2.5 rounded-xl transition-all duration-200 ${
-                pathname === '/guias'
-                  ? 'text-purple-600 bg-purple-50'
-                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
-              }`}
-              title="Guias"
-            >
-              <UserCircle className="w-5 h-5" />
-            </a>
-            <a 
-              href="/selo-verificado" 
-              className={`p-2.5 rounded-xl transition-all duration-200 ${
-                pathname === '/selo-verificado'
-                  ? 'text-purple-600 bg-purple-50'
-                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
-              }`}
-              title="Selo Verificado"
-            >
-              <img 
-                src="/icons/verificado.png" 
-                alt="Selo Verificado" 
-                className="w-5 h-5 object-contain"
-              />
             </a>
           </nav>
 
