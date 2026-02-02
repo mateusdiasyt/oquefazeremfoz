@@ -255,11 +255,11 @@ export default function FozTVPage() {
           onClick={handleOverlayClick}
         >
           <div
-            className="relative flex flex-col md:flex-row w-full max-w-5xl max-h-[90vh] my-auto bg-white rounded-xl shadow-2xl overflow-hidden"
+            className="relative flex flex-col md:flex-row w-[94vw] max-w-[1600px] max-h-[90vh] my-auto bg-white rounded-xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Vídeo à esquerda (ou em cima no mobile) */}
-            <div className="relative flex-1 min-w-0 min-h-[200px] aspect-video md:aspect-auto md:min-h-0 bg-black">
+            {/* Vídeo à esquerda – ocupa a maior parte (fica bem grande) */}
+            <div className="relative flex-[1_1_70%] min-w-0 min-h-[200px] aspect-video md:aspect-video md:min-h-0 bg-black">
               {isYouTubeUrl(playing.videoUrl) ? (
                 <iframe
                   src={getEmbedUrl(playing.videoUrl)}
@@ -279,8 +279,8 @@ export default function FozTVPage() {
               )}
             </div>
 
-            {/* Painel à direita (ou embaixo no mobile): título, ícones e comentários */}
-            <div className="relative flex flex-col w-full md:w-[320px] lg:w-[360px] md:border-l border-t md:border-t-0 border-gray-200 max-h-[50vh] md:max-h-none min-h-0">
+            {/* Painel à direita – estreito para o vídeo dominar (como na referência) */}
+            <div className="relative flex flex-col w-full md:w-[280px] md:min-w-[280px] md:max-w-[320px] md:border-l border-t md:border-t-0 border-gray-200 max-h-[50vh] md:max-h-none min-h-0">
               <button
                 type="button"
                 onClick={handleClose}
