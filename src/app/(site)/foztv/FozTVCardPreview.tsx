@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Play } from 'lucide-react'
+import { Play, Volume2 } from 'lucide-react'
 
 function isYouTubeUrl(url: string): boolean {
   return /youtube\.com|youtu\.be/i.test((url || '').trim())
@@ -31,6 +31,7 @@ interface FozTVCardPreviewProps {
 
 const PREVIEW_DURATION_SEC = 8
 const FADE_OUT_START_SEC = 6
+const PREVIEW_INITIAL_VOLUME = 0.4
 
 export default function FozTVCardPreview({
   video,
@@ -39,6 +40,7 @@ export default function FozTVCardPreview({
 }: FozTVCardPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [previewReady, setPreviewReady] = useState(false)
+  const [previewVolume, setPreviewVolume] = useState(PREVIEW_INITIAL_VOLUME)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const isYouTube = isYouTubeUrl(video.videoUrl)
@@ -53,7 +55,6 @@ export default function FozTVCardPreview({
       if (v) {
         v.pause()
         v.currentTime = 0
-        v.volume = 1
       }
       setPreviewReady(false)
       return
@@ -69,7 +70,7 @@ export default function FozTVCardPreview({
 
     v.currentTime = 0
     v.muted = false
-    v.volume = 1
+    v.volume = previewVolume
 
     const playPromise = v.play()
     if (playPromise && typeof playPromise.then === 'function') {
@@ -94,22 +95,28 @@ export default function FozTVCardPreview({
         }
         el.pause()
         el.currentTime = 0
-        el.volume = 1
         return
       }
       if (t >= FADE_OUT_START_SEC) {
         const fadeDuration = PREVIEW_DURATION_SEC - FADE_OUT_START_SEC
         const fadeProgress = (t - FADE_OUT_START_SEC) / fadeDuration
-        el.volume = Math.max(0, 1 - fadeProgress)
+        el.volume = Math.max(0, previewVolume * (1 - fadeProgress))
       }
     }, 50)
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [isHovering, isYouTube])
+  }, [isHovering, isYouTube, previewVolume])
 
   if (!isHovering) return null
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value)
+    setPreviewVolume(val)
+    const v = videoRef.current
+    if (v) v.volume = val
+  }
 
   return (
     <div
@@ -143,9 +150,25 @@ export default function FozTVCardPreview({
           <Play className="w-8 h-8 text-white ml-1" fill="white" />
         </span>
       </div>
-      <p className="absolute bottom-2 left-2 right-2 text-white text-xs font-medium drop-shadow-md line-clamp-2">
-        {video.title}
-      </p>
+      {/* Controle de volume do preview (só para vídeo do servidor) */}
+      {!isYouTube && (
+        <div
+          className="absolute top-2 right-2 flex items-center gap-1.5 bg-black/60 rounded-lg px-2 py-1.5 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Volume2 className="w-4 h-4 text-white flex-shrink-0" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.1}
+            value={previewVolume}
+            onChange={handleVolumeChange}
+            className="w-16 h-1.5 accent-purple-500 cursor-pointer"
+            title="Volume do preview"
+          />
+        </div>
+      )}
     </div>
   )
 }
