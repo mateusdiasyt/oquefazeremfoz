@@ -18,7 +18,8 @@ import {
   Menu,
   X,
   ExternalLink,
-  Tv
+  Tv,
+  Search
 } from 'lucide-react'
 
 const menuItems = [
@@ -27,6 +28,7 @@ const menuItems = [
   { href: '/admin/guias', label: 'Gerenciar Guias', icon: MapPin },
   { href: '/admin/foztv', label: 'FozTV', icon: Tv },
   { href: '/admin/conteudo', label: 'Gerenciar Conteúdo', icon: FileText },
+  { href: '/admin/seo', label: 'SEO das Páginas', icon: Search },
   { href: '/admin/planos', label: 'Gerenciar Planos', icon: CreditCard },
   { href: '/admin/vendas', label: 'Relatórios de Vendas', icon: BarChart3 },
   { href: '/admin/uploads', label: 'Gerenciar Uploads', icon: Upload },

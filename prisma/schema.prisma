@@ -630,3 +630,21 @@ model foztvvideocomment {
   @@index([videoId], map: "FozTVVideoComment_videoId_idx")
   @@index([userId], map: "FozTVVideoComment_userId_idx")
 }
+
+model pageseo {
+  id            String   @id
+  path          String   @unique(map: "PageSeo_path_key")
+  title         String?
+  description   String?  @db.Text
+  keywords      String?  @db.Text
+  ogTitle       String?
+  ogDescription String?  @db.Text
+  ogImage       String?
+  robotsIndex   Boolean? @default(true)
+  robotsFollow  Boolean? @default(true)
+  canonical     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([path], map: "PageSeo_path_idx")
+}
