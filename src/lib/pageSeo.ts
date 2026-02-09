@@ -18,6 +18,7 @@ export const DEFAULT_PAGES: Array<{
   { path: '/selo-verificado', label: 'Selo Verificado', title: 'Selo Verificado | OQFOZ', description: 'Empresas com selo de verificação OQFOZ em Foz do Iguaçu.', keywords: 'selo verificado, empresas verificadas Foz' },
   { path: '/cameras-ao-vivo', label: 'Câmeras ao Vivo', title: 'Câmeras ao Vivo | OQFOZ', description: 'Câmeras ao vivo de Foz do Iguaçu e Cataratas.', keywords: 'câmeras ao vivo, Foz do Iguaçu, Cataratas' },
   { path: '/foztv', label: 'FozTV', title: 'FozTV | Vídeos sobre Foz do Iguaçu | OQFOZ', description: 'Assista vídeos sobre Foz do Iguaçu: turismo, gastronomia, atrações e dicas.', keywords: 'FozTV, vídeos Foz do Iguaçu, turismo Foz, Cataratas vídeos' },
+  { path: '/portal', label: 'Portal do Turismo', title: 'Portal do Turismo | Notícias para Turistas | OQFOZ', description: 'Notícias, releases e conteúdos para turistas em Foz do Iguaçu. Conteúdo das empresas Portal.', keywords: 'portal turismo Foz, notícias turismo, releases Foz do Iguaçu' },
   { path: '/guias', label: 'Guias', title: 'Guias de Turismo em Foz do Iguaçu | OQFOZ', description: 'Encontre guias de turismo em Foz do Iguaçu.', keywords: 'guias Foz do Iguaçu, turismo, passeios' },
   { path: '/login', label: 'Login', title: 'Entrar | OQFOZ', description: 'Faça login na sua conta OQFOZ.', keywords: '' },
   { path: '/register', label: 'Cadastro', title: 'Criar conta | OQFOZ', description: 'Crie sua conta no OQFOZ.', keywords: '' },
