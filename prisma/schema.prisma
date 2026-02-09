@@ -648,3 +648,10 @@ model pageseo {
 
   @@index([path], map: "PageSeo_path_idx")
 }
+
+// Configurações do painel admin (API Gemini, prompt do bot de conteúdo, etc.)
+model adminsetting {
+  id    String @id
+  key   String @unique(map: "AdminSetting_key_key")
+  value String @db.Text
+}
