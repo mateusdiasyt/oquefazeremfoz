@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Sparkles, Search, Building2, Send, Save, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Sparkles, Search, Building2, Save, Loader2, FileText } from 'lucide-react'
 
 interface Empresa {
   id: string
@@ -12,6 +14,7 @@ interface Empresa {
 }
 
 export default function AdminBotIAPage() {
+  const router = useRouter()
   const [empresas, setEmpresas] = useState<Empresa[]>([])
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Empresa | null>(null)
@@ -88,7 +91,7 @@ export default function AdminBotIAPage() {
         lead: data.lead || '',
         body: data.body || '',
       })
-      setMessage({ type: 'ok', text: 'Conteúdo gerado. Revise e publique quando quiser.' })
+      setMessage({ type: 'ok', text: 'Conteúdo gerado. Revise e clique em "Salvar e enviar para revisão" para ir para Gerenciar Conteúdo.' })
     } catch (err: any) {
       setMessage({ type: 'err', text: err.message || 'Erro ao gerar conteúdo.' })
     } finally {
@@ -96,12 +99,12 @@ export default function AdminBotIAPage() {
     }
   }
 
-  const handlePublish = async () => {
+  const handleSavePending = async () => {
     if (!selected || !generated) return
     setPublishing(true)
     setMessage(null)
     try {
-      const res = await fetch('/api/admin/ai/release', {
+      const res = await fetch('/api/admin/conteudo/pending', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -112,11 +115,11 @@ export default function AdminBotIAPage() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Erro ao publicar')
-      setMessage({ type: 'ok', text: 'Release publicado com sucesso!' })
+      if (!res.ok) throw new Error(data.message || 'Erro ao salvar')
       setGenerated(null)
+      router.push('/admin/conteudo')
     } catch (err: any) {
-      setMessage({ type: 'err', text: err.message || 'Erro ao publicar.' })
+      setMessage({ type: 'err', text: err.message || 'Erro ao salvar.' })
     } finally {
       setPublishing(false)
     }
@@ -129,8 +132,15 @@ export default function AdminBotIAPage() {
         <h1 className="text-2xl font-bold">Bot Criador de Conteúdo</h1>
       </div>
       <p className="text-sm text-gray-600 mb-6">
-        Gere releases para uma empresa com IA (Gemini). Selecione a empresa, informe o tema e publique.
+        Gere releases para uma empresa com IA (Gemini). O conteúdo fica pendente em Gerenciar Conteúdo até você concluir a postagem.
       </p>
+      <Link
+        href="/admin/conteudo"
+        className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:underline mb-4"
+      >
+        <FileText className="w-4 h-4" />
+        Ir para Gerenciar Conteúdo
+      </Link>
 
       {message && (
         <p
@@ -245,7 +255,7 @@ export default function AdminBotIAPage() {
         {generated && (
           <section className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Conteúdo gerado</h2>
-            <p className="text-sm text-gray-500 mb-4">Revise os campos abaixo e clique em Publicar para criar o release na empresa selecionada.</p>
+            <p className="text-sm text-gray-500 mb-4">Revise os campos abaixo e clique em &quot;Salvar e enviar para revisão&quot;. O conteúdo ficará pendente em Gerenciar Conteúdo, onde você pode concluir a postagem.</p>
 
             <div className="space-y-4 mb-6">
               <div>
@@ -279,12 +289,12 @@ export default function AdminBotIAPage() {
 
             <button
               type="button"
-              onClick={handlePublish}
+              onClick={handleSavePending}
               disabled={publishing || !generated.title.trim() || !generated.body.trim()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
             >
-              {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Publicar como release
+              {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Salvar e enviar para revisão
             </button>
           </section>
         )}

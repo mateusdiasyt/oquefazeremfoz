@@ -50,6 +50,7 @@ model business {
   businesslike     businesslike[]
   businessproduct  businessproduct[]
   businessrelease  businessrelease[]
+  pendingrelease   pendingrelease[]
   businessreview   businessreview[]
   post             post[]
   comment         comment[]
@@ -175,6 +176,24 @@ model businessrelease {
   @@unique([businessId, slug], map: "BusinessRelease_businessId_slug_key")
   @@index([businessId], map: "BusinessRelease_businessId_idx")
   @@index([publishedAt], map: "BusinessRelease_publishedAt_idx")
+}
+
+// Conteúdo gerado pela IA no Bot, fica pendente até admin concluir (publicar como release)
+model pendingrelease {
+  id               String    @id
+  businessId       String
+  title            String
+  lead             String?   @db.Text
+  body             String    @db.Text
+  featuredImageUrl String?
+  status           String    @default("PENDING") // PENDING | PUBLISHED
+  publishedReleaseId String? // id do businessrelease quando concluído
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  business         business  @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "PendingRelease_businessId_fkey")
+
+  @@index([businessId], map: "PendingRelease_businessId_idx")
+  @@index([status], map: "PendingRelease_status_idx")
 }
 
 model businessreview {
