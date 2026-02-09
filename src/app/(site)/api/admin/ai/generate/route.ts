@@ -50,31 +50,50 @@ Crie um release completo sobre o seguinte tema: ${topic}.
 
 Responda apenas com um JSON válido contendo: "title", "lead" e "body". O "body" deve ser HTML (use <p> para parágrafos, <strong> para destaque).`
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 8192,
-          responseMimeType: 'application/json',
-        },
-      }),
-    })
+    const payload = {
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ parts: [{ text: userPrompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 8192,
+        responseMimeType: 'application/json',
+      },
+    }
 
-    if (!res.ok) {
-      const err = await res.text()
-      console.error('Gemini API error:', res.status, err)
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest']
+    let res: Response | null = null
+    let lastError = ''
+
+    for (const model of modelsToTry) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (res.ok) break
+      const errText = await res.text()
+      lastError = errText
+      try {
+        const errJson = JSON.parse(errText)
+        lastError = errJson?.error?.message || errText
+      } catch {
+        lastError = errText.slice(0, 200)
+      }
+      if (res.status !== 404) {
+        break
+      }
+    }
+
+    if (!res || !res.ok) {
+      console.error('Gemini API error:', lastError)
       return NextResponse.json(
-        { message: 'Erro ao chamar Gemini. Verifique a API key.' },
+        { message: `Gemini: ${lastError || 'Erro ao chamar a API. Verifique a API key em Configurações.'}` },
         { status: 502 }
       )
     }
 
-    const data = await res.json()
+    const data = await res!.json()
     const text =
       data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || ''
     if (!text) {
