@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Play, Volume2 } from 'lucide-react'
+import { Play, Volume2, VolumeX } from 'lucide-react'
 
 function isYouTubeUrl(url: string): boolean {
   return /youtube\.com|youtu\.be/i.test((url || '').trim())
@@ -40,7 +40,7 @@ export default function FozTVCardPreview({
 }: FozTVCardPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [previewReady, setPreviewReady] = useState(false)
-  const [previewVolume, setPreviewVolume] = useState(PREVIEW_INITIAL_VOLUME)
+  const [isMuted, setIsMuted] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const isYouTube = isYouTubeUrl(video.videoUrl)
@@ -69,8 +69,8 @@ export default function FozTVCardPreview({
     if (!v) return
 
     v.currentTime = 0
-    v.muted = false
-    v.volume = previewVolume
+    v.muted = isMuted
+    v.volume = isMuted ? 0 : PREVIEW_INITIAL_VOLUME
 
     const playPromise = v.play()
     if (playPromise && typeof playPromise.then === 'function') {
@@ -97,25 +97,29 @@ export default function FozTVCardPreview({
         el.currentTime = 0
         return
       }
-      if (t >= FADE_OUT_START_SEC) {
+      if (!el.muted && t >= FADE_OUT_START_SEC) {
         const fadeDuration = PREVIEW_DURATION_SEC - FADE_OUT_START_SEC
         const fadeProgress = (t - FADE_OUT_START_SEC) / fadeDuration
-        el.volume = Math.max(0, previewVolume * (1 - fadeProgress))
+        el.volume = Math.max(0, PREVIEW_INITIAL_VOLUME * (1 - fadeProgress))
       }
     }, 50)
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [isHovering, isYouTube, previewVolume])
+  }, [isHovering, isYouTube, isMuted])
 
   if (!isHovering) return null
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value)
-    setPreviewVolume(val)
+  const handleToggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const next = !isMuted
+    setIsMuted(next)
     const v = videoRef.current
-    if (v) v.volume = val
+    if (v) {
+      v.muted = next
+      if (!next) v.volume = PREVIEW_INITIAL_VOLUME
+    }
   }
 
   return (
@@ -150,24 +154,21 @@ export default function FozTVCardPreview({
           <Play className="w-8 h-8 text-white ml-1" fill="white" />
         </span>
       </div>
-      {/* Controle de volume do preview (só para vídeo do servidor) */}
+      {/* Mute / som do preview (só para vídeo do servidor) */}
       {!isYouTube && (
-        <div
-          className="absolute top-2 right-2 flex items-center gap-1.5 bg-black/60 rounded-lg px-2 py-1.5 pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          type="button"
+          onClick={handleToggleMute}
+          className="absolute top-2 right-2 p-2 bg-black/60 rounded-lg text-white hover:bg-black/80 transition-colors pointer-events-auto"
+          title={isMuted ? 'Ativar som' : 'Silenciar'}
+          aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
         >
-          <Volume2 className="w-4 h-4 text-white flex-shrink-0" />
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.1}
-            value={previewVolume}
-            onChange={handleVolumeChange}
-            className="w-16 h-1.5 accent-purple-500 cursor-pointer"
-            title="Volume do preview"
-          />
-        </div>
+          {isMuted ? (
+            <VolumeX className="w-5 h-5" />
+          ) : (
+            <Volume2 className="w-5 h-5" />
+          )}
+        </button>
       )}
     </div>
   )
