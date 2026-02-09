@@ -27,6 +27,7 @@ export async function PATCH(
     let lead: string | undefined
     let bodyHtml: string | undefined
     let featuredImage: File | null = null
+    let scheduledAt: string | null | undefined
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
@@ -34,17 +35,23 @@ export async function PATCH(
       lead = formData.get('lead') as string
       bodyHtml = formData.get('body') as string
       featuredImage = formData.get('featuredImage') as File
+      const sa = formData.get('scheduledAt')
+      scheduledAt = sa === '' || sa === null ? null : (sa as string)
     } else {
       const body = await request.json()
       title = body.title
       lead = body.lead
       bodyHtml = body.body
+      scheduledAt = body.scheduledAt
     }
 
-    const data: { title?: string; lead?: string | null; body?: string; featuredImageUrl?: string | null } = {}
+    const data: { title?: string; lead?: string | null; body?: string; featuredImageUrl?: string | null; scheduledAt?: Date | null } = {}
     if (title !== undefined) data.title = String(title).trim()
     if (lead !== undefined) data.lead = lead === '' ? null : String(lead).trim()
     if (bodyHtml !== undefined) data.body = String(bodyHtml).trim()
+    if (scheduledAt !== undefined) {
+      data.scheduledAt = scheduledAt === null || scheduledAt === '' ? null : new Date(scheduledAt)
+    }
 
     if (featuredImage && featuredImage.size > 0) {
       if (!featuredImage.type.startsWith('image/')) {

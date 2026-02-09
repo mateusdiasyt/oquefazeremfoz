@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser, isAdmin } from '@/lib/auth'
-import { prisma } from '@/lib/db'
-
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .trim() || 'release'
-}
+import { publishPendingRelease } from '@/lib/publishPendingRelease'
 
 export async function POST(
   _request: NextRequest,
@@ -25,53 +13,14 @@ export async function POST(
     }
 
     const { id } = await params
-
-    const pending = await prisma.pendingrelease.findUnique({
-      where: { id },
-      include: { business: true },
-    })
-    if (!pending || pending.status !== 'PENDING') {
+    const result = await publishPendingRelease(id)
+    if (!result) {
       return NextResponse.json({ message: 'Pendente não encontrado ou já publicado' }, { status: 404 })
     }
 
-    let slug = generateSlug(pending.title)
-    let counter = 1
-    while (true) {
-      const exists = await prisma.businessrelease.findUnique({
-        where: { businessId_slug: { businessId: pending.businessId, slug } },
-      })
-      if (!exists) break
-      slug = `${generateSlug(pending.title)}-${counter}`
-      counter++
-    }
-
-    const release = await prisma.businessrelease.create({
-      data: {
-        id: `release_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-        businessId: pending.businessId,
-        title: pending.title,
-        slug,
-        lead: pending.lead,
-        body: pending.body,
-        featuredImageUrl: pending.featuredImageUrl,
-        isPublished: true,
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    })
-
-    await prisma.pendingrelease.update({
-      where: { id },
-      data: { status: 'PUBLISHED', publishedReleaseId: release.id },
-    })
-
     return NextResponse.json({
       message: 'Release publicado com sucesso',
-      release: {
-        id: release.id,
-        slug: release.slug,
-        title: release.title,
-      },
+      release: { id: result.releaseId, slug: result.slug },
     })
   } catch (error) {
     console.error('Erro ao concluir pendente:', error)

@@ -178,7 +178,7 @@ model businessrelease {
   @@index([publishedAt], map: "BusinessRelease_publishedAt_idx")
 }
 
-// Conteúdo gerado pela IA no Bot, fica pendente até admin concluir (publicar como release)
+// Conteúdo gerado pela IA no Bot. Pode ficar pendente (concluir manual) ou agendado (publicar em scheduledAt)
 model pendingrelease {
   id               String    @id
   businessId       String
@@ -187,6 +187,7 @@ model pendingrelease {
   body             String    @db.Text
   featuredImageUrl String?
   status           String    @default("PENDING") // PENDING | PUBLISHED
+  scheduledAt      DateTime? // Se preenchido, cron publica automaticamente nessa data/hora
   publishedReleaseId String? // id do businessrelease quando concluído
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -194,6 +195,7 @@ model pendingrelease {
 
   @@index([businessId], map: "PendingRelease_businessId_idx")
   @@index([status], map: "PendingRelease_status_idx")
+  @@index([scheduledAt], map: "PendingRelease_scheduledAt_idx")
 }
 
 model businessreview {

@@ -42,6 +42,7 @@ interface Pending {
   lead: string | null
   body: string
   featuredImageUrl?: string | null
+  scheduledAt?: string | null
   status: string
   createdAt: string
   business: { id: string; name: string; slug: string }
@@ -55,7 +56,7 @@ export default function AdminConteudoPage() {
   const [loading, setLoading] = useState(true)
   const [actionId, setActionId] = useState<string | null>(null)
   const [editModal, setEditModal] = useState<Pending | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', lead: '', body: '' })
+  const [editForm, setEditForm] = useState({ title: '', lead: '', body: '', scheduledAt: '' })
   const [editFeaturedFile, setEditFeaturedFile] = useState<File | null>(null)
   const [editFeaturedPreview, setEditFeaturedPreview] = useState('')
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
@@ -111,9 +112,25 @@ export default function AdminConteudoPage() {
     }
   }
 
+  const toDatetimeLocal = (iso: string | null | undefined) => {
+    if (!iso) return ''
+    const d = new Date(iso)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const h = String(d.getHours()).padStart(2, '0')
+    const min = String(d.getMinutes()).padStart(2, '0')
+    return `${y}-${m}-${day}T${h}:${min}`
+  }
+
   const openEdit = (p: Pending) => {
     setEditModal(p)
-    setEditForm({ title: p.title, lead: p.lead || '', body: p.body })
+    setEditForm({
+      title: p.title,
+      lead: p.lead || '',
+      body: p.body,
+      scheduledAt: toDatetimeLocal(p.scheduledAt),
+    })
     setEditFeaturedFile(null)
     setEditFeaturedPreview(p.featuredImageUrl || '')
   }
@@ -141,6 +158,7 @@ export default function AdminConteudoPage() {
         formData.append('title', editForm.title)
         formData.append('lead', editForm.lead)
         formData.append('body', editForm.body)
+        formData.append('scheduledAt', editForm.scheduledAt || '')
         formData.append('featuredImage', editFeaturedFile)
         res = await fetch(`/api/admin/conteudo/pending/${editModal.id}`, {
           method: 'PATCH',
@@ -150,7 +168,12 @@ export default function AdminConteudoPage() {
         res = await fetch(`/api/admin/conteudo/pending/${editModal.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(editForm),
+          body: JSON.stringify({
+            title: editForm.title,
+            lead: editForm.lead,
+            body: editForm.body,
+            scheduledAt: editForm.scheduledAt || null,
+          }),
         })
       }
       const data = await res.json()
@@ -234,6 +257,11 @@ export default function AdminConteudoPage() {
                         {p.business.name}
                       </div>
                       <p className="text-xs text-gray-400 mt-1">{formatDate(p.createdAt)}</p>
+                      {p.scheduledAt && (
+                        <p className="text-xs text-indigo-600 mt-0.5 font-medium">
+                          Agendado para {formatDate(p.scheduledAt)}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button
@@ -381,6 +409,16 @@ export default function AdminConteudoPage() {
                 <div className="mt-3">
                   <SEOPanel title={editForm.title} lead={editForm.lead} bodyHtml={editForm.body} />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Agendar publicação</label>
+                <input
+                  type="datetime-local"
+                  value={editForm.scheduledAt}
+                  onChange={(e) => setEditForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">Defina data e hora para publicar automaticamente. Deixe em branco para publicar manualmente (Concluir).</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Imagem de destaque (thumb)</label>
