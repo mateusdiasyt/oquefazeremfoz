@@ -123,6 +123,13 @@ export default function AdminConteudoPage() {
     return `${y}-${m}-${day}T${h}:${min}`
   }
 
+  const scheduledAtForApi = (localDatetime: string) => {
+    if (!localDatetime) return null
+    const d = new Date(localDatetime)
+    if (Number.isNaN(d.getTime())) return null
+    return d.toISOString()
+  }
+
   const openEdit = (p: Pending) => {
     setEditModal(p)
     setEditForm({
@@ -158,7 +165,7 @@ export default function AdminConteudoPage() {
         formData.append('title', editForm.title)
         formData.append('lead', editForm.lead)
         formData.append('body', editForm.body)
-        formData.append('scheduledAt', editForm.scheduledAt || '')
+        formData.append('scheduledAt', scheduledAtForApi(editForm.scheduledAt) ?? '')
         formData.append('featuredImage', editFeaturedFile)
         res = await fetch(`/api/admin/conteudo/pending/${editModal.id}`, {
           method: 'PATCH',
@@ -172,7 +179,7 @@ export default function AdminConteudoPage() {
             title: editForm.title,
             lead: editForm.lead,
             body: editForm.body,
-            scheduledAt: editForm.scheduledAt || null,
+            scheduledAt: scheduledAtForApi(editForm.scheduledAt),
           }),
         })
       }
