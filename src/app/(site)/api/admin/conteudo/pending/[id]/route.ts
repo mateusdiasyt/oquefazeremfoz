@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { put } from '@vercel/blob'
 
 export async function PATCH(
   request: NextRequest,
@@ -13,12 +14,6 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const body = await request.json()
-    const { title, lead, body: bodyHtml } = body as {
-      title?: string
-      lead?: string
-      body?: string
-    }
 
     const existing = await prisma.pendingrelease.findUnique({
       where: { id },
@@ -27,10 +22,46 @@ export async function PATCH(
       return NextResponse.json({ message: 'Pendente não encontrado ou já publicado' }, { status: 404 })
     }
 
-    const data: { title?: string; lead?: string | null; body?: string } = {}
+    const contentType = request.headers.get('content-type') || ''
+    let title: string | undefined
+    let lead: string | undefined
+    let bodyHtml: string | undefined
+    let featuredImage: File | null = null
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      title = formData.get('title') as string
+      lead = formData.get('lead') as string
+      bodyHtml = formData.get('body') as string
+      featuredImage = formData.get('featuredImage') as File
+    } else {
+      const body = await request.json()
+      title = body.title
+      lead = body.lead
+      bodyHtml = body.body
+    }
+
+    const data: { title?: string; lead?: string | null; body?: string; featuredImageUrl?: string | null } = {}
     if (title !== undefined) data.title = String(title).trim()
     if (lead !== undefined) data.lead = lead === '' ? null : String(lead).trim()
     if (bodyHtml !== undefined) data.body = String(bodyHtml).trim()
+
+    if (featuredImage && featuredImage.size > 0) {
+      if (!featuredImage.type.startsWith('image/')) {
+        return NextResponse.json({ message: 'Apenas imagens são permitidas' }, { status: 400 })
+      }
+      if (featuredImage.size > 5 * 1024 * 1024) {
+        return NextResponse.json({ message: 'Imagem muito grande. Máximo 5MB' }, { status: 400 })
+      }
+      const bytes = await featuredImage.arrayBuffer()
+      const ext = featuredImage.name.split('.').pop() || 'jpg'
+      const blob = await put(
+        `admin/pending/${id}/${Date.now()}.${ext}`,
+        bytes,
+        { access: 'public', contentType: featuredImage.type }
+      )
+      data.featuredImageUrl = blob.url
+    }
 
     const updated = await prisma.pendingrelease.update({
       where: { id },

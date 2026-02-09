@@ -14,6 +14,7 @@ import {
   Loader2,
   User,
 } from 'lucide-react'
+import SEOPanel from '@/components/SEOPanel'
 
 type Tab = 'releases' | 'posts' | 'pending'
 
@@ -40,6 +41,7 @@ interface Pending {
   title: string
   lead: string | null
   body: string
+  featuredImageUrl?: string | null
   status: string
   createdAt: string
   business: { id: string; name: string; slug: string }
@@ -54,6 +56,8 @@ export default function AdminConteudoPage() {
   const [actionId, setActionId] = useState<string | null>(null)
   const [editModal, setEditModal] = useState<Pending | null>(null)
   const [editForm, setEditForm] = useState({ title: '', lead: '', body: '' })
+  const [editFeaturedFile, setEditFeaturedFile] = useState<File | null>(null)
+  const [editFeaturedPreview, setEditFeaturedPreview] = useState('')
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
   const load = () => {
@@ -110,6 +114,20 @@ export default function AdminConteudoPage() {
   const openEdit = (p: Pending) => {
     setEditModal(p)
     setEditForm({ title: p.title, lead: p.lead || '', body: p.body })
+    setEditFeaturedFile(null)
+    setEditFeaturedPreview(p.featuredImageUrl || '')
+  }
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (!file.type.startsWith('image/')) return
+      if (file.size > 5 * 1024 * 1024) return
+      setEditFeaturedFile(file)
+      const reader = new FileReader()
+      reader.onload = () => setEditFeaturedPreview(reader.result as string)
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleSaveEdit = async () => {
@@ -117,15 +135,29 @@ export default function AdminConteudoPage() {
     setActionId(editModal.id)
     setMessage(null)
     try {
-      const res = await fetch(`/api/admin/conteudo/pending/${editModal.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
-      })
+      let res: Response
+      if (editFeaturedFile) {
+        const formData = new FormData()
+        formData.append('title', editForm.title)
+        formData.append('lead', editForm.lead)
+        formData.append('body', editForm.body)
+        formData.append('featuredImage', editFeaturedFile)
+        res = await fetch(`/api/admin/conteudo/pending/${editModal.id}`, {
+          method: 'PATCH',
+          body: formData,
+        })
+      } else {
+        res = await fetch(`/api/admin/conteudo/pending/${editModal.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editForm),
+        })
+      }
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Erro')
       setMessage({ type: 'ok', text: 'Atualizado.' })
       setEditModal(null)
+      setEditFeaturedPreview('')
       load()
     } catch (err: any) {
       setMessage({ type: 'err', text: err.message || 'Erro ao salvar.' })
@@ -318,7 +350,7 @@ export default function AdminConteudoPage() {
 
       {editModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+          <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
             <h3 className="text-lg font-semibold mb-4">Editar conteúdo pendente</h3>
             <div className="space-y-4">
               <div>
@@ -346,6 +378,22 @@ export default function AdminConteudoPage() {
                   rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono"
                 />
+                <div className="mt-3">
+                  <SEOPanel title={editForm.title} lead={editForm.lead} bodyHtml={editForm.body} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Imagem de destaque (thumb)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditImageChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-medium"
+                />
+                <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF ou WebP. Máximo 5MB.</p>
+                {editFeaturedPreview && (
+                  <img src={editFeaturedPreview} alt="Preview" className="mt-3 w-full max-h-48 object-cover rounded-xl border border-gray-200" />
+                )}
               </div>
             </div>
             <div className="flex gap-2 mt-6">
