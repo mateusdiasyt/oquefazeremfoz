@@ -50,7 +50,7 @@ Crie um release completo sobre o seguinte tema: ${topic}.
 
 Responda apenas com um JSON válido contendo: "title", "lead" e "body". O "body" deve ser HTML (use <p> para parágrafos, <strong> para destaque).`
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
