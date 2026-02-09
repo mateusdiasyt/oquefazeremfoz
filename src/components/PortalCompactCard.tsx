@@ -44,7 +44,23 @@ export default function PortalCompactCard({ release, index }: PortalCompactCardP
         <span className="inline-block px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-xs font-semibold mb-1">
           Release
         </span>
-        <p className="text-xs text-gray-500 mb-0.5">Por {release.business.name}</p>
+        <div className="flex items-center gap-2 mb-0.5">
+          <div className="w-5 h-5 rounded-full overflow-hidden border border-gray-200 flex-shrink-0 bg-purple-100">
+            {release.business.profileImage ? (
+              <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="w-full h-full flex items-center justify-center text-purple-600 text-[10px] font-bold">
+                {release.business.name.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 truncate">
+            Por {release.business.name}
+            {release.business.isVerified && (
+              <img src="/icons/verificado.png" alt="" className="inline-block w-3.5 h-3.5 ml-1 align-middle" />
+            )}
+          </p>
+        </div>
         <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-purple-600 transition-colors">
           {release.title}
         </h3>
