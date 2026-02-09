@@ -30,7 +30,7 @@ export default function PortalPage() {
                 Portal do Turismo
               </h1>
               <p className="text-gray-600 text-sm mt-0.5">
-                Notícias e conteúdos para turistas — releases das empresas Portal
+                Notícias e conteúdos para turistas — releases das empresas
               </p>
             </div>
           </div>
@@ -50,7 +50,7 @@ export default function PortalPage() {
                 Nenhum conteúdo ainda
               </h2>
               <p className="text-gray-500 max-w-md mx-auto">
-                Os releases das empresas com categoria &quot;Portais&quot; aparecerão aqui. Cadastre empresas como Portal e publique releases para que eles sejam exibidos.
+                Os releases publicados pelas empresas aprovadas aparecerão aqui. Publique releases no painel da sua empresa para que eles sejam exibidos.
               </p>
             </div>
           ) : (

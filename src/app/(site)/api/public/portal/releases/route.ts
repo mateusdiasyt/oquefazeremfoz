@@ -3,10 +3,8 @@ import { prisma } from '../../../../../../lib/db'
 
 export const dynamic = 'force-dynamic'
 
-const PORTAL_CATEGORY = 'Portais'
-
 /**
- * Releases publicados por empresas com categoria "Portais" (Portal do Turismo).
+ * Todos os releases publicados por empresas aprovadas (Portal do Turismo).
  * Ordenado pelo mais recente primeiro.
  */
 export async function GET() {
@@ -14,10 +12,7 @@ export async function GET() {
     const releases = await prisma.businessrelease.findMany({
       where: {
         isPublished: true,
-        business: {
-          isApproved: true,
-          category: PORTAL_CATEGORY,
-        },
+        business: { isApproved: true },
       },
       include: {
         business: {
