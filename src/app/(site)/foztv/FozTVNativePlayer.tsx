@@ -173,10 +173,10 @@ export default function FozTVNativePlayer({ src, title, onClose }: FozTVNativePl
 
       {/* Barra de controles estilo YouTube */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent pt-12 pb-2 px-3 opacity-0 group-hover/controls:opacity-100 transition-opacity">
-        {/* Timeline com preview ao hover */}
+        {/* Timeline com preview ao hover + bolinha que acompanha o tempo */}
         <div
           ref={progressRef}
-          className="relative h-1 bg-white/30 rounded-full cursor-pointer mb-2 group/timeline"
+          className="relative h-1.5 bg-white/30 rounded-full cursor-pointer mb-2 group/timeline"
           onClick={handleProgressClick}
           onMouseMove={handleProgressMouseMove}
           onMouseLeave={handleProgressMouseLeave}
@@ -184,6 +184,17 @@ export default function FozTVNativePlayer({ src, title, onClose }: FozTVNativePl
           <div
             className="absolute inset-y-0 left-0 bg-purple-500 rounded-full"
             style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+          />
+          {/* Bolinha: posição = momento do vídeo; cresce quando o mouse está em cima da barra */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-white shadow-md ring-2 ring-white/50 pointer-events-none transition-transform duration-150 ease-out"
+            style={{
+              left: `${duration ? (currentTime / duration) * 100 : 0}%`,
+              width: progressHover !== null ? 14 : 10,
+              height: progressHover !== null ? 14 : 10,
+              minWidth: progressHover !== null ? 14 : 10,
+              minHeight: progressHover !== null ? 14 : 10,
+            }}
           />
           {/* Preview ao passar o mouse na timeline */}
           {progressHover != null && previewThumb && (
