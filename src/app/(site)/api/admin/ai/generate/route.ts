@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, isAdmin } from '../../../../../lib/auth'
-import { getGeminiApiKey, getBotSystemPrompt } from '../../../../../lib/adminSettings'
-import { prisma } from '../../../../../lib/db'
+import { getCurrentUser, isAdmin } from '@/lib/auth'
+import { getGeminiApiKey, getBotSystemPrompt } from '@/lib/adminSettings'
+import { prisma } from '@/lib/db'
 
 const DEFAULT_SYSTEM = `Você é um redator de releases e artigos para turismo em Foz do Iguaçu. Escreva em português do Brasil, tom informativo e acolhedor. Gere conteúdo original, útil para turistas. Responda apenas com um JSON válido no formato: {"title":"Título do artigo","lead":"Resumo em 1 ou 2 frases","body":"Texto completo em HTML com parágrafos <p>..."}`
 

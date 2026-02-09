@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, isAdmin } from '../../../../lib/auth'
+import { getCurrentUser, isAdmin } from '@/lib/auth'
 import {
   getGeminiApiKey,
   getBotSystemPrompt,
   setGeminiApiKey,
   setBotSystemPrompt,
   maskApiKey,
-} from '../../../../lib/adminSettings'
+} from '@/lib/adminSettings'
 
 export async function GET() {
   try {
