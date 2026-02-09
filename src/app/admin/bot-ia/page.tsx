@@ -86,12 +86,33 @@ export default function AdminBotIAPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Erro ao gerar')
-      setGenerated({
+
+      const content = {
         title: data.title || '',
         lead: data.lead || '',
         body: data.body || '',
+      }
+      setGenerated(content)
+
+      // Salva como pendente automaticamente para aparecer em Gerenciar Conteúdo
+      const saveRes = await fetch('/api/admin/conteudo/pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: selected.id,
+          title: content.title,
+          lead: content.lead || undefined,
+          body: content.body,
+        }),
       })
-      setMessage({ type: 'ok', text: 'Conteúdo gerado. Revise e clique em "Salvar e enviar para revisão" para ir para Gerenciar Conteúdo.' })
+      const saveData = await saveRes.json()
+      if (!saveRes.ok) {
+        setMessage({ type: 'err', text: saveData.message || 'Conteúdo gerado, mas falha ao salvar em Pendentes. Clique em "Salvar e enviar para revisão".' })
+        return
+      }
+
+      setMessage({ type: 'ok', text: 'Conteúdo gerado e salvo em Pendentes. Redirecionando...' })
+      router.push('/admin/conteudo')
     } catch (err: any) {
       setMessage({ type: 'err', text: err.message || 'Erro ao gerar conteúdo.' })
     } finally {

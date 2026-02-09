@@ -51,8 +51,11 @@ export async function POST(request: NextRequest) {
         businessId: pending.businessId,
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao salvar pendente:', error)
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 })
+    const msg = error?.code === 'P2021' || error?.message?.includes('does not exist')
+      ? 'Tabela pendingrelease não existe. Execute no Neon: prisma/create-pendingrelease-table.sql ou use "npx prisma db push".'
+      : 'Erro interno'
+    return NextResponse.json({ message: msg }, { status: 500 })
   }
 }
