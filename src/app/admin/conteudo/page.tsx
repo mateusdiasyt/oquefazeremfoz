@@ -76,6 +76,15 @@ export default function AdminConteudoPage() {
 
   useEffect(() => {
     load()
+    fetch('/api/admin/conteudo/publish-scheduled', { method: 'POST' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.published?.length > 0) {
+          load()
+          setMessage({ type: 'ok', text: data.message || 'Agendamentos publicados.' })
+        }
+      })
+      .catch(() => {})
   }, [])
 
   const handleConcluir = async (id: string) => {
