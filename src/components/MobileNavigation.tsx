@@ -2,66 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Gift, MapPin, ShieldCheck, UserCircle } from 'lucide-react'
+import { Home, Compass, Video, Tv, Newspaper } from 'lucide-react'
 
 export default function MobileNavigation() {
   const pathname = usePathname()
   const [activeTab, setActiveTab] = useState('inicio')
 
-  // Atualizar tab ativa baseado na rota atual
   useEffect(() => {
-    if (pathname === '/') {
-      setActiveTab('inicio')
-    } else if (pathname === '/empresas') {
-      setActiveTab('descubra')
-    } else if (pathname === '/cupons') {
-      setActiveTab('cupons')
-    } else if (pathname === '/mapa-turistico') {
-      setActiveTab('mapa')
-    } else if (pathname === '/guias') {
-      setActiveTab('guias')
-    } else if (pathname === '/selo-verificado') {
-      setActiveTab('selo')
-    }
+    if (pathname === '/') setActiveTab('inicio')
+    else if (pathname === '/empresas') setActiveTab('descubra')
+    else if (pathname === '/cameras-ao-vivo') setActiveTab('cameras')
+    else if (pathname === '/foztv') setActiveTab('foztv')
+    else if (pathname === '/portal') setActiveTab('portal')
   }, [pathname])
 
   const navigationItems = [
-    {
-      id: 'inicio',
-      icon: Home,
-      label: 'Início',
-      href: '/'
-    },
-    {
-      id: 'descubra',
-      icon: Search,
-      label: 'Descubra',
-      href: '/empresas'
-    },
-    {
-      id: 'cupons',
-      icon: Gift,
-      label: 'Cupons',
-      href: '/cupons'
-    },
-    {
-      id: 'mapa',
-      icon: MapPin,
-      label: 'Mapa Turístico',
-      href: '/mapa-turistico'
-    },
-    {
-      id: 'guias',
-      icon: UserCircle,
-      label: 'Guias',
-      href: '/guias'
-    },
-    {
-      id: 'selo',
-      icon: ShieldCheck,
-      label: 'Selo Verificado',
-      href: '/selo-verificado'
-    }
+    { id: 'inicio', icon: Home, label: 'Início', href: '/' },
+    { id: 'descubra', icon: Compass, label: 'Descubra', href: '/empresas' },
+    { id: 'cameras', icon: Video, label: 'Câmeras', href: '/cameras-ao-vivo' },
+    { id: 'foztv', icon: Tv, label: 'FozTV', href: '/foztv' },
+    { id: 'portal', icon: Newspaper, label: 'Portal', href: '/portal' },
   ]
 
   return (
