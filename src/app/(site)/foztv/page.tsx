@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Play, Tv, X, Heart, MessageCircle, Share2 } from 'lucide-react'
 import { useAuth } from '../../../contexts/AuthContext'
+import FozTVNativePlayer from './FozTVNativePlayer'
+import FozTVCardPreview from './FozTVCardPreview'
 
 interface FozTVVideo {
   id: string
@@ -71,6 +73,7 @@ export default function FozTVPage() {
   const [commentText, setCommentText] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [togglingLike, setTogglingLike] = useState(false)
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/public/foztv', { cache: 'no-store' })
@@ -206,40 +209,56 @@ export default function FozTVPage() {
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
             {videos.map((video) => {
               const thumb = video.thumbnailUrl || getYouTubeThumbnail(video.videoUrl)
+              const isHovering = hoveredCardId === video.id
               return (
-                <button
+                <div
                   key={video.id}
-                  type="button"
-                  onClick={() => setPlaying(video)}
-                  className="group text-left rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-200 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
+                  className="group text-left rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-200 focus-within:ring-2 focus-within:ring-purple-500 transition-all"
+                  onMouseEnter={() => setHoveredCardId(video.id)}
+                  onMouseLeave={() => setHoveredCardId(null)}
                 >
-                  <div className="relative aspect-video bg-gray-100">
-                    {thumb ? (
-                      <img
-                        src={thumb}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  <button
+                    type="button"
+                    onClick={() => setPlaying(video)}
+                    className="w-full text-left focus:outline-none"
+                  >
+                    <div className="relative aspect-video bg-gray-100">
+                      {!isHovering && (
+                        <>
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                              <Play className="w-12 h-12 text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
+                            <span className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                              <Play className="w-7 h-7 text-white ml-1" fill="white" />
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      <FozTVCardPreview
+                        video={video}
+                        isHovering={isHovering}
+                        onPlay={() => setPlaying(video)}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <Play className="w-12 h-12 text-gray-300" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
-                      <span className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-                        <Play className="w-7 h-7 text-white ml-1" fill="white" />
-                      </span>
                     </div>
-                  </div>
-                  <div className="p-3">
-                    <p className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-purple-600 transition-colors">
-                      {video.title}
-                    </p>
-                    {typeof video.likeCount === 'number' && (
-                      <p className="text-xs text-gray-500 mt-1">{video.likeCount} curtida{video.likeCount !== 1 ? 's' : ''}</p>
-                    )}
-                  </div>
-                </button>
+                    <div className="p-3">
+                      <p className="font-medium text-gray-900 text-sm line-clamp-2 group-hover:text-purple-600 transition-colors">
+                        {video.title}
+                      </p>
+                      {typeof video.likeCount === 'number' && (
+                        <p className="text-xs text-gray-500 mt-1">{video.likeCount} curtida{video.likeCount !== 1 ? 's' : ''}</p>
+                      )}
+                    </div>
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -258,7 +277,7 @@ export default function FozTVPage() {
             className="relative flex flex-col md:flex-row w-[94vw] max-w-[1600px] max-h-[90vh] my-auto bg-white rounded-xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Vídeo à esquerda – ocupa a maior parte (fica bem grande) */}
+            {/* Vídeo à esquerda – player com timeline preview (vídeo nativo) ou iframe YouTube */}
             <div className="relative flex-[1_1_70%] min-w-0 min-h-[200px] aspect-video md:aspect-video md:min-h-0 bg-black">
               {isYouTubeUrl(playing.videoUrl) ? (
                 <iframe
@@ -269,12 +288,9 @@ export default function FozTVPage() {
                   allowFullScreen
                 />
               ) : (
-                <video
+                <FozTVNativePlayer
                   src={playing.videoUrl}
-                  controls
-                  autoPlay
-                  className="absolute inset-0 w-full h-full object-contain bg-black"
-                  playsInline
+                  title={playing.title}
                 />
               )}
             </div>
