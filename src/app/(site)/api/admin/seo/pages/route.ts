@@ -32,9 +32,20 @@ export async function GET() {
     )
 
     return NextResponse.json({ pages })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Erro ao listar páginas SEO:', error)
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Erro interno'
+    const isTableMissing =
+      typeof msg === 'string' &&
+      (msg.includes('does not exist') || msg.includes('PageSeo') || msg.includes('pageseo') || msg.includes('P2021'))
+    return NextResponse.json(
+      {
+        message: isTableMissing
+          ? 'Tabela de SEO ainda não existe no banco. Rode: npx prisma db push'
+          : msg,
+      },
+      { status: isTableMissing ? 503 : 500 }
+    )
   }
 }
 
@@ -54,7 +65,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ message: 'Página não configurável' }, { status: 400 })
     }
 
-    const id = `seo_${normalized.replace(/\//g, '_') || 'home'}`
+    const id = normalized === '/' ? 'seo_home' : `seo_${normalized.replace(/\//g, '_').replace(/^_/, '')}`
     const data = {
       title: body.title != null ? String(body.title).trim() || null : undefined,
       description: body.description != null ? String(body.description).trim() || null : undefined,
@@ -97,8 +108,19 @@ export async function PUT(request: NextRequest) {
 
     const updated = await getPageSeo(normalized)
     return NextResponse.json({ page: updated })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Erro ao atualizar SEO:', error)
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Erro interno'
+    const isTableMissing =
+      typeof msg === 'string' &&
+      (msg.includes('does not exist') || msg.includes('PageSeo') || msg.includes('pageseo') || msg.includes('P2021'))
+    return NextResponse.json(
+      {
+        message: isTableMissing
+          ? 'Tabela de SEO ainda não existe no banco. No seu projeto rode: npx prisma db push'
+          : msg,
+      },
+      { status: isTableMissing ? 503 : 500 }
+    )
   }
 }
