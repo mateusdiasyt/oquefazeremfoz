@@ -466,20 +466,17 @@ export default function HomePage() {
       {/* Main Content */}
       <section className="w-full pt-8 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-0 md:px-4 lg:px-8">
-          {/* Sidebar Esquerda - Empresas em Destaque */}
-          <aside className="hidden lg:flex flex-col gap-6">
-            {/* Agrupar empresas por categoria */}
+          {/* Sidebar Esquerda - Empresas em Destaque (coluna compacta e moderna) */}
+          <aside className="hidden lg:flex flex-col gap-4">
             {(() => {
               const categories = ['Hotel', 'Restaurante', 'Pousada', 'Atração Turística', 'Loja', 'Serviço', 'Evento', 'Portais', 'Influencers', 'Outro']
               const businessesByCategory: Record<string, Business[]> = {}
-              
-              // Agrupar empresas aprovadas por categoria
+              const maxPerCategory = 2
+
               businesses
                 .filter(b => b.isApproved)
                 .sort((a, b) => {
-                  if (a.isVerified !== b.isVerified) {
-                    return b.isVerified ? -1 : 1
-                  }
+                  if (a.isVerified !== b.isVerified) return b.isVerified ? -1 : 1
                   const followersDiff = (b.followersCount || 0) - (a.followersCount || 0)
                   if (followersDiff !== 0) return followersDiff
                   const likesDiff = (b.likesCount || 0) - (a.likesCount || 0)
@@ -488,108 +485,82 @@ export default function HomePage() {
                 })
                 .forEach(business => {
                   const category = business.category || 'Outro'
-                  if (!businessesByCategory[category]) {
-                    businessesByCategory[category] = []
-                  }
-                  if (businessesByCategory[category].length < 3) {
+                  if (!businessesByCategory[category]) businessesByCategory[category] = []
+                  if (businessesByCategory[category].length < maxPerCategory) {
                     businessesByCategory[category].push(business)
                   }
                 })
-              
-              // Filtrar apenas categorias que têm empresas
-              const categoriesWithBusinesses = categories.filter(cat => 
+
+              const categoriesWithBusinesses = categories.filter(cat =>
                 businessesByCategory[cat] && businessesByCategory[cat].length > 0
               )
-              
-              if (categoriesWithBusinesses.length === 0) {
-                return null
-              }
-              
+              if (categoriesWithBusinesses.length === 0) return null
+
               return (
-                <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-4 md:p-6">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                      <Star className="w-4 h-4 text-white" />
+                <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                      <Star className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <h4 className="text-base font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>
-                      Empresas em Destaque
-                    </h4>
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">Empresas em Destaque</h4>
                   </div>
-                  
-                  <div className="space-y-6">
+                  <div className="p-2 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
                     {categoriesWithBusinesses.map((category, categoryIndex) => (
                       <div key={category}>
-                        {/* Título da categoria */}
-                        <h5 className="text-sm font-semibold text-gray-700 mb-3" style={{ letterSpacing: '-0.01em' }}>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider px-1.5 mb-1.5">
                           {category}
-                        </h5>
-                        
-                        {/* Lista de empresas da categoria */}
-                        <div className="space-y-2">
+                        </p>
+                        <div className="space-y-0.5">
                           {businessesByCategory[category].map((business) => (
-                            <div key={business.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50/50 transition-colors border border-transparent hover:border-gray-100">
+                            <div
+                              key={business.id}
+                              className="group flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
                               <button
                                 onClick={() => router.push(`/empresa/${business.slug || business.id}`)}
-                                className="flex items-center space-x-3 flex-1 min-w-0 text-left"
+                                className="flex items-center gap-2 flex-1 min-w-0 text-left"
                               >
                                 {business.profileImage ? (
                                   <img
                                     src={business.profileImage}
-                                    alt={business.name}
-                                    className="w-11 h-11 rounded-xl object-cover border border-gray-200"
+                                    alt=""
+                                    className="w-8 h-8 rounded-lg object-cover flex-shrink-0 ring-1 ring-gray-100"
                                   />
                                 ) : (
-                                  <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center text-purple-600 font-semibold text-sm border-2 border-purple-200">
+                                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-xs flex-shrink-0">
                                     {business.name.charAt(0).toUpperCase()}
                                   </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <h5 className="font-semibold text-gray-900 truncate text-sm" style={{ letterSpacing: '-0.01em' }}>
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-medium text-gray-900 truncate text-xs">
                                       {capitalizeWords(business.name)}
-                                    </h5>
+                                    </span>
                                     {business.isVerified && (
-                                      <img 
-                                        src="/icons/verificado.png" 
-                                        alt="Verificado" 
-                                        className="w-4 h-4 object-contain"
-                                        title="Empresa verificada"
-                                      />
+                                      <img src="/icons/verificado.png" alt="" className="w-3 h-3 object-contain flex-shrink-0" />
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 mt-0.5">
-                                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                                      </svg>
-                                      <span>{business.followersCount}</span>
-                                    </div>
-                                  </div>
+                                  <span className="text-[10px] text-gray-400">{business.followersCount} seguidores</span>
                                 </div>
                               </button>
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleFollowBusiness(business.id)
-                                }}
-                                className={`p-2 rounded-lg transition-all duration-200 ${
-                                  business.isFollowing 
-                                    ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                                onClick={(e) => { e.stopPropagation(); handleFollowBusiness(business.id) }}
+                                className={`p-1.5 rounded-md transition-colors flex-shrink-0 ${
+                                  business.isFollowing
+                                    ? 'bg-purple-600 text-white'
                                     : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
                                 }`}
                                 title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
                               >
-                                <svg className="w-4 h-4" fill={business.isFollowing ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5" fill={business.isFollowing ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                 </svg>
                               </button>
                             </div>
                           ))}
                         </div>
-                        
-                        {/* Separador entre categorias (exceto na última) */}
                         {categoryIndex < categoriesWithBusinesses.length - 1 && (
-                          <div className="border-t border-gray-100 mt-4"></div>
+                          <div className="border-t border-gray-100/80 mt-2 pt-2" />
                         )}
                       </div>
                     ))}
