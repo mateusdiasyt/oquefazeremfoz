@@ -103,29 +103,55 @@ function ReleasePopup({
 }) {
   const excerpt = release.lead || stripHtml(release.body).slice(0, 200) + (release.body.length > 200 ? '...' : '')
 
-  const popupWidth = 320
-  const gap = 8
-  const left = Math.max(16, Math.min(rect.left + rect.width / 2 - popupWidth / 2, typeof window !== 'undefined' ? window.innerWidth - popupWidth - 16 : 400))
-  const top = rect.top - gap
+  const popupWidth = 340
+  const gap = 10
+  const padding = 16
+  const winH = typeof window !== 'undefined' ? window.innerHeight : 600
+  const spaceBelow = winH - rect.bottom - gap - padding
+  const maxH = spaceBelow > 0 ? Math.min(320, spaceBelow) : 280
+
+  const left = Math.max(padding, Math.min(rect.left + rect.width / 2 - popupWidth / 2, typeof window !== 'undefined' ? window.innerWidth - popupWidth - padding : 400))
+  const top = rect.bottom + gap
 
   return (
     <Link
       href={`/empresa/${release.business.slug}/release/${release.slug}`}
-      className="fixed z-[100] block"
+      className="fixed z-[100] block animate-fade-in"
       style={{
         left,
         top,
-        transform: 'translateY(-100%)',
         width: popupWidth
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-5 hover:border-purple-200 transition-colors">
-        <div className="text-xs font-semibold text-purple-600 mb-2">{release.business.name}</div>
-        <h4 className="text-base font-bold text-gray-900 mb-2 leading-snug line-clamp-3">{release.title}</h4>
-        {excerpt && <p className="text-sm text-gray-600 leading-relaxed line-clamp-4">{excerpt}</p>}
-        <span className="text-sm text-purple-600 font-medium mt-3 inline-block">Clique para ler →</span>
+      <div
+        className="bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden"
+        style={{ maxHeight: maxH }}
+      >
+        <div className="p-4 overflow-y-auto">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-purple-500">
+              {release.business.name}
+            </span>
+            {release.business.isVerified && (
+              <img src="/icons/verificado.png" alt="" className="w-3.5 h-3.5 object-contain" />
+            )}
+          </div>
+          <h4 className="text-[15px] font-bold text-gray-900 leading-snug line-clamp-2 mb-2 tracking-tight">
+            {release.title}
+          </h4>
+          {excerpt && (
+            <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+              {excerpt}
+            </p>
+          )}
+          <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors">
+            Clique para ler
+            <span className="text-purple-400" aria-hidden>→</span>
+          </span>
+        </div>
+        <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
       </div>
     </Link>
   )
