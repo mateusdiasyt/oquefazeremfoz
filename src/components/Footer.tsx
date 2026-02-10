@@ -195,6 +195,9 @@ export default function Footer() {
               <a href="/mapa-turistico" className="text-gray-600 hover:text-purple-600 transition-colors">
                 Mapa Turístico
               </a>
+              <a href="/contato" className="text-gray-600 hover:text-purple-600 transition-colors">
+                Contato
+              </a>
             </nav>
           </div>
         </div>
