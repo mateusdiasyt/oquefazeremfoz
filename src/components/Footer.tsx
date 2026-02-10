@@ -78,13 +78,13 @@ export default function Footer() {
   const currentBanner = banners.length > 0 ? banners[currentIndex] : null
 
   return (
-    <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white w-full relative z-10">
-      {/* Carrossel de Banners */}
+    <footer className="bg-white border-t border-gray-100 w-full relative z-10">
+      {/* Carrossel de Banners - tamanho reduzido */}
       {banners.length > 0 && currentBanner && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="relative">
-            <div className="overflow-hidden rounded-2xl shadow-soft">
-              <div className="relative h-64 md:h-80">
+            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100">
+              <div className="relative h-36 md:h-44">
                 {banners.map((banner, index) => (
                   <div
                     key={banner.id}
@@ -129,13 +129,13 @@ export default function Footer() {
                       </>
                     )}
                     
-                    {/* Botão Patrocine aqui - sempre acima do overlay */}
-                    <div className="absolute top-4 right-4 z-20 pointer-events-auto">
+                    {/* Botão Patrocine aqui */}
+                    <div className="absolute top-2 right-2 md:top-3 md:right-3 z-20 pointer-events-auto">
                       <a
                         href="https://wa.me/5545999287669?text=Olá! Tenho interesse em patrocinar no banner da página inicial."
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-black/40 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full hover:bg-black/60 transition-all duration-300 border border-white/20 hover:border-white/40 opacity-75 hover:opacity-100"
+                        className="bg-black/50 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full hover:bg-black/70 transition-all duration-200 border border-white/20"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Patrocine aqui
@@ -147,12 +147,12 @@ export default function Footer() {
               
               {/* Banner indicators */}
               {banners.length > 1 && (
-                <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+                <div className="absolute bottom-2 right-2 md:bottom-3 md:right-3 flex gap-1.5 z-10">
                   {banners.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
                         index === currentIndex 
                           ? 'bg-white' 
                           : 'bg-white/50 hover:bg-white/70'
@@ -167,12 +167,12 @@ export default function Footer() {
         </div>
       )}
 
-      {/* Informações do rodapé */}
-      <div className="border-t border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-center md:text-left space-y-1">
-              <p className="text-gray-400 text-sm">
+      {/* Rodapé reformulado - claro e compacto */}
+      <div className="border-t border-gray-100 bg-gray-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
+            <div className="space-y-0.5">
+              <p className="text-gray-500 text-sm">
                 © {new Date().getFullYear()} O Que Fazer em Foz. Todos os direitos reservados.
               </p>
               <p className="text-gray-500 text-sm">
@@ -181,23 +181,23 @@ export default function Footer() {
                   href="https://www.instagram.com/devmateusmendoza/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                  className="text-purple-600 hover:text-purple-700 transition-colors font-medium"
                 >
                   Mateus Mendoza
                 </a>
               </p>
             </div>
-            <div className="flex gap-6 text-sm text-gray-400">
-              <a href="/" className="hover:text-white transition-colors">
+            <nav className="flex flex-wrap justify-center sm:justify-end gap-x-6 gap-y-1 text-sm">
+              <a href="/" className="text-gray-600 hover:text-purple-600 transition-colors">
                 Início
               </a>
-              <a href="/empresas" className="hover:text-white transition-colors">
+              <a href="/empresas" className="text-gray-600 hover:text-purple-600 transition-colors">
                 Empresas
               </a>
-              <a href="/mapa-turistico" className="hover:text-white transition-colors">
+              <a href="/mapa-turistico" className="text-gray-600 hover:text-purple-600 transition-colors">
                 Mapa Turístico
               </a>
-            </div>
+            </nav>
           </div>
         </div>
       </div>
