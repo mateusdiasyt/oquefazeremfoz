@@ -66,13 +66,18 @@ function ReleaseCarouselCard({
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        <div className="absolute top-2 left-2 w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white flex-shrink-0 ring-2 ring-purple-400/80">
-          {release.business.profileImage ? (
-            <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-purple-500 flex items-center justify-center text-white font-bold text-sm">
-              {release.business.name.charAt(0)}
-            </div>
+        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+          <div className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-white flex-shrink-0 ring-2 ring-purple-400/80">
+            {release.business.profileImage ? (
+              <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                {release.business.name.charAt(0)}
+              </div>
+            )}
+          </div>
+          {release.business.isVerified && (
+            <img src="/icons/verificado.png" alt="" className="w-5 h-5 flex-shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
           )}
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-2 text-center">

@@ -261,7 +261,8 @@ export default function HomePage() {
         setLoadingMore(true)
       }
 
-      const response = await fetch(`/api/posts?page=${page}&limit=5`)
+      // Timeline: sem limite por empresa; carregar mais itens por página
+      const response = await fetch(`/api/posts?page=${page}&limit=20`)
       if (response.ok) {
         const data = await response.json()
         
@@ -272,7 +273,7 @@ export default function HomePage() {
         }
         
         // Verificar se há mais posts
-        setHasMorePosts(data.posts && data.posts.length === 5)
+        setHasMorePosts(data.posts && data.posts.length === 20)
         setCurrentPage(page)
       }
     } catch (error) {

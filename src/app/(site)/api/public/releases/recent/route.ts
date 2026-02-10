@@ -4,7 +4,7 @@ import { prisma } from '../../../../../../lib/db'
 export const dynamic = 'force-dynamic'
 
 /**
- * Últimos releases publicados, 1 por empresa (o mais recente de cada).
+ * Últimos releases publicados, sem limite por empresa.
  * Ordenado pelo mais recente primeiro.
  */
 export async function GET() {
@@ -19,15 +19,11 @@ export async function GET() {
           select: { id: true, name: true, slug: true, profileImage: true, isVerified: true }
         }
       },
-      orderBy: { publishedAt: 'desc' as const }
+      orderBy: { publishedAt: 'desc' as const },
+      take: 30
     })
 
-    const seen = new Set<string>()
-    const onePerBusiness = releases
-      .filter((r) => r.business && !seen.has(r.businessId) && seen.add(r.businessId))
-      .slice(0, 12)
-
-    return NextResponse.json(onePerBusiness)
+    return NextResponse.json(releases)
   } catch (error) {
     console.error('Erro ao buscar releases recentes:', error)
     return NextResponse.json({ message: 'Erro ao buscar releases' }, { status: 500 })
