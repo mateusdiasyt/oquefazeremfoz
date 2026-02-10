@@ -83,12 +83,12 @@ export default function Footer() {
       {banners.length > 0 && currentBanner && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="relative">
-            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-100">
-              <div className="relative h-36 md:h-44">
+            <div className="overflow-hidden rounded-xl shadow-sm border border-gray-200 bg-gray-900">
+              <div className="relative h-44 md:h-56">
                 {banners.map((banner, index) => (
                   <div
                     key={banner.id}
-                    className={`absolute inset-0 transition-opacity duration-500 ${
+                    className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
                       index === currentIndex ? 'opacity-100' : 'opacity-0'
                     }`}
                     onMouseEnter={() => setIsPaused(true)}
@@ -105,13 +105,12 @@ export default function Footer() {
                           <img
                             src={banner.imageUrl}
                             alt="Banner"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-r from-pink-600 to-blue-600" />
                         )}
-                        {/* Overlay mais claro e com pointer-events-none para permitir cliques */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                       </a>
                     ) : (
                       <>
@@ -119,13 +118,12 @@ export default function Footer() {
                           <img
                             src={banner.imageUrl}
                             alt="Banner"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-r from-pink-600 to-blue-600" />
                         )}
-                        {/* Overlay mais claro quando não há link */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                       </>
                     )}
                     
@@ -167,8 +165,8 @@ export default function Footer() {
         </div>
       )}
 
-      {/* Rodapé reformulado - claro e compacto */}
-      <div className="border-t border-gray-100 bg-gray-50/50">
+      {/* Rodapé - fundo mais escuro para diferenciar do body */}
+      <div className="border-t border-gray-200 bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
             <div className="space-y-0.5">
