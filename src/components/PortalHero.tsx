@@ -62,7 +62,21 @@ export default function PortalHero({ releases }: { releases: PortalReleaseCardRe
           <h2 className="text-xl lg:text-2xl font-bold text-white leading-tight line-clamp-2 group-hover:text-purple-200 transition-colors">
             {featured.title}
           </h2>
-          <p className="text-white/70 text-sm mt-1 truncate">{featured.business.name}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="w-6 h-6 rounded-full overflow-hidden border border-white/30 flex-shrink-0 bg-white/20">
+              {featured.business.profileImage ? (
+                <img src={featured.business.profileImage} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                  {featured.business.name.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <p className="text-white/70 text-sm truncate">{featured.business.name}</p>
+            {featured.business.isVerified && (
+              <img src="/icons/verificado.png" alt="" className="w-4 h-4 flex-shrink-0 opacity-90" />
+            )}
+          </div>
         </div>
       </Link>
 
@@ -94,7 +108,21 @@ export default function PortalHero({ releases }: { releases: PortalReleaseCardRe
                 <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-purple-600 transition-colors">
                   {release.title}
                 </h3>
-                <p className="text-xs text-gray-500 truncate mt-0.5">{release.business.name}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-4 h-4 rounded-full overflow-hidden border border-gray-200 flex-shrink-0 bg-purple-100">
+                    {release.business.profileImage ? (
+                      <img src={release.business.profileImage} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-purple-600 text-[10px] font-bold">
+                        {release.business.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">{release.business.name}</p>
+                  {release.business.isVerified && (
+                    <img src="/icons/verificado.png" alt="" className="w-3 h-3 flex-shrink-0" />
+                  )}
+                </div>
               </div>
             </Link>
           )
