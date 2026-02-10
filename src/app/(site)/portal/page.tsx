@@ -84,6 +84,11 @@ export default function PortalPage() {
                       <PortalCompactCard key={release.id} release={release} index={i + 1} />
                     ))}
                   </div>
+                  <div className="mt-10 p-5 md:p-6 bg-purple-50/60 border border-purple-100 rounded-2xl">
+                    <p className="text-gray-700 text-sm md:text-base leading-relaxed">
+                      <strong className="text-purple-800">Como funciona:</strong> Qualquer empresa aprovada no OQFOZ pode aparecer no Portal do Turismo. Basta publicar um <strong>release</strong> (notícia ou conteúdo) pelo painel da sua empresa — o conteúdo será exibido aqui automaticamente para turistas e visitantes. Quer divulgar sua empresa ou atração? Cadastre-se, seja aprovado e comece a publicar releases.
+                    </p>
+                  </div>
                 </section>
               )}
             </>
