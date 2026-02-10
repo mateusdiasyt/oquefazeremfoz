@@ -84,11 +84,11 @@ export default function Footer() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="relative">
             <div className="overflow-hidden rounded-xl shadow-sm border border-gray-200 bg-gray-900">
-              <div className="relative h-44 md:h-56">
+              <div className="relative h-52 md:h-64">
                 {banners.map((banner, index) => (
                   <div
                     key={banner.id}
-                    className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${
+                    className={`absolute inset-0 transition-opacity duration-500 ${
                       index === currentIndex ? 'opacity-100' : 'opacity-0'
                     }`}
                     onMouseEnter={() => setIsPaused(true)}
@@ -105,7 +105,7 @@ export default function Footer() {
                           <img
                             src={banner.imageUrl}
                             alt="Banner"
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-r from-pink-600 to-blue-600" />
@@ -118,7 +118,7 @@ export default function Footer() {
                           <img
                             src={banner.imageUrl}
                             alt="Banner"
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-r from-pink-600 to-blue-600" />
