@@ -8,7 +8,7 @@ import CreatePost from '@/components/CreatePost'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
 import FloatingChat from '@/components/FloatingChat'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 
@@ -188,6 +188,16 @@ interface Weather {
   }>
 }
 
+interface FozTVVideo {
+  id: string
+  title: string
+  slug: string
+  videoUrl: string
+  thumbnailUrl: string | null
+  publishedAt: string | null
+  likeCount?: number
+}
+
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -195,6 +205,8 @@ export default function HomePage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [weather, setWeather] = useState<Weather | null>(null)
+  const [lastFozTVVideo, setLastFozTVVideo] = useState<FozTVVideo | null>(null)
+  const [weatherExpanded, setWeatherExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
 
   // Função para calcular tempo relativo
@@ -232,7 +244,21 @@ export default function HomePage() {
     fetchBusinesses()
     fetchCoupons()
     fetchWeather()
+    fetchLastFozTVVideo()
   }, [])
+
+  const fetchLastFozTVVideo = async () => {
+    try {
+      const response = await fetch('/api/public/foztv', { cache: 'no-store' })
+      if (response.ok) {
+        const data = await response.json()
+        const list = Array.isArray(data) ? data : []
+        setLastFozTVVideo(list.length > 0 ? list[0] : null)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar último vídeo FozTV:', error)
+    }
+  }
 
   useEffect(() => {
     fetchReleases()
@@ -720,6 +746,49 @@ export default function HomePage() {
                 )}
             </div>
 
+            {/* Último vídeo FozTV */}
+            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-4 md:p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Tv className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                </div>
+                <h4 className="text-base md:text-lg font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>Último vídeo FozTV</h4>
+              </div>
+              {lastFozTVVideo ? (
+                <Link
+                  href="/foztv"
+                  className="block rounded-2xl overflow-hidden border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all duration-200 group"
+                >
+                  <div className="relative aspect-video bg-gray-100">
+                    {lastFozTVVideo.thumbnailUrl ? (
+                      <img
+                        src={lastFozTVVideo.thumbnailUrl}
+                        alt={lastFozTVVideo.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-500">
+                        <Video className="w-12 h-12 text-white/80" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className="text-sm font-semibold text-white drop-shadow line-clamp-2">{lastFozTVVideo.title}</p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-gray-50 group-hover:bg-purple-50/50 transition-colors">
+                    <span className="text-sm font-medium text-purple-600 group-hover:text-purple-700">Assistir no FozTV →</span>
+                  </div>
+                </Link>
+              ) : (
+                <div className="text-center py-8">
+                  <Tv className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">Nenhum vídeo ainda</p>
+                  <p className="text-gray-400 text-xs mt-1">Em breve no FozTV</p>
+                </div>
+              )}
+            </div>
+
             {/* Clima em Foz do Iguaçu */}
             <div className="card p-6">
               <div className="flex items-center space-x-3 mb-4">
@@ -731,77 +800,75 @@ export default function HomePage() {
               
               {weather ? (
                 <div className="space-y-4">
-                  {/* Temperatura Atual */}
+                  {/* Resumo compacto: temperatura e condição */}
                   <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 border border-yellow-200">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <img 
-                            src={`https://openweathermap.org/img/wn/${weather.current.icon}@2x.png`} 
-                            alt={weather.current.description}
-                            className="w-12 h-12"
-                          />
-                          <div>
-                            <p className="text-3xl font-bold text-gray-800">{weather.current.temp}°C</p>
-                            <p className="text-sm text-gray-600 capitalize">{weather.current.description}</p>
-                          </div>
+                      <div className="flex items-center space-x-2">
+                        <img 
+                          src={`https://openweathermap.org/img/wn/${weather.current.icon}@2x.png`} 
+                          alt={weather.current.description}
+                          className="w-10 h-10"
+                        />
+                        <div>
+                          <p className="text-2xl font-bold text-gray-800">{weather.current.temp}°C</p>
+                          <p className="text-sm text-gray-600 capitalize">{weather.current.description}</p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Sensação: {weather.current.feels_like}°C • Umidade: {weather.current.humidity}%
-                        </p>
                       </div>
                     </div>
+                    {weatherExpanded && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Sensação: {weather.current.feels_like}°C • Umidade: {weather.current.humidity}%
+                      </p>
+                    )}
                   </div>
 
-                  {/* Previsão dos próximos 7 dias */}
-                  <div>
-                    <h5 className="text-sm font-semibold text-gray-700 mb-3">
-                      <span className="hidden md:inline">Próximos 7 dias</span>
-                      <span className="md:hidden">Próximos dias</span>
-                    </h5>
-                    <div className="space-y-2">
-                      {weather.daily.slice(0, 7).map((day, index) => {
-                        const today = new Date()
-                        const dayDate = new Date(today)
-                        dayDate.setDate(today.getDate() + index)
-                        
-                        // Mapear dias da semana: getDay() retorna 0=Domingo, 1=Segunda, etc.
-                        const weekDayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-                        
-                        let dayName: string
-                        if (index === 0) {
-                          dayName = 'Hoje'
-                        } else if (index === 1) {
-                          dayName = 'Amanhã'
-                        } else {
-                          // Para os demais dias, usar o nome do dia da semana
-                          dayName = weekDayNames[dayDate.getDay()]
-                        }
-                        
-                        // No mobile, mostrar apenas hoje e amanhã (índices 0 e 1)
-                        return (
-                          <div key={index} className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors ${index > 1 ? 'hidden md:flex' : ''}`}>
-                          <div className="flex items-center space-x-3">
-                            <img 
-                              src={`https://openweathermap.org/img/wn/${day.icon}.png`} 
-                              alt={day.description}
-                                className="w-7 h-7"
-                            />
-                            <div>
-                                <p className="text-sm font-medium text-gray-800">{dayName}</p>
-                                <p className="text-xs text-gray-500 capitalize">{day.description}</p>
+                  {/* Previsão: só mostra quando expandido */}
+                  {weatherExpanded && (
+                    <div>
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Próximos 7 dias</h5>
+                      <div className="space-y-2">
+                        {weather.daily.slice(0, 7).map((day, index) => {
+                          const today = new Date()
+                          const dayDate = new Date(today)
+                          dayDate.setDate(today.getDate() + index)
+                          const weekDayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+                          const dayName = index === 0 ? 'Hoje' : index === 1 ? 'Amanhã' : weekDayNames[dayDate.getDay()]
+                          return (
+                            <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <img src={`https://openweathermap.org/img/wn/${day.icon}.png`} alt={day.description} className="w-7 h-7" />
+                                <div>
+                                  <p className="text-sm font-medium text-gray-800">{dayName}</p>
+                                  <p className="text-xs text-gray-500 capitalize">{day.description}</p>
+                                </div>
                               </div>
-                            </div>
-                            <div className="text-right">
                               <div className="text-sm font-semibold text-gray-800">
                                 {day.temp.max}° / {day.temp.min}°
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setWeatherExpanded((v) => !v)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors border border-gray-100 hover:border-purple-100"
+                  >
+                    {weatherExpanded ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Ver menos
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Expandir previsão
+                      </>
+                    )}
+                  </button>
                 </div>
               ) : (
                 <div className="text-center py-8">
