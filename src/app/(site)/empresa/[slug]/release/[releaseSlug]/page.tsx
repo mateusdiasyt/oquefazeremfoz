@@ -103,8 +103,8 @@ export default async function ReleaseDetailPage({
     lead: release.lead,
     body: release.body,
     featuredImageUrl: release.featuredImageUrl,
-    publishedAt: release.publishedAt,
-    createdAt: release.createdAt,
+    publishedAt: release.publishedAt?.toISOString() ?? null,
+    createdAt: release.createdAt.toISOString(),
     business: {
       id: business.id,
       name: business.name,
