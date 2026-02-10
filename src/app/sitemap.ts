@@ -26,13 +26,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }))
 
-  // URLs estáticas principais
+  // URLs estáticas principais (página pilar SEO com prioridade alta)
   const staticUrls: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/o-que-fazer-em-foz-do-iguacu`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.95,
     },
     {
       url: `${baseUrl}/empresas`,

@@ -601,6 +601,14 @@ export default function HomePage() {
             {/* Menu rápido - estilo minimalista, ícones simples (terceira imagem) */}
             <nav className="rounded-xl border border-gray-100 bg-white/50 py-2 px-3">
               <Link
+                href="/o-que-fazer-em-foz-do-iguacu"
+                className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
+                style={{ letterSpacing: '-0.01em' }}
+              >
+                <BookOpen className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <span className="font-medium">O que fazer em Foz</span>
+              </Link>
+              <Link
                 href="/guias"
                 className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
                 style={{ letterSpacing: '-0.01em' }}

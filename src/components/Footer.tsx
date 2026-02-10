@@ -189,6 +189,9 @@ export default function Footer() {
               <a href="/" className="text-gray-600 hover:text-purple-600 transition-colors">
                 Início
               </a>
+              <a href="/o-que-fazer-em-foz-do-iguacu" className="text-gray-600 hover:text-purple-600 transition-colors">
+                O que fazer em Foz
+              </a>
               <a href="/empresas" className="text-gray-600 hover:text-purple-600 transition-colors">
                 Empresas
               </a>
