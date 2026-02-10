@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Newspaper, Globe, ArrowRight } from 'lucide-react'
+import { Newspaper, Globe, ArrowRight, Sparkles } from 'lucide-react'
 import PortalHero from '@/components/PortalHero'
 import PortalCompactCard from '@/components/PortalCompactCard'
 import type { PortalReleaseCardRelease } from '@/components/PortalReleaseCard'
@@ -84,10 +84,21 @@ export default function PortalPage() {
                       <PortalCompactCard key={release.id} release={release} index={i + 1} />
                     ))}
                   </div>
-                  <div className="mt-10 p-5 md:p-6 bg-purple-50/60 border border-purple-100 rounded-2xl">
-                    <p className="text-gray-700 text-sm md:text-base leading-relaxed">
-                      <strong className="text-purple-800">Como funciona:</strong> Qualquer empresa aprovada no OQFOZ pode aparecer no Portal do Turismo. Basta publicar um <strong>release</strong> (notícia ou conteúdo) pelo painel da sua empresa — o conteúdo será exibido aqui automaticamente para turistas e visitantes. Quer divulgar sua empresa ou atração? Cadastre-se, seja aprovado e comece a publicar releases.
-                    </p>
+                  <div className="mt-10 overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500/5 via-white to-pink-500/5 border border-purple-100/80 shadow-sm">
+                    <div className="flex gap-4 p-6 md:p-8">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                        <Sparkles className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Como funciona</h3>
+                        <p className="text-gray-600 leading-relaxed">
+                          Qualquer empresa aprovada no OQFOZ pode aparecer no Portal do Turismo. Basta publicar um <span className="font-semibold text-purple-700">release</span> (notícia ou conteúdo) pelo painel da sua empresa — o conteúdo será exibido aqui automaticamente para turistas e visitantes.
+                        </p>
+                        <p className="text-gray-600 leading-relaxed mt-2">
+                          Quer divulgar sua empresa ou atração? Cadastre-se, seja aprovado e comece a publicar releases.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </section>
               )}
