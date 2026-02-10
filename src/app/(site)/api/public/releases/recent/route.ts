@@ -23,7 +23,11 @@ export async function GET() {
       take: 30
     })
 
-    return NextResponse.json(releases)
+    const headers = {
+      'Cache-Control': 'no-store, max-age=0',
+      'CDN-Cache-Control': 'no-store'
+    }
+    return NextResponse.json(releases, { headers })
   } catch (error) {
     console.error('Erro ao buscar releases recentes:', error)
     return NextResponse.json({ message: 'Erro ao buscar releases' }, { status: 500 })
