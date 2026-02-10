@@ -156,6 +156,16 @@ interface FozTVVideo {
   likeCount?: number
 }
 
+interface FeaturedGuide {
+  id: string
+  name: string
+  slug: string | null
+  profileImage: string | null
+  ratingAvg: number
+  ratingCount: number
+  isVerified: boolean
+}
+
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -164,6 +174,7 @@ export default function HomePage() {
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [weather, setWeather] = useState<Weather | null>(null)
   const [lastFozTVVideo, setLastFozTVVideo] = useState<FozTVVideo | null>(null)
+  const [featuredGuides, setFeaturedGuides] = useState<FeaturedGuide[]>([])
   const [weatherExpanded, setWeatherExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -203,6 +214,7 @@ export default function HomePage() {
     fetchCoupons()
     fetchWeather()
     fetchLastFozTVVideo()
+    fetchFeaturedGuides()
   }, [])
 
   const fetchLastFozTVVideo = async () => {
@@ -215,6 +227,27 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Erro ao buscar último vídeo FozTV:', error)
+    }
+  }
+
+  const fetchFeaturedGuides = async () => {
+    try {
+      const response = await fetch('/api/guides')
+      if (response.ok) {
+        const data = await response.json()
+        const list = (data.guides || []).slice(0, 5)
+        setFeaturedGuides(list.map((g: { id: string; name: string; slug: string | null; profileImage: string | null; ratingAvg: number; ratingCount: number; isVerified: boolean }) => ({
+          id: g.id,
+          name: g.name,
+          slug: g.slug,
+          profileImage: g.profileImage,
+          ratingAvg: g.ratingAvg,
+          ratingCount: g.ratingCount,
+          isVerified: g.isVerified,
+        })))
+      }
+    } catch (error) {
+      console.error('Erro ao buscar guias em destaque:', error)
     }
   }
 
@@ -659,6 +692,63 @@ export default function HomePage() {
 
           {/* Sidebar Direita – mesmo estilo compacto e moderno - rola com a página */}
           <aside className="flex flex-col gap-4 relative">
+            {/* Guias em Destaque */}
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-3.5 h-3.5 text-white" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900 truncate">Guias em Destaque</h4>
+              </div>
+              <div className="p-2 space-y-1 max-h-[240px] overflow-y-auto">
+                {featuredGuides.length === 0 ? (
+                  <div className="text-center py-6">
+                    <BookOpen className="w-9 h-9 text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-xs">Nenhum guia</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">Em breve</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {featuredGuides.map((guide) => (
+                      <Link
+                        key={guide.id}
+                        href={guide.slug ? `/guia/${guide.slug}` : '/guias'}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-purple-50/80 transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                          {guide.profileImage ? (
+                            <img src={guide.profileImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                              <span className="text-white text-xs font-semibold">{guide.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-gray-900 truncate flex items-center gap-1">
+                            {capitalizeWords(guide.name)}
+                            {guide.isVerified && <img src="/icons/verificado.png" alt="" className="w-3 h-3 object-contain flex-shrink-0" />}
+                          </p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500 flex-shrink-0" />
+                            <span>{guide.ratingAvg > 0 ? guide.ratingAvg.toFixed(1) : '-'}</span>
+                            {guide.ratingCount > 0 && <span>({guide.ratingCount})</span>}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {featuredGuides.length > 0 && (
+                <div className="px-3 py-2 border-t border-gray-100">
+                  <Link href="/guias" className="text-xs font-medium text-purple-600 hover:text-purple-700">
+                    Ver todos os guias →
+                  </Link>
+                </div>
+              )}
+            </div>
+
             {/* Cupons do Dia */}
             <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
