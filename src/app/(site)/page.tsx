@@ -424,8 +424,8 @@ export default function HomePage() {
       {/* Main Content */}
       <section className="w-full pt-8 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-7xl mx-auto px-0 md:px-4 lg:px-8">
-          {/* Sidebar Esquerda - Empresas em Destaque (coluna compacta e moderna) */}
-          <aside className="hidden lg:flex flex-col gap-4">
+          {/* Sidebar Esquerda - Empresas em Destaque (coluna compacta e moderna) - rola com a página */}
+          <aside className="hidden lg:flex flex-col gap-4 relative">
             {(() => {
               const categories = ['Hotel', 'Restaurante', 'Pousada', 'Atração Turística', 'Loja', 'Serviço', 'Evento', 'Portais', 'Influencers', 'Outro']
               const businessesByCategory: Record<string, Business[]> = {}
@@ -657,8 +657,8 @@ export default function HomePage() {
             })()}
           </div>
 
-          {/* Sidebar Direita – mesmo estilo compacto e moderno */}
-          <aside className="flex flex-col gap-4">
+          {/* Sidebar Direita – mesmo estilo compacto e moderno - rola com a página */}
+          <aside className="flex flex-col gap-4 relative">
             {/* Cupons do Dia */}
             <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">

@@ -1,131 +1,117 @@
-'use client'
+import { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { prisma } from '@/lib/db'
+import ReleaseDetailClient from './ReleaseDetailClient'
 
-import { useState, useEffect, useMemo } from 'react'
-import DOMPurify from 'dompurify'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Calendar } from 'lucide-react'
-import { capitalizeWords, getTimeAgo } from '@/utils/formatters'
+const SITE_URL = 'https://www.oquefazeremfoz.com.br'
 
-interface Release {
-  id: string
-  title: string
-  slug: string
-  lead: string | null
-  body: string
-  featuredImageUrl: string | null
-  publishedAt: string | null
-  createdAt: string
-  business: {
-    id: string
-    name: string
-    slug: string
-    profileImage: string | null
+function stripHtml(html: string, maxLength = 160): string {
+  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength - 3).trim() + '...'
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string; releaseSlug: string }>
+}): Promise<Metadata> {
+  const { slug: businessSlug, releaseSlug } = await params
+  try {
+    const business = await prisma.business.findUnique({
+      where: { slug: businessSlug, isApproved: true },
+      select: { id: true, name: true },
+    })
+    if (!business) return {}
+
+    const release = await prisma.businessrelease.findUnique({
+      where: {
+        businessId_slug: { businessId: business.id, slug: releaseSlug },
+      },
+    })
+    if (!release || !release.isPublished) return {}
+
+    const title = `${release.title} | OQFOZ`
+    const description = release.lead
+      ? release.lead.slice(0, 160) + (release.lead.length > 160 ? '...' : '')
+      : stripHtml(release.body)
+    const imageUrl = release.featuredImageUrl
+      ? release.featuredImageUrl.startsWith('http')
+        ? release.featuredImageUrl
+        : `${SITE_URL}${release.featuredImageUrl.startsWith('/') ? '' : '/'}${release.featuredImageUrl}`
+      : `${SITE_URL}/og-image.png`
+    const url = `${SITE_URL}/empresa/${businessSlug}/release/${releaseSlug}`
+
+    return {
+      title,
+      description,
+      openGraph: {
+        type: 'article',
+        locale: 'pt_BR',
+        url,
+        siteName: 'OQFOZ',
+        title: release.title,
+        description,
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: release.title,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: release.title,
+        description,
+        images: [imageUrl],
+      },
+      alternates: {
+        canonical: url,
+      },
+    }
+  } catch {
+    return {}
   }
 }
 
-export default function ReleaseDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [release, setRelease] = useState<Release | null>(null)
-  const [loading, setLoading] = useState(true)
+export default async function ReleaseDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string; releaseSlug: string }>
+}) {
+  const { slug: businessSlug, releaseSlug } = await params
 
-  useEffect(() => {
-    const fetchRelease = async () => {
-      try {
-        const res = await fetch(
-          `/api/public/release?businessSlug=${params.slug}&releaseSlug=${params.releaseSlug}`
-        )
-        if (!res.ok) {
-          if (res.status === 404) {
-            router.push(`/empresa/${params.slug}`)
-            return
-          }
-          throw new Error('Erro ao carregar')
-        }
-        const data = await res.json()
-        setRelease(data)
-      } catch {
-        router.push(`/empresa/${params.slug}`)
-      } finally {
-        setLoading(false)
-      }
-    }
-    if (params.slug && params.releaseSlug) {
-      fetchRelease()
-    }
-  }, [params.slug, params.releaseSlug, router])
+  const business = await prisma.business.findUnique({
+    where: { slug: businessSlug, isApproved: true },
+    select: { id: true, name: true, slug: true, profileImage: true },
+  })
+  if (!business) redirect(`/empresa/${businessSlug}`)
 
-  const sanitizedBody = useMemo(() => {
-    const html = release?.body || ''
-    const safeTags = ['p', 'br', 'strong', 'em', 'u', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote']
-    if (html.trim().startsWith('<')) {
-      if (typeof window !== 'undefined') {
-        return DOMPurify.sanitize(html, { ALLOWED_TAGS: safeTags, ALLOWED_ATTR: ['href', 'target', 'rel'] })
-      }
-      return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/on\w+="[^"]*"/gi, '')
-    }
-    return html.replace(/\n/g, '<br />')
-  }, [release?.body])
+  const release = await prisma.businessrelease.findUnique({
+    where: {
+      businessId_slug: { businessId: business.id, slug: releaseSlug },
+    },
+  })
+  if (!release || !release.isPublished) redirect(`/empresa/${businessSlug}`)
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
+  const releaseForClient = {
+    id: release.id,
+    title: release.title,
+    slug: release.slug,
+    lead: release.lead,
+    body: release.body,
+    featuredImageUrl: release.featuredImageUrl,
+    publishedAt: release.publishedAt,
+    createdAt: release.createdAt,
+    business: {
+      id: business.id,
+      name: business.name,
+      slug: business.slug,
+      profileImage: business.profileImage,
+    },
   }
 
-  if (!release) return null
-
-  const displayDate = release.publishedAt || release.createdAt
-
-  return (
-    <div className="min-h-screen bg-white">
-      <article className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
-        <Link
-          href={`/empresa/${release.business.slug}`}
-          className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-medium mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar para {capitalizeWords(release.business.name)}
-        </Link>
-
-        <header className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Calendar className="w-4 h-4" />
-            <time dateTime={displayDate}>{getTimeAgo(displayDate)}</time>
-            <span>•</span>
-            <span>{capitalizeWords(release.business.name)}</span>
-          </div>
-
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.02em' }}>
-            {release.title}
-          </h1>
-
-          {release.lead && (
-            <p className="text-xl text-gray-600 leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
-              {release.lead}
-            </p>
-          )}
-        </header>
-
-        {release.featuredImageUrl && (
-          <div className="rounded-2xl overflow-hidden mb-8 shadow-lg">
-            <img
-              src={release.featuredImageUrl}
-              alt={release.title}
-              className="w-full h-auto object-cover"
-            />
-          </div>
-        )}
-
-        <div
-          className="prose prose-lg max-w-none text-gray-700 leading-relaxed [&_a]:text-purple-600 [&_a]:underline [&_a:hover]:text-purple-700"
-          style={{ letterSpacing: '-0.01em' }}
-          dangerouslySetInnerHTML={{ __html: sanitizedBody }}
-        />
-      </article>
-    </div>
-  )
+  return <ReleaseDetailClient release={releaseForClient} />
 }

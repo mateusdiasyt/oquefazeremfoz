@@ -68,9 +68,9 @@ export default function SiteLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-visible">
       <Header />
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main className="flex-1 min-h-0 pb-20 md:pb-0 overflow-visible">{children}</main>
       <Footer />
       {user && <FloatingChat />}
       <MobileNavigation />
