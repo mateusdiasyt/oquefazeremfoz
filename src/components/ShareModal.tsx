@@ -7,22 +7,23 @@ interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
   post: {
-    id: string
+    id?: string
     title: string
     business: {
       name: string
       slug: string
     }
   }
+  /** Quando informado, usa esta URL em vez de /post/{id} (ex.: release) */
+  shareUrl?: string
 }
 
-export default function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareModalProps) {
   const [copied, setCopied] = useState(false)
-  
-  const postUrl = `${window.location.origin}/post/${post.id}`
-  const businessUrl = `${window.location.origin}/empresa/${post.business.slug}`
-  
-  const shareText = `Confira esta postagem de ${post.business.name}: "${post.title}"`
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const postUrl = shareUrl ?? (post.id ? `${origin}/post/${post.id}` : '')
+  const businessUrl = `${origin}/empresa/${post.business.slug}`
+  const shareText = `Confira de ${post.business.name}: "${post.title}"`
   
   const shareOptions = [
     {
@@ -118,7 +119,7 @@ export default function ShareModal({ isOpen, onClose, post }: ShareModalProps) {
           <div className="mt-6 pt-6 border-t border-gray-100">
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-500 mb-1">Link da postagem</p>
+                <p className="text-xs text-gray-500 mb-1">Link</p>
                 <p className="text-sm text-gray-800 truncate">{postUrl}</p>
               </div>
               <button

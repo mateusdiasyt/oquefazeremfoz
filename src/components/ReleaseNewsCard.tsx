@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Globe } from 'lucide-react'
+import { Globe, Heart, MessageCircle, Share2 } from 'lucide-react'
+import ShareModal from './ShareModal'
 
 function stripHtml(html: string): string {
   return (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -46,11 +47,14 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
   const companyHref = `/empresa/${release.business.slug}`
   const [displayUrl, setDisplayUrl] = useState(baseUrl ? `${baseUrl.replace(/\/$/, '')}${releaseHref}` : releaseHref)
   const [domain, setDomain] = useState(baseUrl ? (() => { try { return new URL(baseUrl).host } catch { return 'Portal' } })() : 'Portal')
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [fullReleaseUrl, setFullReleaseUrl] = useState('')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setDisplayUrl(`${window.location.origin}${releaseHref}`)
       setDomain(window.location.host)
+      setFullReleaseUrl(`${window.location.origin}${releaseHref}`)
     }
   }, [releaseHref])
 
@@ -126,6 +130,36 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
           </div>
         </div>
       </Link>
+
+      {/* Ações: curtir, comentar, compartilhar (release não tem like/comment no backend; só compartilhar ativo) */}
+      <div className="flex items-center gap-6 pt-4 mt-4 border-t border-gray-100">
+        <span className="flex items-center gap-1.5 text-gray-400 text-sm" title="Curtir (em breve)">
+          <Heart className="w-5 h-5" />
+          <span>0</span>
+        </span>
+        <span className="flex items-center gap-1.5 text-gray-400 text-sm" title="Comentar (em breve)">
+          <MessageCircle className="w-5 h-5" />
+          <span>0</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowShareModal(true)}
+          className="flex items-center gap-1.5 text-gray-500 hover:text-purple-600 transition-colors"
+        >
+          <Share2 className="w-5 h-5" />
+          <span className="text-sm font-medium">Compartilhar</span>
+        </button>
+      </div>
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        post={{
+          title: release.title,
+          business: { name: release.business.name, slug: release.business.slug }
+        }}
+        shareUrl={fullReleaseUrl || releaseHref}
+      />
     </article>
   )
 }
