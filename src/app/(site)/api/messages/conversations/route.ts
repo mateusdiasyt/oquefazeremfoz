@@ -51,7 +51,17 @@ export async function GET(request: NextRequest) {
                 category: true
               },
               orderBy: { createdAt: 'desc' },
-              take: 1 // ✅ Apenas empresa ativa
+              take: 1
+            },
+            guide: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                profileImage: true,
+                isVerified: true
+              },
+              take: 1
             }
           }
         },
@@ -136,10 +146,10 @@ export async function GET(request: NextRequest) {
       // ✅ Usar mapa em vez de query individual
       const unreadCount = unreadCountMap.get(conv.id) || 0
 
-      // Buscar empresa ativa do outro participante
-      const otherParticipantActiveBusiness = otherParticipant?.activeBusinessId 
-        ? otherParticipant.business.find(b => b.id === otherParticipant.activeBusinessId)
-        : otherParticipant?.business[0]
+      const otherParticipantActiveBusiness = otherParticipant?.activeBusinessId
+        ? otherParticipant.business?.find(b => b.id === otherParticipant.activeBusinessId)
+        : otherParticipant?.business?.[0]
+      const otherParticipantGuide = otherParticipant?.guide?.[0]
 
       // Buscar empresa ativa do remetente da última mensagem
       const senderActiveBusiness = lastMessage?.user_message_senderIdTouser.activeBusinessId 
@@ -161,6 +171,14 @@ export async function GET(request: NextRequest) {
           isVerified: otherParticipantActiveBusiness.isVerified,
           category: otherParticipantActiveBusiness.category,
           followedAt: new Date().toISOString(),
+          userId: otherParticipant.id
+        } : null,
+        guide: otherParticipantGuide && otherParticipant ? {
+          id: otherParticipantGuide.id,
+          name: otherParticipantGuide.name,
+          slug: otherParticipantGuide.slug ?? '',
+          profileImage: otherParticipantGuide.profileImage,
+          isVerified: otherParticipantGuide.isVerified,
           userId: otherParticipant.id
         } : null,
         lastMessage: lastMessage ? {

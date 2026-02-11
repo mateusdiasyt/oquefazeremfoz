@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
+import { useOpenChat } from '../../../../contexts/OpenChatContext'
 import { capitalizeWords } from '../../../../utils/formatters'
 import {
   Phone,
@@ -27,6 +28,8 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Package,
+  DollarSign,
 } from 'lucide-react'
 
 const WhatsAppIcon = ({ size = 20, className = '' }: { size?: number; className?: string }) => (
@@ -84,14 +87,26 @@ interface Post {
   createdAt: string
 }
 
-type Tab = 'sobre' | 'galeria' | 'avaliacoes' | 'posts' | 'contato'
+type Tab = 'sobre' | 'pacotes' | 'galeria' | 'avaliacoes' | 'posts' | 'contato'
 
 const TAB_LABELS: Record<Tab, string> = {
   sobre: 'Sobre',
+  pacotes: 'Pacotes e preços',
   galeria: 'Galeria',
   avaliacoes: 'Avaliações',
   posts: 'Posts',
   contato: 'Contato',
+}
+
+interface GuideProduct {
+  id: string
+  name: string
+  description: string | null
+  priceCents: number
+  currency: string
+  imageUrl: string | null
+  order: number
+  isActive: boolean
 }
 
 export default function GuideProfilePage() {
@@ -99,11 +114,13 @@ export default function GuideProfilePage() {
   const router = useRouter()
   const { user } = useAuth()
   const { showNotification } = useNotification()
+  const { setOpenWithGuideId } = useOpenChat()
 
   const [guide, setGuide] = useState<Guide | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [gallery, setGallery] = useState<GalleryItem[]>([])
   const [posts, setPosts] = useState<Post[]>([])
+  const [products, setProducts] = useState<GuideProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>('sobre')
   const [isFollowing, setIsFollowing] = useState(false)
@@ -130,6 +147,11 @@ export default function GuideProfilePage() {
   const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
   const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
   const [uploadingPost, setUploadingPost] = useState(false)
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [productName, setProductName] = useState('')
+  const [productDescription, setProductDescription] = useState('')
+  const [productPriceCents, setProductPriceCents] = useState('')
+  const [savingProduct, setSavingProduct] = useState(false)
 
   useEffect(() => {
     if (params.slug) fetchGuideData()
@@ -140,9 +162,23 @@ export default function GuideProfilePage() {
       fetchReviews()
       fetchGallery()
       fetchPosts()
+      fetchProducts()
       checkFollowing()
     }
   }, [guide?.id])
+
+  const fetchProducts = async () => {
+    if (!guide?.id) return
+    try {
+      const response = await fetch(`/api/guide/products?guideId=${guide.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(Array.isArray(data) ? data : data.products || [])
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos do guia:', error)
+    }
+  }
 
   const fetchGuideData = async () => {
     try {
@@ -582,7 +618,7 @@ export default function GuideProfilePage() {
                   </div>
                 )}
 
-                {/* Ações: Seguir + CTAs */}
+                {/* Ações: Seguir + Enviar mensagem (in-app) + WhatsApp + Ver contato */}
                 <div className="flex flex-wrap items-center gap-3">
                   {!isOwner && user && (
                     <button
@@ -600,6 +636,25 @@ export default function GuideProfilePage() {
                       {isFollowingLoading ? '...' : isFollowing ? 'Seguindo' : 'Seguir'}
                     </button>
                   )}
+                  {!isOwner && (
+                    user ? (
+                      <button
+                        onClick={() => setOpenWithGuideId(guide.id)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-violet-600 text-white hover:bg-violet-700 transition-all duration-200 shadow-lg shadow-violet-500/25"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Enviar mensagem
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => router.push('/login')}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-violet-600 text-white hover:bg-violet-700 transition-all duration-200 shadow-lg shadow-violet-500/25"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Enviar mensagem
+                      </button>
+                    )
+                  )}
                   {guide.whatsapp && (
                     <a
                       href={`https://wa.me/${guide.whatsapp.replace(/\D/g, '')}`}
@@ -608,7 +663,7 @@ export default function GuideProfilePage() {
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
                     >
                       <Send className="w-4 h-4" />
-                      Enviar mensagem
+                      WhatsApp
                     </a>
                   )}
                   <button
@@ -637,8 +692,8 @@ export default function GuideProfilePage() {
                   }`}
                 >
                   {TAB_LABELS[tab]}
-                  {(tab === 'avaliacoes' && reviews.length > 0) || (tab === 'posts' && posts.length > 0)
-                    ? ` (${tab === 'avaliacoes' ? reviews.length : posts.length})`
+                  {(tab === 'avaliacoes' && reviews.length > 0) || (tab === 'posts' && posts.length > 0) || (tab === 'pacotes' && products.length > 0)
+                    ? ` (${tab === 'avaliacoes' ? reviews.length : tab === 'posts' ? posts.length : products.length})`
                     : ''}
                 </button>
               ))}
@@ -795,6 +850,143 @@ export default function GuideProfilePage() {
                         {guide.languages && <p><span className="font-medium text-slate-700">Idiomas:</span> {guide.languages}</p>}
                       </div>
                     )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pacotes e preços */}
+            {activeTab === 'pacotes' && (
+              <div>
+                <p className="text-slate-600 mb-4">
+                  Pacotes e valores para combinar direto com o guia pelo chat ou WhatsApp. A contratação e o pagamento são feitos fora da plataforma.
+                </p>
+                {isOwner && (
+                  <div className="mb-6">
+                    {!showProductForm ? (
+                      <button
+                        onClick={() => setShowProductForm(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Adicionar pacote
+                      </button>
+                    ) : (
+                      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                        <h3 className="font-semibold text-slate-900">Novo pacote</h3>
+                        <input
+                          type="text"
+                          value={productName}
+                          onChange={(e) => setProductName(e.target.value)}
+                          placeholder="Nome do pacote (ex: Passeio Cataratas meio dia)"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800"
+                        />
+                        <textarea
+                          value={productDescription}
+                          onChange={(e) => setProductDescription(e.target.value)}
+                          placeholder="Descrição (opcional)"
+                          rows={2}
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={productPriceCents ? Number(productPriceCents) / 100 : ''}
+                          onChange={(e) => setProductPriceCents(String(Math.round(parseFloat(e.target.value || '0') * 100)))}
+                          placeholder="Valor (R$)"
+                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-slate-800"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            disabled={savingProduct || !productName.trim() || !productPriceCents}
+                            onClick={async () => {
+                              setSavingProduct(true)
+                              try {
+                                const res = await fetch('/api/guide/products', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    guideId: guide.id,
+                                    name: productName.trim(),
+                                    description: productDescription.trim() || null,
+                                    priceCents: Number(productPriceCents),
+                                  }),
+                                })
+                                if (res.ok) {
+                                  const created = await res.json()
+                                  setProducts((p) => [created, ...p])
+                                  setProductName('')
+                                  setProductDescription('')
+                                  setProductPriceCents('')
+                                  setShowProductForm(false)
+                                  showNotification('Pacote adicionado!', 'success')
+                                } else {
+                                  const err = await res.json()
+                                  showNotification(err.message || 'Erro ao salvar', 'error')
+                                }
+                              } finally {
+                                setSavingProduct(false)
+                              }
+                            }}
+                            className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 disabled:opacity-50"
+                          >
+                            {savingProduct ? 'Salvando...' : 'Salvar'}
+                          </button>
+                          <button
+                            onClick={() => { setShowProductForm(false); setProductName(''); setProductDescription(''); setProductPriceCents('') }}
+                            className="px-4 py-2.5 bg-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-300"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {products.length === 0 ? (
+                  <div className="text-center py-12 rounded-2xl bg-slate-50 border border-slate-100">
+                    <Package className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                    <p className="text-slate-500">
+                      {isOwner ? 'Adicione seus pacotes e preços para os turistas verem.' : 'Nenhum pacote cadastrado ainda.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {products.map((prod) => (
+                      <div
+                        key={prod.id}
+                        className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden hover:border-violet-200 transition-colors"
+                      >
+                        {prod.imageUrl && (
+                          <img src={prod.imageUrl} alt="" className="w-full h-36 object-cover" />
+                        )}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-slate-900">{prod.name}</h3>
+                          {prod.description && (
+                            <p className="text-sm text-slate-600 mt-1 line-clamp-2">{prod.description}</p>
+                          )}
+                          <p className="mt-2 text-lg font-bold text-violet-600">
+                            {(prod.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </p>
+                          {isOwner && (
+                            <button
+                              onClick={async () => {
+                                if (!confirm('Remover este pacote?')) return
+                                const res = await fetch(`/api/guide/products/${prod.id}`, { method: 'DELETE' })
+                                if (res.ok) {
+                                  setProducts((p) => p.filter((x) => x.id !== prod.id))
+                                  showNotification('Pacote removido', 'success')
+                                }
+                              }}
+                              className="mt-2 text-sm text-red-600 hover:text-red-700"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

@@ -93,6 +93,7 @@ model guide {
   guidereview     guidereview[]
   guidegallery    guidegallery[]
   guidepost       guidepost[]
+  guideproduct   guideproduct[]
   post            post[]
   follow_follow_followerGuideId follow[] @relation("follow_followerGuideId")
   follow_follow_followingGuideId follow[] @relation("follow_followingGuideId")
@@ -603,6 +604,24 @@ model guidepost {
   guide      guide    @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuidePost_guideId_fkey")
 
   @@index([guideId], map: "GuidePost_guideId_idx")
+}
+
+// Pacotes/serviços do guia com valor obrigatório (negociação/contratação fora da plataforma)
+model guideproduct {
+  id          String   @id
+  guideId     String
+  name        String
+  description String?  @db.Text
+  priceCents  Int      // Valor obrigatório
+  currency    String   @default("BRL")
+  imageUrl    String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  guide       guide    @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuideProduct_guideId_fkey")
+
+  @@index([guideId], map: "GuideProduct_guideId_idx")
 }
 
 // Vídeos do canal FozTV (publicados pelo admin)

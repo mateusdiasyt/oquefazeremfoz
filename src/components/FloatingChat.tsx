@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotification } from '@/contexts/NotificationContext'
+import { useOpenChat } from '@/contexts/OpenChatContext'
 import { MessageCircle, X, Send, ChevronDown, ChevronUp, Search, ArrowLeft, Check, CheckCheck } from 'lucide-react'
 import { capitalizeWords } from '@/utils/formatters'
 
@@ -14,6 +15,15 @@ interface Business {
   isVerified: boolean
   category: string
   followedAt: string
+  userId?: string
+}
+
+interface Guide {
+  id: string
+  name: string
+  slug: string
+  profileImage: string | null
+  isVerified: boolean
   userId?: string
 }
 
@@ -45,6 +55,7 @@ interface Message {
 interface Conversation {
   id: string
   business: Business | null
+  guide: Guide | null
   lastMessage: Message | null
   unreadCount?: number
   updatedAt: string
@@ -53,6 +64,7 @@ interface Conversation {
 export default function FloatingChat() {
   const { user } = useAuth()
   const { playMessageSound } = useNotification()
+  const { openWithGuideId, setOpenWithGuideId } = useOpenChat()
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -451,6 +463,38 @@ export default function FloatingChat() {
     scrollToBottom()
   }, [messages])
 
+  // Abrir balão com conversa do guia (ex.: ao clicar "Enviar mensagem" no perfil do guia)
+  useEffect(() => {
+    if (!user || !openWithGuideId) return
+    let cancelled = false
+    const run = async () => {
+      try {
+        const res = await fetch('/api/messages/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ guideId: openWithGuideId }),
+        })
+        if (cancelled) return
+        if (!res.ok) return
+        const data = await res.json()
+        const conv = data.conversation
+        if (!conv) return
+        setConversations((prev) => {
+          const exists = prev.some((c) => c.id === conv.id)
+          if (exists) return prev.map((c) => (c.id === conv.id ? { ...c, ...conv } : c))
+          return [conv, ...prev]
+        })
+        setSelectedConversation(conv)
+        setIsOpen(true)
+        setOpenWithGuideId(null)
+      } catch (e) {
+        if (!cancelled) setOpenWithGuideId(null)
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }, [openWithGuideId, user, setOpenWithGuideId])
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) {
       return
@@ -473,8 +517,8 @@ export default function FloatingChat() {
         } : undefined
       },
       receiver: {
-        id: selectedConversation.business?.userId || '',
-        name: selectedConversation.business?.name || '',
+        id: selectedConversation.business?.userId || selectedConversation.guide?.userId || '',
+        name: selectedConversation.business?.name || selectedConversation.guide?.name || '',
         business: selectedConversation.business ? {
           id: selectedConversation.business.id,
           name: selectedConversation.business.name,
@@ -494,10 +538,16 @@ export default function FloatingChat() {
       // Primeiro, encontrar ou criar conversa
       let conversation = selectedConversation
       if (conversation.id.startsWith('temp-')) {
+        const startBody = conversation.business
+          ? { businessId: conversation.business.id }
+          : conversation.guide
+            ? { guideId: conversation.guide.id }
+            : null
+        if (!startBody) return
         const startResponse = await fetch('/api/messages/start', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ businessId: conversation.business!.id })
+          body: JSON.stringify(startBody)
         })
         
         if (startResponse.ok) {
@@ -517,7 +567,7 @@ export default function FloatingChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: messageContent,
-          receiverId: conversation.business?.userId
+          receiverId: conversation.business?.userId || conversation.guide?.userId
         })
       })
 
@@ -616,22 +666,26 @@ export default function FloatingChat() {
                   >
                     <ArrowLeft size={16} />
                   </button>
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    {selectedConversation.business?.profileImage ? (
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                    {(selectedConversation.business?.profileImage || selectedConversation.guide?.profileImage) ? (
                       <img
-                        src={selectedConversation.business.profileImage}
-                        alt={selectedConversation.business.name}
+                        src={selectedConversation.business?.profileImage || selectedConversation.guide?.profileImage || ''}
+                        alt={selectedConversation.business?.name || selectedConversation.guide?.name || ''}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-sm font-bold">
-                        {selectedConversation.business?.name?.charAt(0)?.toUpperCase() || 'E'}
+                        {(selectedConversation.business?.name || selectedConversation.guide?.name)?.charAt(0)?.toUpperCase() || '?'}
                       </span>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-white">{selectedConversation.business?.name}</h3>
-                    <p className="text-xs text-white opacity-90">{selectedConversation.business?.category}</p>
+                    <h3 className="font-semibold text-sm text-white">
+                      {selectedConversation.business?.name || selectedConversation.guide?.name}
+                    </h3>
+                    <p className="text-xs text-white opacity-90">
+                      {selectedConversation.business ? selectedConversation.business.category : 'Guia turístico'}
+                    </p>
                   </div>
                 </>
               ) : (
@@ -691,7 +745,7 @@ export default function FloatingChat() {
                         <div className="flex flex-col items-center justify-center h-full text-gray-500">
                           <MessageCircle size={48} className="mb-4 opacity-50" />
                           <p className="text-sm">Nenhuma conversa ainda</p>
-                          <p className="text-xs opacity-75">Comece uma conversa com uma empresa</p>
+                          <p className="text-xs opacity-75">Converse com uma empresa ou um guia</p>
                     </div>
                   ) : (
                         conversations.map((conversation) => (
@@ -704,16 +758,16 @@ export default function FloatingChat() {
                           >
                             <div className="flex items-center gap-3">
                               <div className="relative">
-                                <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center">
-                                  {conversation.business?.profileImage ? (
+                                <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center overflow-hidden">
+                                  {(conversation.business?.profileImage || conversation.guide?.profileImage) ? (
                                     <img
-                                      src={conversation.business.profileImage}
-                                      alt={conversation.business.name}
+                                      src={conversation.business?.profileImage || conversation.guide?.profileImage || ''}
+                                      alt={conversation.business?.name || conversation.guide?.name || ''}
                                       className="w-12 h-12 rounded-full object-cover"
                                     />
                                   ) : (
                                     <span className="text-white font-bold">
-                                      {conversation.business?.name?.charAt(0)?.toUpperCase() || 'E'}
+                                      {(conversation.business?.name || conversation.guide?.name)?.charAt(0)?.toUpperCase() || '?'}
                                     </span>
                                   )}
                                 </div>
@@ -731,7 +785,7 @@ export default function FloatingChat() {
                                       ? 'font-bold text-gray-900' 
                                       : 'font-semibold text-gray-800'
                                   }`}>
-                                    {capitalizeWords(conversation.business?.name)}
+                                    {capitalizeWords(conversation.business?.name || conversation.guide?.name || '')}
                                   </h4>
                                   <span className={`text-xs ${
                                     (conversation.unreadCount || 0) > 0 
