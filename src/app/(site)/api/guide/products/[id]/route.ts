@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, isGuide, isAdmin } from '../../../../../../../lib/auth'
-import { prisma } from '../../../../../../../lib/db'
+import { getCurrentUser, isGuide, isAdmin } from '@/lib/auth'
+import { prisma } from '@/lib/db'
 
 // PATCH - Atualizar produto
 export async function PATCH(
