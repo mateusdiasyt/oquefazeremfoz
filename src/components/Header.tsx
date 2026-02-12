@@ -25,6 +25,7 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchSuggestions, setSearchSuggestions] = useState<Business[]>([])
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false)
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
@@ -46,6 +47,28 @@ export default function Header() {
 
     fetchUserBusinesses()
   }, [user, isCompany])
+
+  // Contagem de mensagens não lidas (para bolinha no ícone do chat)
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessagesCount(0)
+      return
+    }
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/messages/unread-count')
+        if (res.ok) {
+          const data = await res.json()
+          setUnreadMessagesCount(data.unreadCount ?? 0)
+        }
+      } catch {
+        // ignora erro
+      }
+    }
+    fetchUnreadCount()
+    const interval = setInterval(fetchUnreadCount, 15000)
+    return () => clearInterval(interval)
+  }, [user])
 
   // Buscar empresas para sugestões de pesquisa
   useEffect(() => {
@@ -308,14 +331,20 @@ export default function Header() {
                   </div>
                 )}
 
-                {/* Ícone de mensagens */}
+                {/* Ícone de mensagens (com bolinha vermelha se houver não lidas) */}
                 <Link
                   href="/messages"
-                  className="flex shrink-0 items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
+                  className="relative flex shrink-0 items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
                   title="Mensagens"
                   aria-label="Abrir mensagens"
                 >
                   <MessageCircle className="w-5 h-5" />
+                  {unreadMessagesCount > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"
+                      aria-hidden
+                    />
+                  )}
                 </Link>
                 {/* Dropdown do usuário */}
               <div 
