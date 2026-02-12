@@ -770,20 +770,22 @@ export default function HomePage() {
             {/* Releases recentes – cards estilo stories (carrossel) */}
             <ReleaseCarousel key={releasesRefreshKey} />
 
-            {/* Filtro da linha do tempo (dropdown discreto) */}
-            <div className="flex items-center gap-1.5 mb-3">
-              <ArrowUpDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-              <select
-                value={timelineSortBy}
-                onChange={(e) => setTimelineSortBy(e.target.value as typeof timelineSortBy)}
-                className="text-sm text-gray-500 bg-transparent border-0 py-0.5 pl-0 pr-6 focus:ring-0 focus:outline-none cursor-pointer appearance-none hover:text-gray-600 rounded"
-              >
-                <option value="recent">Mais recentes</option>
-                <option value="views">Mais visualizações</option>
-                <option value="likes">Mais curtidas</option>
-                <option value="comments">Mais comentários</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 -ml-4 pointer-events-none flex-shrink-0" />
+            {/* Filtro da linha do tempo – alinhado à direita, dropdown moderno */}
+            <div className="flex justify-end mb-3">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-gray-200/80 bg-white/90 px-3 py-1.5 shadow-sm focus-within:border-purple-300/60 focus-within:ring-2 focus-within:ring-purple-100 transition-all">
+                <ArrowUpDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <select
+                  value={timelineSortBy}
+                  onChange={(e) => setTimelineSortBy(e.target.value as typeof timelineSortBy)}
+                  className="min-w-[140px] text-sm text-gray-600 bg-transparent border-0 py-0.5 pl-0 pr-6 focus:ring-0 focus:outline-none cursor-pointer appearance-none font-medium"
+                >
+                  <option value="recent">Mais recentes</option>
+                  <option value="views">Mais visualizações</option>
+                  <option value="likes">Mais curtidas</option>
+                  <option value="comments">Mais comentários</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none flex-shrink-0 -ml-5" />
+              </div>
             </div>
 
             {/* Timeline: posts + releases (releases com card de link) */}
