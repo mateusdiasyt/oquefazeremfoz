@@ -8,7 +8,7 @@ import CreatePost from '@/components/CreatePost'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
 import FloatingChat from '@/components/FloatingChat'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2 } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 import FozTVNativePlayer from './foztv/FozTVNativePlayer'
@@ -703,7 +703,7 @@ export default function HomePage() {
                 className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
                 style={{ letterSpacing: '-0.01em' }}
               >
-                <BookOpen className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <Compass className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
                 <span className="font-medium">Guias</span>
               </Link>
               <Link
@@ -735,7 +735,7 @@ export default function HomePage() {
                 className="flex items-center gap-3 py-2 px-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50/80 rounded-lg transition-colors text-sm"
                 style={{ letterSpacing: '-0.01em' }}
               >
-                <Video className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
+                <Tv className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
                 <span className="font-medium">FozTV</span>
               </Link>
               <Link
