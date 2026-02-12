@@ -135,6 +135,8 @@ export default function GuideProfilePage() {
   const [editLanguages, setEditLanguages] = useState('')
 
   const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewHover, setReviewHover] = useState(0)
   const [showGalleryPreview, setShowGalleryPreview] = useState(false)
   const [selectedGalleryIndex, setSelectedGalleryIndex] = useState(0)
   const [uploadingGallery, setUploadingGallery] = useState(false)
@@ -1289,70 +1291,94 @@ export default function GuideProfilePage() {
         </div>
       )}
 
-      {/* Modal avaliação */}
+      {/* Modal avaliação — minimalista */}
       {showReviewForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-slate-900">Avaliar guia</h3>
-              <button onClick={() => setShowReviewForm(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl border border-slate-100 overflow-hidden">
+            <div className="flex items-center justify-end p-3">
+              <button
+                type="button"
+                onClick={() => { setShowReviewForm(false); setReviewRating(0); setReviewHover(0) }}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-lg transition-colors"
+                aria-label="Fechar"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form
               onSubmit={async (e) => {
                 e.preventDefault()
+                if (reviewRating < 1) return
                 const formData = new FormData(e.currentTarget)
+                formData.set('rating', String(reviewRating))
                 formData.append('guideId', guide!.id)
                 try {
                   const response = await fetch('/api/guide/reviews', { method: 'POST', body: formData })
                   if (response.ok) {
-                    showNotification('Avaliação criada com sucesso!', 'success')
+                    showNotification('Avaliação enviada!', 'success')
                     setShowReviewForm(false)
+                    setReviewRating(0)
+                    setReviewHover(0)
                     await fetchReviews()
                     await fetchGuideData()
                   } else {
                     const error = await response.json()
-                    showNotification(error.message || 'Erro ao criar avaliação', 'error')
+                    showNotification(error.message || 'Erro ao enviar', 'error')
                   }
                 } catch (error) {
-                  showNotification('Erro ao criar avaliação', 'error')
+                  showNotification('Erro ao enviar avaliação', 'error')
                 }
               }}
-              className="space-y-4"
+              className="px-6 pb-6 pt-0"
             >
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Nota</label>
-                <select
-                  name="rating"
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+              <input type="hidden" name="rating" value={reviewRating} />
+              <p className="text-sm font-medium text-slate-500 mb-1">Sua nota</p>
+              <div className="flex gap-1 mb-6">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setReviewRating(n)}
+                    onMouseEnter={() => setReviewHover(n)}
+                    onMouseLeave={() => setReviewHover(0)}
+                    className="p-1 rounded-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2"
+                    aria-label={`${n} estrela${n > 1 ? 's' : ''}`}
+                  >
+                    <Star
+                      className={`w-8 h-8 transition-colors ${
+                        n <= (reviewHover || reviewRating)
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-slate-200'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <label className="block text-sm font-medium text-slate-500 mb-1">Comentário (opcional)</label>
+              <textarea
+                name="comment"
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 resize-none text-sm"
+                placeholder="Conte como foi a experiência..."
+              />
+              <label className="mt-4 flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
+                <span>Foto (opcional)</span>
+                <input type="file" name="image" accept="image/*" className="text-slate-500 text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:text-slate-600 file:text-xs hover:file:bg-slate-50" />
+              </label>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => { setShowReviewForm(false); setReviewRating(0); setReviewHover(0) }}
+                  className="flex-1 py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
                 >
-                  <option value="">Selecione...</option>
-                  {[5, 4, 3, 2, 1].map((n) => (
-                    <option key={n} value={n}>{n} estrela{n > 1 ? 's' : ''}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Comentário</label>
-                <textarea
-                  name="comment"
-                  rows={4}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
-                  placeholder="Deixe seu comentário..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Foto (opcional)</label>
-                <input type="file" name="image" accept="image/*" className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-violet-50 file:text-violet-700" />
-              </div>
-              <div className="flex gap-2">
-                <button type="submit" className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">
-                  Enviar avaliação
-                </button>
-                <button type="button" onClick={() => setShowReviewForm(false)} className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200">
                   Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={reviewRating < 1}
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-violet-600 rounded-xl hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Enviar
                 </button>
               </div>
             </form>
