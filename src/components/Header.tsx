@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Search, MapPin, Compass, Video, Tv, X, Newspaper, MessageCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { capitalizeWords } from '../utils/formatters'
+import { MESSAGES_UPDATED } from '../lib/events'
 import NotificationBell from './NotificationBell'
 
 interface Business {
@@ -48,7 +49,7 @@ export default function Header() {
     fetchUserBusinesses()
   }, [user, isCompany])
 
-  // Contagem de mensagens não lidas (para bolinha no ícone do chat)
+  // Contagem de mensagens não lidas: polling por visibilidade + evento ao vivo
   useEffect(() => {
     if (!user) {
       setUnreadMessagesCount(0)
@@ -56,7 +57,7 @@ export default function Header() {
     }
     const fetchUnreadCount = async () => {
       try {
-        const res = await fetch('/api/messages/unread-count')
+        const res = await fetch('/api/messages/unread-count', { cache: 'no-store' })
         if (res.ok) {
           const data = await res.json()
           setUnreadMessagesCount(data.unreadCount ?? 0)
@@ -66,8 +67,28 @@ export default function Header() {
       }
     }
     fetchUnreadCount()
-    const interval = setInterval(fetchUnreadCount, 15000)
-    return () => clearInterval(interval)
+
+    const INTERVAL_VISIBLE = 4000
+    const INTERVAL_HIDDEN = 30000
+    let intervalMs = document.visibilityState === 'visible' ? INTERVAL_VISIBLE : INTERVAL_HIDDEN
+    let t = setInterval(fetchUnreadCount, intervalMs)
+
+    const onVisibilityChange = () => {
+      clearInterval(t)
+      intervalMs = document.visibilityState === 'visible' ? INTERVAL_VISIBLE : INTERVAL_HIDDEN
+      t = setInterval(fetchUnreadCount, intervalMs)
+      if (document.visibilityState === 'visible') fetchUnreadCount()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    const onMessagesUpdated = () => fetchUnreadCount()
+    window.addEventListener(MESSAGES_UPDATED, onMessagesUpdated)
+
+    return () => {
+      clearInterval(t)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener(MESSAGES_UPDATED, onMessagesUpdated)
+    }
   }, [user])
 
   // Buscar empresas para sugestões de pesquisa

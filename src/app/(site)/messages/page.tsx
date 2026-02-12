@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { dispatchMessagesUpdated } from '@/lib/events'
 import { MessageCircle, Send, Check, CheckCheck, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -98,6 +99,7 @@ export default function MessagesPage() {
         if (res.ok) {
           const data = await res.json()
           setMessages(data.messages ?? [])
+          dispatchMessagesUpdated()
         }
       } catch {
         setMessages([])
@@ -187,6 +189,7 @@ export default function MessagesPage() {
         const data = await res.json()
         setMessages((prev) => [...prev, data.data])
         setNewMessage('')
+        dispatchMessagesUpdated()
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80)
         const wasTemp = selectedConversation?.id.startsWith('temp-')
         const prevConv = selectedConversation
