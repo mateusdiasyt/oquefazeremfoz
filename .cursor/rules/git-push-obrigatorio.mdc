@@ -1,0 +1,14 @@
+---
+description: Sempre fazer commit e push após alterações no código
+alwaysApply: true
+---
+
+# Git: commit e push obrigatórios
+
+Após qualquer alteração no código que modifique arquivos do repositório:
+
+1. **Sempre** executar `git add` nos arquivos alterados (ou `git add -A` se fizer sentido).
+2. **Sempre** fazer `git commit` com mensagem clara e em português descrevendo a mudança.
+3. **Sempre** fazer `git push` para o remoto (ex.: `origin main`).
+
+Não encerrar a resposta sem ter executado esses comandos quando houver mudanças não commitadas. Em PowerShell, usar `;` em vez de `&&` para encadear comandos.
