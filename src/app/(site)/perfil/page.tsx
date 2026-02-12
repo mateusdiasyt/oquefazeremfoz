@@ -21,6 +21,8 @@ import {
   Trash2,
   ExternalLink,
   Megaphone,
+  Image as ImageIcon,
+  Video,
 } from 'lucide-react'
 
 interface UserReview {
@@ -109,6 +111,14 @@ export default function PerfilPage() {
   const [savingProduct, setSavingProduct] = useState(false)
   type GuideSection = 'publicacoes' | 'pacotes' | 'avaliacoes'
   const [guideSection, setGuideSection] = useState<GuideSection>('publicacoes')
+  const [postComposerOpen, setPostComposerOpen] = useState(false)
+  const [postTitle, setPostTitle] = useState('')
+  const [postBody, setPostBody] = useState('')
+  const [postImageFile, setPostImageFile] = useState<File | null>(null)
+  const [postVideoFile, setPostVideoFile] = useState<File | null>(null)
+  const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
+  const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
+  const [uploadingPost, setUploadingPost] = useState(false)
 
   const isGuide = user?.roles?.includes('GUIDE')
 
@@ -269,6 +279,58 @@ export default function PerfilPage() {
       showNotification('Erro ao cadastrar pacote', 'error')
     } finally {
       setSavingProduct(false)
+    }
+  }
+
+  const handlePostSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!guide?.id || !postTitle.trim()) {
+      showNotification('Título é obrigatório', 'error')
+      return
+    }
+    setUploadingPost(true)
+    try {
+      const formData = new FormData()
+      formData.append('guideId', guide.id)
+      formData.append('title', postTitle.trim())
+      formData.append('body', postBody.trim())
+      if (postImageFile) formData.append('image', postImageFile)
+      if (postVideoFile) formData.append('video', postVideoFile)
+      const res = await fetch('/api/guide/posts', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        setPosts((prev) => [data.post, ...prev])
+        setPostTitle('')
+        setPostBody('')
+        setPostImageFile(null)
+        setPostVideoFile(null)
+        setPostImagePreview(null)
+        setPostVideoPreview(null)
+        setPostComposerOpen(false)
+        showNotification('Publicação criada!', 'success')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        showNotification(err?.message || 'Erro ao publicar', 'error')
+      }
+    } catch {
+      showNotification('Erro ao publicar', 'error')
+    } finally {
+      setUploadingPost(false)
+    }
+  }
+
+  const handlePostDelete = async (postId: string) => {
+    if (!confirm('Tem certeza que deseja excluir esta publicação?')) return
+    try {
+      const res = await fetch(`/api/guide/posts?postId=${postId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setPosts((prev) => prev.filter((p) => p.id !== postId))
+        showNotification('Publicação excluída', 'success')
+      } else {
+        showNotification('Erro ao excluir', 'error')
+      }
+    } catch {
+      showNotification('Erro ao excluir', 'error')
     }
   }
 
@@ -439,36 +501,127 @@ export default function PerfilPage() {
             {guideSection === 'publicacoes' && (
               <>
                 <div className="mb-4">
-                  <Link
-                    href="/"
-                    className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 hover:border-violet-200 hover:bg-violet-50/40 transition-all w-full text-left"
-                  >
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
-                      {(profileImage || guide.profileImage) ? (
-                        <img src={profileImage || guide.profileImage || ''} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg">
-                          {(guide.name || user.name)?.charAt(0).toUpperCase()}
+                  {!postComposerOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => setPostComposerOpen(true)}
+                      className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 hover:border-violet-200 hover:bg-violet-50/40 transition-all w-full text-left"
+                    >
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
+                        {(profileImage || guide.profileImage) ? (
+                          <img src={profileImage || guide.profileImage || ''} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg">
+                            {(guide.name || user.name)?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <span className="flex-1 text-gray-500 text-sm">No que você está pensando?</span>
+                    </button>
+                  ) : (
+                    <div className="p-4 rounded-2xl border-2 border-violet-100 bg-violet-50/30">
+                      <form onSubmit={handlePostSubmit} className="space-y-4">
+                        <input
+                          type="text"
+                          value={postTitle}
+                          onChange={(e) => setPostTitle(e.target.value)}
+                          placeholder="Título da publicação"
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                          required
+                        />
+                        <textarea
+                          value={postBody}
+                          onChange={(e) => setPostBody(e.target.value)}
+                          placeholder="No que você está pensando?"
+                          rows={3}
+                          className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                        />
+                        <div className="flex flex-wrap gap-4">
+                          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                            <ImageIcon size={18} />
+                            <span>Imagem</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  setPostImageFile(file)
+                                  const reader = new FileReader()
+                                  reader.onload = (ev) => setPostImagePreview(ev.target?.result as string)
+                                  reader.readAsDataURL(file)
+                                }
+                              }}
+                            />
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                            <Video size={18} />
+                            <span>Vídeo</span>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  setPostVideoFile(file)
+                                  const reader = new FileReader()
+                                  reader.onload = (ev) => setPostVideoPreview(ev.target?.result as string)
+                                  reader.readAsDataURL(file)
+                                }
+                              }}
+                            />
+                          </label>
                         </div>
-                      )}
+                        {postImagePreview && <img src={postImagePreview} alt="Preview" className="w-full max-w-sm rounded-xl object-cover h-36" />}
+                        {postVideoPreview && <video src={postVideoPreview} controls className="w-full max-w-sm rounded-xl mt-2" />}
+                        <div className="flex gap-2">
+                          <button type="submit" disabled={uploadingPost} className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 disabled:opacity-50">
+                            {uploadingPost ? 'Publicando...' : 'Publicar'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPostComposerOpen(false)
+                              setPostTitle('')
+                              setPostBody('')
+                              setPostImageFile(null)
+                              setPostVideoFile(null)
+                              setPostImagePreview(null)
+                              setPostVideoPreview(null)
+                            }}
+                            className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                    <span className="flex-1 text-gray-500 text-sm">No que você está pensando?</span>
-                  </Link>
-                  <p className="text-xs text-gray-400 mt-2">Clique para criar uma nova publicação na página inicial.</p>
+                  )}
                 </div>
                 {posts.length === 0 ? (
                   <div className="text-center py-10 text-gray-500">
                     <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
                     <p>Nenhuma publicação ainda.</p>
-                    <p className="text-sm mt-1">Clique acima para criar na página inicial ou use o bloco de postagem na home.</p>
+                    <p className="text-sm mt-1">Clique acima para criar sua primeira publicação.</p>
                   </div>
                 ) : (
                   <ul className="space-y-4">
                     {posts.map((post) => (
-                      <li key={post.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                        <p className="font-semibold text-gray-900">{post.title}</p>
-                        {post.body && <p className="text-sm text-gray-600 line-clamp-2 mt-1">{post.body}</p>}
-                        <p className="text-xs text-gray-400 mt-2">{new Date(post.createdAt).toLocaleString('pt-BR')} · {post.likes} curtidas</p>
+                      <li key={post.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900">{post.title}</p>
+                            {post.body && <p className="text-sm text-gray-600 mt-1">{post.body}</p>}
+                            {post.imageUrl && <img src={post.imageUrl} alt="" className="mt-2 rounded-xl max-h-64 object-cover w-full" />}
+                            {post.videoUrl && <video src={post.videoUrl} controls className="mt-2 rounded-xl max-h-64 w-full" />}
+                            <p className="text-xs text-gray-400 mt-2">{new Date(post.createdAt).toLocaleString('pt-BR')} · {post.likes ?? 0} curtidas</p>
+                          </div>
+                          <button type="button" onClick={() => handlePostDelete(post.id)} className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50" title="Excluir">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
