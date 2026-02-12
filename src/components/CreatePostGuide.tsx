@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocale } from '../contexts/LocaleContext'
+import { getTranslations } from '../lib/translations'
 
 interface Guide {
   id: string
@@ -18,6 +20,8 @@ interface CreatePostGuideProps {
 
 export default function CreatePostGuide({ onPostCreated }: CreatePostGuideProps) {
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [guide, setGuide] = useState<Guide | null>(null)
   const [expanded, setExpanded] = useState(false)
   const [content, setContent] = useState('')
@@ -139,7 +143,7 @@ export default function CreatePostGuide({ onPostCreated }: CreatePostGuideProps)
             )}
           </div>
           <span className="flex-1 text-gray-500 text-sm" style={{ letterSpacing: '-0.01em' }}>
-            No que você está pensando?
+            {t.home.whatAreYouThinking}
           </span>
         </button>
       </div>
@@ -201,7 +205,7 @@ export default function CreatePostGuide({ onPostCreated }: CreatePostGuideProps)
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="No que você está pensando?"
+              placeholder={t.home.whatAreYouThinking}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-gray-900 placeholder-gray-400 text-sm"
               rows={4}
               disabled={loading}

@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { Newspaper } from 'lucide-react'
+import { useLocale } from '../contexts/LocaleContext'
+import { getTranslations } from '../lib/translations'
 
 interface Release {
   id: string
@@ -158,6 +160,8 @@ function ReleasePopup({
 }
 
 export default function ReleaseCarousel() {
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [releases, setReleases] = useState<Release[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<{ release: Release; rect: DOMRect } | null>(null)
@@ -192,7 +196,7 @@ export default function ReleaseCarousel() {
       <div className="py-4 px-0 md:px-4">
         <div className="flex items-center gap-2 mb-3">
           <Newspaper className="w-4 h-4 text-purple-600" />
-          <h3 className="text-sm font-semibold text-gray-900">Releases recentes</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t.home.recentReleases}</h3>
         </div>
         <div className="flex gap-3 overflow-hidden">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -209,7 +213,7 @@ export default function ReleaseCarousel() {
     <div className="py-4 px-0 md:px-4">
       <div className="flex items-center gap-2 mb-3">
         <Newspaper className="w-4 h-4 text-purple-600" />
-        <h3 className="text-sm font-semibold text-gray-900">Releases recentes</h3>
+        <h3 className="text-sm font-semibold text-gray-900">{t.home.recentReleases}</h3>
       </div>
       <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-1 -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-gray-50 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
         {releases.map((release) => (

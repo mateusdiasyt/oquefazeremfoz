@@ -11,6 +11,8 @@ import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/Relea
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
+import { useLocale } from '@/contexts/LocaleContext'
+import { getTranslations } from '@/lib/translations'
 import FozTVNativePlayer from './foztv/FozTVNativePlayer'
 import FozTVCardPreview from './foztv/FozTVCardPreview'
 
@@ -96,7 +98,7 @@ interface Coupon {
   }
 }
 
-function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date: string) => string }) {
+function CouponCard({ coupon, getTimeAgo, copyLabel = 'Copiar', copiedLabel = 'Copiado' }: { coupon: Coupon; getTimeAgo: (date: string) => string; copyLabel?: string; copiedLabel?: string }) {
   const [isCopied, setIsCopied] = useState(false)
   const handleCopyCode = async () => {
     try {
@@ -127,7 +129,7 @@ function CouponCard({ coupon, getTimeAgo }: { coupon: Coupon; getTimeAgo: (date:
           isCopied ? 'bg-green-500 text-white' : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
         }`}
       >
-        {isCopied ? <><Check className="w-3 h-3" /><span>Copiado</span></> : <><Copy className="w-3 h-3" /><span>Copiar</span></>}
+        {isCopied ? <><Check className="w-3 h-3" /><span>{copiedLabel}</span></> : <><Copy className="w-3 h-3" /><span>{copyLabel}</span></>}
       </button>
     </div>
   )
@@ -204,6 +206,8 @@ interface FeaturedGuide {
 export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [posts, setPosts] = useState<Post[]>([])
   const [guidePosts, setGuidePosts] = useState<Post[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
@@ -623,7 +627,7 @@ export default function HomePage() {
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                       <Star className="w-3.5 h-3.5 text-white" />
                     </div>
-                    <h4 className="text-sm font-semibold text-gray-900 truncate">Empresas em Destaque</h4>
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">{t.home.featuredBusinesses}</h4>
                   </div>
                   <div className="p-2 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
                     {categoriesWithBusinesses.map((category, categoryIndex) => (
@@ -661,7 +665,7 @@ export default function HomePage() {
                                       <img src="/icons/verificado.png" alt="" className="w-3 h-3 object-contain flex-shrink-0" />
                                     )}
                                   </div>
-                                  <span className="text-[10px] text-gray-400">{business.followersCount} seguidores</span>
+                                  <span className="text-[10px] text-gray-400">{business.followersCount} {t.home.followers}</span>
                                 </div>
                               </button>
                               <button
@@ -671,7 +675,7 @@ export default function HomePage() {
                                     ? 'bg-purple-600 text-white'
                                     : 'text-gray-400 hover:bg-purple-50 hover:text-purple-600'
                                 }`}
-                                title={business.isFollowing ? 'Parar de seguir' : 'Seguir'}
+                                title={business.isFollowing ? t.home.unfollow : t.home.follow}
                               >
                                 <svg className="w-3.5 h-3.5" fill={business.isFollowing ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -698,7 +702,7 @@ export default function HomePage() {
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <BookOpen className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">O que fazer em Foz</span>
+                <span className="font-medium">{t.home.whatToDoInFoz}</span>
               </Link>
               <Link
                 href="/guias"
@@ -706,7 +710,7 @@ export default function HomePage() {
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <Compass className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">Guias</span>
+                <span className="font-medium">{t.nav.guides}</span>
               </Link>
               <Link
                 href="/cupons"
@@ -714,7 +718,7 @@ export default function HomePage() {
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <Gift className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">Cupons</span>
+                <span className="font-medium">{t.home.coupons}</span>
               </Link>
               <Link
                 href="/selo-verificado"
@@ -722,7 +726,7 @@ export default function HomePage() {
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <BadgeCheck className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">Selo Verificado</span>
+                <span className="font-medium">{t.home.verifiedSeal}</span>
               </Link>
               <Link
                 href="/cameras-ao-vivo"
@@ -730,7 +734,7 @@ export default function HomePage() {
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <Video className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">Câmeras ao vivo</span>
+                <span className="font-medium">{t.home.liveCameras}</span>
               </Link>
               <Link
                 href="/foztv"
@@ -746,7 +750,7 @@ export default function HomePage() {
                 style={{ letterSpacing: '-0.01em' }}
               >
                 <Newspaper className="w-4 h-4 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                <span className="font-medium">Portal do Turismo</span>
+                <span className="font-medium">{t.home.tourismPortal}</span>
               </Link>
             </nav>
           </aside>
@@ -768,7 +772,7 @@ export default function HomePage() {
             {loading ? (
               <div className="card p-12 text-center">
                 <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-600 text-lg">Carregando publicações...</p>
+                <p className="text-gray-600 text-lg">{t.home.loadingPosts}</p>
               </div>
             ) : (() => {
               type FeedItem = { type: 'post'; date: string; item: Post } | { type: 'release'; date: string; item: ReleaseNewsCardRelease }
@@ -783,10 +787,10 @@ export default function HomePage() {
                   <div className="card p-12 text-center">
                     <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                      Nenhuma publicação ainda
+                      {t.home.noPostsYet}
                     </h3>
                     <p className="text-gray-500">
-                      Empresas e guias ainda não compartilharam conteúdo
+                      {t.home.noContentShared}
                     </p>
                   </div>
                 )
@@ -805,7 +809,7 @@ export default function HomePage() {
                     <div className="flex justify-center py-8">
                       <div className="flex items-center space-x-3">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-                        <span className="text-gray-600 text-sm">Carregando mais...</span>
+                        <span className="text-gray-600 text-sm">{t.home.loadingMore}</span>
                       </div>
                     </div>
                   )}
@@ -816,7 +820,7 @@ export default function HomePage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
-                      <p className="text-gray-500 text-sm">Você viu todas as publicações!</p>
+                      <p className="text-gray-500 text-sm">{t.home.seenAllPosts}</p>
                     </div>
                   )}
                 </>
@@ -832,14 +836,14 @@ export default function HomePage() {
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                   <BookOpen className="w-3.5 h-3.5 text-white" />
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 truncate">Guias em Destaque</h4>
+                <h4 className="text-sm font-semibold text-gray-900 truncate">{t.home.featuredGuides}</h4>
               </div>
               <div className="p-2 space-y-1 max-h-[240px] overflow-y-auto">
                 {featuredGuides.length === 0 ? (
                   <div className="text-center py-6">
                     <BookOpen className="w-9 h-9 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-xs">Nenhum guia</p>
-                    <p className="text-gray-400 text-[10px] mt-0.5">Em breve</p>
+                    <p className="text-gray-500 text-xs">{t.home.noGuide}</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">{t.home.comingSoon}</p>
                   </div>
                 ) : (
                   <div className="space-y-1">
@@ -877,7 +881,7 @@ export default function HomePage() {
               {featuredGuides.length > 0 && (
                 <div className="px-3 py-2 border-t border-gray-100">
                   <Link href="/guias" className="text-xs font-medium text-purple-600 hover:text-purple-700">
-                    Ver todos os guias →
+                    {t.home.seeAllGuides}
                   </Link>
                 </div>
               )}
@@ -889,19 +893,19 @@ export default function HomePage() {
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                   <Gift className="w-3.5 h-3.5 text-white" />
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 truncate">Cupons do Dia</h4>
+                <h4 className="text-sm font-semibold text-gray-900 truncate">{t.home.couponsOfTheDay}</h4>
               </div>
               <div className="p-2 max-h-[280px] overflow-y-auto">
                 {coupons.length === 0 ? (
                   <div className="text-center py-6">
                     <Gift className="w-9 h-9 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-xs">Nenhum cupom</p>
-                    <p className="text-gray-400 text-[10px] mt-0.5">Em breve</p>
+                    <p className="text-gray-500 text-xs">{t.home.noCoupon}</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">{t.home.comingSoon}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {coupons.map((coupon) => (
-                      <CouponCard key={coupon.id} coupon={coupon} getTimeAgo={getTimeAgo} />
+                      <CouponCard key={coupon.id} coupon={coupon} getTimeAgo={getTimeAgo} copyLabel={t.home.copy} copiedLabel={t.home.copied} />
                     ))}
                   </div>
                 )}
@@ -971,14 +975,14 @@ export default function HomePage() {
                       ))}
                     </div>
                     <div className="py-1.5 px-2">
-                      <span className="text-xs font-medium text-purple-600">Assistir →</span>
+                      <span className="text-xs font-medium text-purple-600">{t.home.watch} →</span>
                     </div>
                   </>
                 ) : (
                   <div className="text-center py-6">
                     <Tv className="w-9 h-9 text-gray-300 mx-auto mb-2" />
-                    <p className="text-gray-500 text-xs">Nenhum vídeo</p>
-                    <p className="text-gray-400 text-[10px] mt-0.5">Em breve</p>
+                    <p className="text-gray-500 text-xs">{t.home.noVideo}</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">{t.home.comingSoon}</p>
                   </div>
                 )}
               </div>
@@ -990,7 +994,7 @@ export default function HomePage() {
                 className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Assistir vídeo"
+                aria-label={t.home.watch}
                 onClick={(e) => e.target === e.currentTarget && handleFozTVClose()}
               >
                 <div
@@ -1115,7 +1119,7 @@ export default function HomePage() {
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center flex-shrink-0">
                   <Sun className="w-3.5 h-3.5 text-white" />
                 </div>
-                <h4 className="text-sm font-semibold text-gray-900 truncate">Clima</h4>
+                <h4 className="text-sm font-semibold text-gray-900 truncate">{t.home.weather}</h4>
               </div>
               <div className="p-2">
                 {weather ? (
@@ -1165,7 +1169,7 @@ export default function HomePage() {
                       onClick={() => setWeatherExpanded((v) => !v)}
                       className="w-full flex items-center justify-center gap-1.5 py-2 text-[11px] font-medium text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-gray-100"
                     >
-                      {weatherExpanded ? <><ChevronUp className="w-3.5 h-3.5" /> Ver menos</> : <><ChevronDown className="w-3.5 h-3.5" /> Expandir</>}
+                      {weatherExpanded ? <><ChevronUp className="w-3.5 h-3.5" /> {t.home.seeLess}</> : <><ChevronDown className="w-3.5 h-3.5" /> {t.home.expand}</>}
                     </button>
                   </div>
                 ) : (

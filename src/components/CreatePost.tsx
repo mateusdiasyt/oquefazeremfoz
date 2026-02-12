@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocale } from '../contexts/LocaleContext'
+import { getTranslations } from '../lib/translations'
 import UrlPreview from './UrlPreview'
 import RichTextEditor from './RichTextEditor'
 import SEOPanel from './SEOPanel'
@@ -25,6 +27,8 @@ type PublishType = 'post' | 'release'
 export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePostProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [publishType, setPublishType] = useState<PublishType>('post')
   const [content, setContent] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -379,7 +383,7 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
             )}
           </div>
           <span className="flex-1 text-gray-500 text-sm" style={{ letterSpacing: '-0.01em' }}>
-            No que você está pensando?
+            {t.home.whatAreYouThinking}
           </span>
         </button>
         {approvedBusinesses.length === 0 && (
@@ -596,7 +600,7 @@ export default function CreatePost({ onPostCreated, onReleaseCreated }: CreatePo
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="No que você está pensando?"
+              placeholder={t.home.whatAreYouThinking}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all duration-200 text-gray-900 placeholder-gray-400 text-sm"
               rows={4}
               disabled={loading}
