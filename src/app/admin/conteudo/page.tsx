@@ -16,6 +16,7 @@ import {
   Heart,
   MessageCircle,
   ArrowUpDown,
+  Eye,
 } from 'lucide-react'
 import SEOPanel from '@/components/SEOPanel'
 
@@ -27,6 +28,9 @@ interface Release {
   slug: string
   lead: string | null
   createdAt: string
+  likes?: number
+  views?: number
+  _count?: { releasecomment: number }
   business: { id: string; name: string; slug: string }
 }
 
@@ -66,6 +70,7 @@ export default function AdminConteudoPage() {
   const [editFeaturedPreview, setEditFeaturedPreview] = useState('')
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [postsSortBy, setPostsSortBy] = useState<'recent' | 'likes' | 'comments'>('recent')
+  const [releasesSortBy, setReleasesSortBy] = useState<'recent' | 'views' | 'likes' | 'comments'>('recent')
 
   const load = () => {
     setLoading(true)
@@ -220,6 +225,13 @@ export default function AdminConteudoPage() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 
+  const sortedReleases = [...releases].sort((a, b) => {
+    if (releasesSortBy === 'views') return (b.views ?? 0) - (a.views ?? 0)
+    if (releasesSortBy === 'likes') return (b.likes ?? 0) - (a.likes ?? 0)
+    if (releasesSortBy === 'comments') return (b._count?.releasecomment ?? 0) - (a._count?.releasecomment ?? 0)
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
+
   const tabs: { id: Tab; label: string; icon: typeof FileText }[] = [
     { id: 'pending', label: 'Pendentes (IA)', icon: Sparkles },
     { id: 'releases', label: 'Releases', icon: FileText },
@@ -330,30 +342,62 @@ export default function AdminConteudoPage() {
               {releases.length === 0 ? (
                 <p className="text-gray-500 py-8">Nenhum release publicado.</p>
               ) : (
-                releases.map((r) => (
-                  <div
-                    key={r.id}
-                    className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{r.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                        <Building2 className="w-4 h-4 flex-shrink-0" />
-                        {r.business.name}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">{formatDate(r.createdAt)}</p>
-                    </div>
-                    <Link
-                      href={`/empresa/${r.business.slug}/release/${r.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline"
+                <>
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="flex items-center gap-1.5 text-sm text-gray-600">
+                      <ArrowUpDown className="w-4 h-4" />
+                      Ordenar por:
+                    </span>
+                    <select
+                      value={releasesSortBy}
+                      onChange={(e) => setReleasesSortBy(e.target.value as 'recent' | 'views' | 'likes' | 'comments')}
+                      className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                      Ver
-                    </Link>
+                      <option value="recent">Mais recentes</option>
+                      <option value="views">Mais visualizações</option>
+                      <option value="likes">Mais curtidas</option>
+                      <option value="comments">Mais comentários</option>
+                    </select>
                   </div>
-                ))
+                  {sortedReleases.map((r) => (
+                    <div
+                      key={r.id}
+                      className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">{r.title}</h3>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                          <Building2 className="w-4 h-4 flex-shrink-0" />
+                          {r.business.name}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">{formatDate(r.createdAt)}</p>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          <span className="flex items-center gap-1" title="Visualizações">
+                            <Eye className="w-3.5 h-3.5 text-gray-500" />
+                            {r.views ?? 0} visualizações
+                          </span>
+                          <span className="flex items-center gap-1" title="Curtidas">
+                            <Heart className="w-3.5 h-3.5 text-red-500" />
+                            {r.likes ?? 0} curtidas
+                          </span>
+                          <span className="flex items-center gap-1" title="Comentários">
+                            <MessageCircle className="w-3.5 h-3.5 text-indigo-500" />
+                            {r._count?.releasecomment ?? 0} comentários
+                          </span>
+                        </div>
+                      </div>
+                      <Link
+                        href={`/empresa/${r.business.slug}/release/${r.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline flex-shrink-0"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Ver
+                      </Link>
+                    </div>
+                  ))}
+                </>
               )}
             </div>
           )}

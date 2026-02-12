@@ -14,6 +14,7 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
         include: {
           business: { select: { id: true, name: true, slug: true } },
+          _count: { select: { releasecomment: true } },
         },
       }),
       prisma.post.findMany({
