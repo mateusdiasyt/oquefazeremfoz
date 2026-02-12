@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
+import CreatePostGuide from '@/components/CreatePostGuide'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass } from 'lucide-react'
@@ -752,9 +753,12 @@ export default function HomePage() {
 
           {/* Feed */}
           <div className="lg:col-span-2 flex flex-col gap-0 md:gap-6 px-0 md:px-0">
-            {/* Criar Post - apenas para empresas (admins não precisam criar posts) */}
+            {/* Criar Post - empresas e guias (coluna igual na home) */}
             {user && user.roles.includes('COMPANY') && (
               <CreatePost onPostCreated={handlePostCreated} onReleaseCreated={handleReleaseCreated} />
+            )}
+            {user && user.roles.includes('GUIDE') && (
+              <CreatePostGuide onPostCreated={handlePostCreated} />
             )}
 
             {/* Releases recentes – cards estilo stories (carrossel) */}

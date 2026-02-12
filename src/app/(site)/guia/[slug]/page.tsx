@@ -93,7 +93,7 @@ const TAB_LABELS: Record<Tab, string> = {
   pacotes: 'Pacotes e preços',
   galeria: 'Galeria',
   avaliacoes: 'Avaliações',
-  posts: 'Posts',
+  posts: 'Publicações',
   contato: 'Contato',
 }
 
@@ -671,19 +671,24 @@ export default function GuideProfilePage() {
             </div>
           </div>
 
-          {/* Tabs pill */}
+          {/* Tabs – destaque para Publicações e demais */}
           <div className="px-4 sm:px-6 pb-4">
-            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
+            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-2xl w-full sm:w-fit">
               {(Object.keys(TAB_LABELS) as Tab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                     activeTab === tab
-                      ? 'bg-white text-violet-600 shadow-sm'
+                      ? 'bg-white text-violet-600 shadow-sm border border-violet-100'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                   }`}
                 >
+                  {tab === 'posts' && (
+                    <svg className="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                  )}
                   {TAB_LABELS[tab]}
                   {(tab === 'avaliacoes' && reviews.length > 0) || (tab === 'posts' && posts.length > 0) || (tab === 'pacotes' && products.length > 0)
                     ? ` (${tab === 'avaliacoes' ? reviews.length : tab === 'posts' ? posts.length : products.length})`
@@ -694,8 +699,19 @@ export default function GuideProfilePage() {
           </div>
         </div>
 
-        {/* Conteúdo das abas */}
+        {/* Conteúdo das abas – card único com título da seção */}
         <div className="mt-6 bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden">
+          {activeTab === 'posts' && (
+            <div className="px-6 sm:px-8 pt-6 pb-2 border-b border-slate-100">
+              <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                <svg className="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+                Publicações
+                {posts.length > 0 && <span className="text-slate-500 font-normal text-base">({posts.length})</span>}
+              </h2>
+            </div>
+          )}
           <div className="p-6 sm:p-8">
             {/* Sobre */}
             {activeTab === 'sobre' && (
@@ -1089,46 +1105,89 @@ export default function GuideProfilePage() {
               </div>
             )}
 
-            {/* Posts */}
+            {/* Publicações – padrão coluna: composer no topo + lista com publicador visível */}
             {activeTab === 'posts' && (
-              <div>
+              <div className="space-y-6">
+                {/* Composer: avatar + "No que você está pensando?" (igual segunda foto) */}
                 {isOwner && (
-                  <button
+                  <div
                     onClick={() => setShowPostForm(true)}
-                    className="mb-6 inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 transition-colors"
+                    className="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-200 bg-slate-50/80 hover:border-violet-200 hover:bg-violet-50/40 transition-all cursor-pointer"
                   >
-                    <Plus className="w-4 h-4" />
-                    Criar post
-                  </button>
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 flex-shrink-0">
+                      {guide.profileImage ? (
+                        <img src={guide.profileImage} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg">
+                          {guide.name?.charAt(0)?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span className="flex-1 text-slate-500 text-sm">No que você está pensando?</span>
+                  </div>
                 )}
+
                 {posts.length === 0 ? (
-                  <div className="text-center py-16">
+                  <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-100">
                     <MessageCircle className="w-14 h-14 mx-auto text-slate-300 mb-4" />
-                    <p className="text-slate-500">Nenhum post ainda.</p>
+                    <p className="text-slate-500">Nenhuma publicação ainda.</p>
+                    {isOwner && <p className="text-slate-400 text-sm mt-1">Clique acima para criar seu primeiro post.</p>}
                   </div>
                 ) : (
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     {posts.map((post) => (
-                      <article key={post.id} className="rounded-2xl border border-slate-100 overflow-hidden bg-slate-50/50">
-                        {post.imageUrl && (
-                          <img src={post.imageUrl} alt="" className="w-full h-48 object-cover" />
-                        )}
-                        <div className="p-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-semibold text-slate-900">{post.title}</h3>
-                            {isOwner && (
+                      <article key={post.id} className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        {/* Cabeçalho: publicador (guia) + data + ações */}
+                        <div className="flex items-center justify-between gap-3 p-4 border-b border-slate-100">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 flex-shrink-0">
+                              {guide.profileImage ? (
+                                <img src={guide.profileImage} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-violet-100 flex items-center justify-center text-violet-600 font-semibold text-sm">
+                                  {guide.name?.charAt(0)?.toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-900 truncate flex items-center gap-1.5">
+                                {capitalizeWords(guide.name)}
+                                {guide.isVerified && (
+                                  <img src="/icons/verificado.png" alt="Verificado" className="w-4 h-4 object-contain flex-shrink-0" />
+                                )}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {new Date(post.createdAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          </div>
+                          {isOwner && (
+                            <div className="flex items-center gap-1 flex-shrink-0">
                               <button
                                 onClick={() => handlePostDelete(post.id)}
-                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                                title="Excluir"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
-                            )}
-                          </div>
-                          {post.body && <p className="text-slate-600 text-sm mt-1 line-clamp-2">{post.body}</p>}
-                          <p className="text-xs text-slate-400 mt-2">
-                            {new Date(post.createdAt).toLocaleDateString('pt-BR')} · {post.likes} curtida{post.likes !== 1 ? 's' : ''}
-                          </p>
+                            </div>
+                          )}
+                        </div>
+                        {/* Conteúdo */}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-slate-900 mb-2">{post.title}</h3>
+                          {post.body && <p className="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{post.body}</p>}
+                          {post.imageUrl && (
+                            <div className="mt-3 rounded-xl overflow-hidden border border-slate-100">
+                              <img src={post.imageUrl} alt="" className="w-full max-h-80 object-cover" />
+                            </div>
+                          )}
+                          {post.videoUrl && (
+                            <div className="mt-3 rounded-xl overflow-hidden border border-slate-100">
+                              <video src={post.videoUrl} controls className="w-full max-h-80" />
+                            </div>
+                          )}
+                          <p className="text-xs text-slate-400 mt-3">{post.likes} curtida{post.likes !== 1 ? 's' : ''}</p>
                         </div>
                       </article>
                     ))}
