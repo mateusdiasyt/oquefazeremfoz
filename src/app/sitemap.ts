@@ -6,27 +6,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Buscar todas as empresas aprovadas
   const businesses = await prisma.business.findMany({
-    where: {
-      isApproved: true,
-    },
-    select: {
-      slug: true,
-      updatedAt: true,
-    },
-    take: 1000, // Limitar a 1000 empresas
+    where: { isApproved: true },
+    select: { slug: true, updatedAt: true },
+    take: 1000,
   })
 
-  // Filtrar apenas empresas com slug válido e gerar URLs
   const businessUrls: MetadataRoute.Sitemap = businesses
-    .filter((business) => business.slug !== null)
-    .map((business) => ({
-      url: `${baseUrl}/empresa/${business.slug}`,
-      lastModified: business.updatedAt,
+    .filter((b) => b.slug != null)
+    .map((b) => ({
+      url: `${baseUrl}/empresa/${b.slug}`,
+      lastModified: b.updatedAt,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     }))
 
-  // URLs estáticas principais (página pilar SEO com prioridade alta)
+  // Releases/publicações (blogs) de empresas aprovadas – para o Google indexar cada release
+  const releases = await prisma.businessrelease.findMany({
+    where: {
+      isPublished: true,
+      business: { isApproved: true },
+    },
+    select: {
+      slug: true,
+      updatedAt: true,
+      publishedAt: true,
+      business: { select: { slug: true } },
+    },
+    take: 5000,
+  })
+
+  const releaseUrls: MetadataRoute.Sitemap = releases
+    .filter((r) => r.business?.slug)
+    .map((r) => ({
+      url: `${baseUrl}/empresa/${r.business!.slug}/release/${r.slug}`,
+      lastModified: r.updatedAt ?? r.publishedAt ?? new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }))
+
+  // URLs estáticas principais
   const staticUrls: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
@@ -82,7 +100,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}/guias`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
   ]
 
-  return [...staticUrls, ...businessUrls]
+  return [...staticUrls, ...businessUrls, ...releaseUrls]
 }
