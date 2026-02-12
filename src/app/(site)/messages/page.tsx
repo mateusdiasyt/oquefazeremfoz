@@ -172,10 +172,6 @@ export default function MessagesPage() {
     return () => clearInterval(t)
   }, [user, fetchConversations])
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
   const sendMessage = async () => {
     const otherUserId = selectedConversation ? getOtherUserId(selectedConversation) : null
     if (!newMessage.trim() || !otherUserId || !user) return
@@ -191,6 +187,7 @@ export default function MessagesPage() {
         const data = await res.json()
         setMessages((prev) => [...prev, data.data])
         setNewMessage('')
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80)
         const wasTemp = selectedConversation?.id.startsWith('temp-')
         const prevConv = selectedConversation
         const res2 = await fetch('/api/messages/conversations', { cache: 'no-store' })
