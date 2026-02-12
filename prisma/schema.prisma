@@ -572,6 +572,8 @@ model user {
   notification                     notification[]
   guide                            guide[]
   guidereview                      guidereview[]
+  guidepostlike                    guidepostlike[]
+  guidepostcomment                 guidepostcomment[]
   foztvvideolike                   foztvvideolike[]
   foztvvideocomment                foztvvideocomment[]
 }
@@ -635,17 +637,49 @@ model guidegallery {
 }
 
 model guidepost {
-  id         String   @id
-  guideId    String
-  title      String
-  body       String?
-  imageUrl   String?
-  videoUrl   String?
-  likes      Int      @default(0)
-  createdAt  DateTime @default(now())
-  guide      guide    @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuidePost_guideId_fkey")
+  id               String             @id
+  guideId          String
+  title            String
+  body             String?
+  imageUrl         String?
+  videoUrl         String?
+  likes            Int                @default(0)
+  createdAt        DateTime           @default(now())
+  guide            guide              @relation(fields: [guideId], references: [id], onDelete: Cascade, map: "GuidePost_guideId_fkey")
+  guidepostlike    guidepostlike[]
+  guidepostcomment guidepostcomment[]
 
   @@index([guideId], map: "GuidePost_guideId_idx")
+}
+
+model guidepostlike {
+  id          String    @id
+  guidePostId String
+  userId      String
+  createdAt   DateTime  @default(now())
+  guidepost   guidepost @relation(fields: [guidePostId], references: [id], onDelete: Cascade, map: "GuidePostLike_guidePostId_fkey")
+  user        user      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GuidePostLike_userId_fkey")
+
+  @@unique([guidePostId, userId], map: "GuidePostLike_guidePostId_userId_key")
+  @@index([guidePostId], map: "GuidePostLike_guidePostId_idx")
+  @@index([userId], map: "GuidePostLike_userId_idx")
+}
+
+model guidepostcomment {
+  id          String             @id
+  guidePostId String
+  userId      String
+  body        String             @db.Text
+  parentId    String?
+  createdAt   DateTime           @default(now())
+  guidepost   guidepost          @relation(fields: [guidePostId], references: [id], onDelete: Cascade, map: "GuidePostComment_guidePostId_fkey")
+  user        user               @relation(fields: [userId], references: [id], onDelete: Cascade, map: "GuidePostComment_userId_fkey")
+  parent      guidepostcomment?  @relation("GuidePostCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     guidepostcomment[] @relation("GuidePostCommentReplies")
+
+  @@index([guidePostId], map: "GuidePostComment_guidePostId_idx")
+  @@index([userId], map: "GuidePostComment_userId_idx")
+  @@index([parentId], map: "GuidePostComment_parentId_idx")
 }
 
 // Pacotes/serviços do guia com valor obrigatório (negociação/contratação fora da plataforma)

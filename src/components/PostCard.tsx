@@ -73,9 +73,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [showPostDetailModal, setShowPostDetailModal] = useState(false)
 
   useEffect(() => {
-    if (!post.isGuidePost) {
-      checkIfLiked()
-    }
+    if (user) checkIfLiked()
     if (user?.roles?.includes('COMPANY')) {
       fetchUserBusinesses()
     }
@@ -115,9 +113,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     }
   }, [showCommentIdentityDropdown])
 
+  const likeApiUrl = post.isGuidePost ? `/api/guide/posts/${post.id}/like` : `/api/posts/${post.id}/like`
   const checkIfLiked = async () => {
     try {
-      const response = await fetch(`/api/posts/${post.id}/like`)
+      const response = await fetch(likeApiUrl)
       if (response.ok) {
         const data = await response.json()
         setIsLiked(data.liked)
@@ -133,7 +132,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       return
     }
     try {
-      const response = await fetch(`/api/posts/${post.id}/like`, {
+      const response = await fetch(likeApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -143,12 +142,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       if (response.ok) {
         const data = await response.json()
         setIsLiked(data.liked)
-        setLikesCount(data.likesCount)
-        
-        // Chamar callback se fornecido
-        if (onLike) {
-          onLike()
-        }
+        setLikesCount(data.likesCount ?? likesCount)
+        if (onLike) onLike()
       } else {
         console.error('Erro ao curtir post:', response.statusText)
       }
@@ -168,17 +163,19 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     setCommentLoading(true)
 
     try {
-      const response = await fetch('/api/posts/comments', {
+      const url = post.isGuidePost ? '/api/guide/posts/comments' : '/api/posts/comments'
+      const body = post.isGuidePost
+        ? { guidePostId: post.id, content: newComment.trim(), parentId: replyingTo?.id || null }
+        : {
+            postId: post.id,
+            content: newComment.trim(),
+            parentId: replyingTo?.id || null,
+            businessId: selectedCommentIdentity !== 'user' ? selectedCommentIdentity : null
+          }
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          postId: post.id,
-          content: newComment.trim(),
-          parentId: replyingTo?.id || null,
-          businessId: selectedCommentIdentity !== 'user' ? selectedCommentIdentity : null
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
 
       if (response.ok) {
@@ -221,34 +218,26 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`/api/posts/comments?postId=${post.id}`)
+      const url = post.isGuidePost
+        ? `/api/guide/posts/comments?guidePostId=${post.id}`
+        : `/api/posts/comments?postId=${post.id}`
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         const fetchedComments = data.comments || []
-        
-        // Deduplicar respostas em cada comentário
         const deduplicatedComments = fetchedComments.map((comment: any) => {
           if (comment.replies && comment.replies.length > 0) {
-            // Usar Map para deduplicar por ID
             const uniqueReplies = new Map()
             comment.replies.forEach((reply: any) => {
-              if (!uniqueReplies.has(reply.id)) {
-                uniqueReplies.set(reply.id, reply)
-              }
+              if (!uniqueReplies.has(reply.id)) uniqueReplies.set(reply.id, reply)
             })
-            
-            return {
-              ...comment,
-              replies: Array.from(uniqueReplies.values())
-            }
+            return { ...comment, replies: Array.from(uniqueReplies.values()) }
           }
           return comment
         })
-        
         setComments(deduplicatedComments)
-        // Atualizar a contagem apenas com comentários principais (sem replies)
-        const mainCommentsCount = deduplicatedComments.length
-        setCommentsCount(mainCommentsCount)
+        const total = deduplicatedComments.length + deduplicatedComments.reduce((acc: number, c: any) => acc + (c.replies?.length || 0), 0)
+        setCommentsCount(post.isGuidePost ? total : deduplicatedComments.length)
       }
     } catch (error) {
       console.error('Erro ao buscar comentários:', error)
@@ -647,10 +636,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         )}
       </div>
 
-      {/* Ações do post */}
+      {/* Ações do post (curtir, comentar, compartilhar – mesmo padrão do card de release) */}
       <div className="flex items-center space-x-6 border-t border-gray-100 pt-4">
-        {!isGuidePost ? (
         <button
+          type="button"
           onClick={handleLike}
           className={`flex items-center space-x-1.5 transition-all duration-200 ${
             isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
@@ -661,15 +650,9 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           </svg>
           <span className="text-sm font-medium">{likesCount}</span>
         </button>
-        ) : (
-          <span className="flex items-center space-x-1.5 text-gray-500">
-            <Heart className="w-5 h-5" />
-            <span className="text-sm font-medium">{likesCount}</span>
-          </span>
-        )}
 
-        {!isGuidePost && (
         <button
+          type="button"
           onClick={() => setShowComments(!showComments)}
           className="flex items-center space-x-1.5 text-gray-500 hover:text-purple-600 transition-all duration-200"
         >
@@ -678,9 +661,9 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           </svg>
           <span className="text-sm font-medium">{commentsCount}</span>
         </button>
-        )}
 
         <button
+          type="button"
           onClick={() => {
             if (!user) {
               router.push('/login')
@@ -697,8 +680,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         </button>
       </div>
 
-      {/* Comentários (apenas para posts de empresa) */}
-      {!isGuidePost && showComments && (
+      {/* Comentários (posts de empresa e de guia – mesmo padrão do release) */}
+      {showComments && (
         <div className="mt-5 border-t border-gray-100 pt-5">
           {/* Formulário de comentário minimalista */}
           <form onSubmit={handleComment} className="mb-5">
@@ -719,8 +702,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                       </button>
                     </div>
                   )}
-                  {/* Seletor de identidade - apenas se usuário tem empresa */}
-                  {userBusinesses.length > 0 && (
+                  {/* Seletor de identidade - apenas para posts de empresa (guia comenta só como usuário) */}
+                  {!isGuidePost && userBusinesses.length > 0 && (
                     <div className="mb-2 relative" ref={commentIdentityDropdownRef}>
                       <button
                         type="button"
