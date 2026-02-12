@@ -107,6 +107,8 @@ export default function PerfilPage() {
   const [productDescription, setProductDescription] = useState('')
   const [productPriceCents, setProductPriceCents] = useState('')
   const [savingProduct, setSavingProduct] = useState(false)
+  type GuideSection = 'publicacoes' | 'pacotes' | 'avaliacoes'
+  const [guideSection, setGuideSection] = useState<GuideSection>('publicacoes')
 
   const isGuide = user?.roles?.includes('GUIDE')
 
@@ -375,7 +377,7 @@ export default function PerfilPage() {
           </div>
 
           {/* Métricas */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="card p-5 text-center">
               <FileText className="w-8 h-8 mx-auto text-violet-500 mb-2" />
               <p className="text-2xl font-bold text-gray-900">{posts.length}</p>
@@ -398,161 +400,183 @@ export default function PerfilPage() {
             </div>
           </div>
 
-          {/* Pacotes e preços */}
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Package className="w-5 h-5 text-violet-500" />
-              Pacotes e preços
-            </h2>
-            <div className="card p-6">
-              {!showProductForm ? (
-                <button
-                  type="button"
-                  onClick={() => setShowProductForm(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
-                >
-                  <Plus size={18} />
-                  Cadastrar pacote
-                </button>
-              ) : (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <h3 className="font-semibold text-gray-900">Novo pacote</h3>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder="Nome do pacote (ex: Passeio Cataratas meio dia)"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
-                  />
-                  <textarea
-                    value={productDescription}
-                    onChange={(e) => setProductDescription(e.target.value)}
-                    placeholder="Descrição (opcional)"
-                    rows={2}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
-                  />
-                  <input
-                    type="text"
-                    value={productPriceCents}
-                    onChange={(e) => setProductPriceCents(e.target.value)}
-                    placeholder="Valor (R$)"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddProduct}
-                      disabled={savingProduct || !productName.trim() || !productPriceCents}
-                      className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 disabled:opacity-50"
-                    >
-                      {savingProduct ? 'Salvando...' : 'Salvar'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowProductForm(false); setProductName(''); setProductDescription(''); setProductPriceCents('') }}
-                      className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              )}
-              {products.length === 0 && !showProductForm && (
-                <p className="text-gray-500 text-sm mt-3">Nenhum pacote cadastrado. Cadastre para exibir no perfil.</p>
-              )}
-              {products.length > 0 && (
-                <ul className="mt-4 space-y-3">
-                  {products.map((prod) => (
-                    <li key={prod.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                      <div>
-                        <p className="font-medium text-gray-900">{prod.name}</p>
-                        {prod.description && <p className="text-sm text-gray-500 line-clamp-1">{prod.description}</p>}
-                      </div>
-                      <p className="font-semibold text-violet-600">{(prod.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+          {/* Abas: clicar mostra a seção */}
+          <div className="flex flex-wrap gap-2 p-1.5 bg-gray-100 rounded-2xl mb-6 w-full sm:w-fit">
+            <button
+              type="button"
+              onClick={() => setGuideSection('publicacoes')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                guideSection === 'publicacoes' ? 'bg-white text-violet-600 shadow-sm border border-violet-100' : 'text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              <FileText size={18} />
+              Publicações {posts.length > 0 && `(${posts.length})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setGuideSection('pacotes')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                guideSection === 'pacotes' ? 'bg-white text-violet-600 shadow-sm border border-violet-100' : 'text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              <Package size={18} />
+              Pacotes e preços {products.length > 0 && `(${products.length})`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setGuideSection('avaliacoes')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                guideSection === 'avaliacoes' ? 'bg-white text-violet-600 shadow-sm border border-violet-100' : 'text-gray-600 hover:bg-white/50'
+              }`}
+            >
+              <Star size={18} />
+              Avaliações {guideReviews.length > 0 && `(${guideReviews.length})`}
+            </button>
+          </div>
 
-          {/* Minhas publicações */}
-          <section className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Megaphone className="w-5 h-5 text-violet-500" />
-              Minhas publicações
-            </h2>
-            <div className="card p-6">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
-                >
-                  <Plus size={18} />
-                  Nova publicação (na página inicial)
-                </Link>
-                {guide.slug && (
+          {/* Conteúdo da aba ativa */}
+          <div className="card p-6">
+            {guideSection === 'publicacoes' && (
+              <>
+                <div className="mb-4">
                   <Link
-                    href={`/guia/${guide.slug}`}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 border border-violet-200 text-violet-600 rounded-xl font-medium hover:bg-violet-50"
+                    href="/"
+                    className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-200 bg-gray-50 hover:border-violet-200 hover:bg-violet-50/40 transition-all w-full text-left"
                   >
-                    <ExternalLink size={16} />
-                    Publicar no perfil
-                  </Link>
-                )}
-              </div>
-              {posts.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                  <p>Nenhuma publicação ainda.</p>
-                  <p className="text-sm mt-1">Crie posts na página inicial ou no seu perfil público.</p>
-                </div>
-              ) : (
-                <ul className="space-y-4">
-                  {posts.map((post) => (
-                    <li key={post.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                      <p className="font-semibold text-gray-900">{post.title}</p>
-                      {post.body && <p className="text-sm text-gray-600 line-clamp-2 mt-1">{post.body}</p>}
-                      <p className="text-xs text-gray-400 mt-2">{new Date(post.createdAt).toLocaleString('pt-BR')} · {post.likes} curtidas</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
-
-          {/* Avaliações que recebi */}
-          <section>
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Star className="w-5 h-5 text-violet-500" />
-              Avaliações que recebi
-            </h2>
-            <div className="card p-6">
-              {guideReviews.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  <Star className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                  <p>Nenhuma avaliação ainda.</p>
-                  <p className="text-sm mt-1">As avaliações dos turistas aparecerão aqui.</p>
-                </div>
-              ) : (
-                <ul className="space-y-4">
-                  {guideReviews.map((rev) => (
-                    <li key={rev.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((s) => (
-                            <Star key={s} size={16} className={s <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'} />
-                          ))}
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-gray-200 flex-shrink-0">
+                      {(profileImage || guide.profileImage) ? (
+                        <img src={profileImage || guide.profileImage || ''} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg">
+                          {(guide.name || user.name)?.charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-sm text-gray-500">{rev.user?.name || rev.user?.email || 'Anônimo'}</span>
-                        <span className="text-xs text-gray-400">{getTimeAgo(rev.createdAt)}</span>
-                      </div>
-                      {rev.comment && <p className="text-gray-700 text-sm">{rev.comment}</p>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+                      )}
+                    </div>
+                    <span className="flex-1 text-gray-500 text-sm">No que você está pensando?</span>
+                  </Link>
+                  <p className="text-xs text-gray-400 mt-2">Clique para criar uma nova publicação na página inicial.</p>
+                </div>
+                {posts.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                    <p>Nenhuma publicação ainda.</p>
+                    <p className="text-sm mt-1">Clique acima para criar na página inicial ou use o bloco de postagem na home.</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-4">
+                    {posts.map((post) => (
+                      <li key={post.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                        <p className="font-semibold text-gray-900">{post.title}</p>
+                        {post.body && <p className="text-sm text-gray-600 line-clamp-2 mt-1">{post.body}</p>}
+                        <p className="text-xs text-gray-400 mt-2">{new Date(post.createdAt).toLocaleString('pt-BR')} · {post.likes} curtidas</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+
+            {guideSection === 'pacotes' && (
+              <>
+                {!showProductForm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowProductForm(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
+                  >
+                    <Plus size={18} />
+                    Cadastrar pacote
+                  </button>
+                ) : (
+                  <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100 mb-4">
+                    <h3 className="font-semibold text-gray-900">Novo pacote</h3>
+                    <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      placeholder="Nome do pacote (ex: Passeio Cataratas meio dia)"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
+                    />
+                    <textarea
+                      value={productDescription}
+                      onChange={(e) => setProductDescription(e.target.value)}
+                      placeholder="Descrição (opcional)"
+                      rows={2}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
+                    />
+                    <input
+                      type="text"
+                      value={productPriceCents}
+                      onChange={(e) => setProductPriceCents(e.target.value)}
+                      placeholder="Valor (R$)"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleAddProduct}
+                        disabled={savingProduct || !productName.trim() || !productPriceCents}
+                        className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 disabled:opacity-50"
+                      >
+                        {savingProduct ? 'Salvando...' : 'Salvar'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setShowProductForm(false); setProductName(''); setProductDescription(''); setProductPriceCents('') }}
+                        className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {products.length === 0 && !showProductForm && (
+                  <p className="text-gray-500 text-sm mt-3">Nenhum pacote cadastrado. Cadastre para exibir no perfil.</p>
+                )}
+                {products.length > 0 && (
+                  <ul className="mt-4 space-y-3">
+                    {products.map((prod) => (
+                      <li key={prod.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                        <div>
+                          <p className="font-medium text-gray-900">{prod.name}</p>
+                          {prod.description && <p className="text-sm text-gray-500 line-clamp-1">{prod.description}</p>}
+                        </div>
+                        <p className="font-semibold text-violet-600">{(prod.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+
+            {guideSection === 'avaliacoes' && (
+              <>
+                {guideReviews.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <Star className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                    <p>Nenhuma avaliação ainda.</p>
+                    <p className="text-sm mt-1">As avaliações dos turistas aparecerão aqui.</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-4">
+                    {guideReviews.map((rev) => (
+                      <li key={rev.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star key={s} size={16} className={s <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'} />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-500">{rev.user?.name || rev.user?.email || 'Anônimo'}</span>
+                          <span className="text-xs text-gray-400">{getTimeAgo(rev.createdAt)}</span>
+                        </div>
+                        {rev.comment && <p className="text-gray-700 text-sm">{rev.comment}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     )

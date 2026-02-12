@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
 import { capitalizeWords } from '../../../../utils/formatters'
@@ -1105,33 +1106,18 @@ export default function GuideProfilePage() {
               </div>
             )}
 
-            {/* Publicações – padrão coluna: composer no topo + lista com publicador visível */}
+            {/* Publicações – apenas visualização (criar post no perfil do guia ou na página inicial) */}
             {activeTab === 'posts' && (
               <div className="space-y-6">
-                {/* Composer: avatar + "No que você está pensando?" (igual segunda foto) */}
-                {isOwner && (
-                  <div
-                    onClick={() => setShowPostForm(true)}
-                    className="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-200 bg-slate-50/80 hover:border-violet-200 hover:bg-violet-50/40 transition-all cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-slate-200 flex-shrink-0">
-                      {guide.profileImage ? (
-                        <img src={guide.profileImage} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-lg">
-                          {guide.name?.charAt(0)?.toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <span className="flex-1 text-slate-500 text-sm">No que você está pensando?</span>
-                  </div>
-                )}
-
                 {posts.length === 0 ? (
                   <div className="text-center py-16 rounded-2xl bg-slate-50 border border-slate-100">
                     <MessageCircle className="w-14 h-14 mx-auto text-slate-300 mb-4" />
                     <p className="text-slate-500">Nenhuma publicação ainda.</p>
-                    {isOwner && <p className="text-slate-400 text-sm mt-1">Clique acima para criar seu primeiro post.</p>}
+                    {isOwner && (
+                      <p className="text-slate-400 text-sm mt-1">
+                        Crie publicações em <Link href="/perfil" className="text-violet-600 hover:underline">Meu perfil</Link> ou na <Link href="/" className="text-violet-600 hover:underline">página inicial</Link>.
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
