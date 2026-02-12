@@ -36,6 +36,7 @@ export interface ReleaseNewsCardRelease {
   createdAt: string
   likes?: number
   views?: number
+  _count?: { releasecomment: number }
   business: {
     id: string
     name: string

@@ -17,7 +17,8 @@ export async function GET() {
       include: {
         business: {
           select: { id: true, name: true, slug: true, profileImage: true, isVerified: true }
-        }
+        },
+        _count: { select: { releasecomment: true } }
       },
       orderBy: { publishedAt: 'desc' as const },
       take: 30

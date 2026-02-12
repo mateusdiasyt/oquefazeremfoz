@@ -8,7 +8,7 @@ import CreatePost from '@/components/CreatePost'
 import CreatePostGuide from '@/components/CreatePostGuide'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass, Eye, ArrowUpDown } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 import { useLocale } from '@/contexts/LocaleContext'
@@ -47,6 +47,7 @@ interface Post {
     user: { id: string; name: string | null }
   }>
   postLikes?: Array<{ userId: string }>
+  commentsCount?: number
 }
 
 interface User {
@@ -245,6 +246,7 @@ export default function HomePage() {
   const [businessToUnfollow, setBusinessToUnfollow] = useState<Business | null>(null)
   const [releasesRefreshKey, setReleasesRefreshKey] = useState(0)
   const [releases, setReleases] = useState<ReleaseNewsCardRelease[]>([])
+  const [timelineSortBy, setTimelineSortBy] = useState<'recent' | 'views' | 'likes' | 'comments'>('recent')
   
   // Estados removidos - busca agora está no header
   
@@ -768,6 +770,35 @@ export default function HomePage() {
             {/* Releases recentes – cards estilo stories (carrossel) */}
             <ReleaseCarousel key={releasesRefreshKey} />
 
+            {/* Filtro da linha do tempo */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="flex items-center gap-1.5 text-sm text-gray-600 font-medium">
+                <ArrowUpDown className="w-4 h-4" />
+                Ordenar:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { value: 'recent' as const, label: 'Mais recentes' },
+                  { value: 'views' as const, label: 'Mais visualizações' },
+                  { value: 'likes' as const, label: 'Mais curtidas' },
+                  { value: 'comments' as const, label: 'Mais comentários' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setTimelineSortBy(value)}
+                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
+                      timelineSortBy === value
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Timeline: posts + releases (releases com card de link) */}
             {loading ? (
               <div className="card p-12 text-center">
@@ -776,11 +807,37 @@ export default function HomePage() {
               </div>
             ) : (() => {
               type FeedItem = { type: 'post'; date: string; item: Post } | { type: 'release'; date: string; item: ReleaseNewsCardRelease }
-              const feedItems: FeedItem[] = [
+              const rawItems: FeedItem[] = [
                 ...posts.map((p) => ({ type: 'post' as const, date: p.createdAt, item: p })),
                 ...guidePosts.map((p) => ({ type: 'post' as const, date: p.createdAt, item: p })),
                 ...releases.map((r) => ({ type: 'release' as const, date: r.publishedAt || r.createdAt, item: r }))
-              ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              ]
+              const feedItems: FeedItem[] = [...rawItems].sort((a, b) => {
+                if (timelineSortBy === 'recent') {
+                  return new Date(b.date).getTime() - new Date(a.date).getTime()
+                }
+                if (timelineSortBy === 'views') {
+                  const va = a.type === 'release' ? (a.item as ReleaseNewsCardRelease).views ?? 0 : 0
+                  const vb = b.type === 'release' ? (b.item as ReleaseNewsCardRelease).views ?? 0 : 0
+                  if (vb !== va) return vb - va
+                  return new Date(b.date).getTime() - new Date(a.date).getTime()
+                }
+                if (timelineSortBy === 'likes') {
+                  const la = (a.item as Post & ReleaseNewsCardRelease).likes ?? 0
+                  const lb = (b.item as Post & ReleaseNewsCardRelease).likes ?? 0
+                  if (lb !== la) return lb - la
+                  return new Date(b.date).getTime() - new Date(a.date).getTime()
+                }
+                // comments
+                const ca = a.type === 'release'
+                  ? (a.item as ReleaseNewsCardRelease)._count?.releasecomment ?? 0
+                  : (a.item as Post).commentsCount ?? 0
+                const cb = b.type === 'release'
+                  ? (b.item as ReleaseNewsCardRelease)._count?.releasecomment ?? 0
+                  : (b.item as Post).commentsCount ?? 0
+                if (cb !== ca) return cb - ca
+                return new Date(b.date).getTime() - new Date(a.date).getTime()
+              })
 
               if (feedItems.length === 0) {
                 return (
