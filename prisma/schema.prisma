@@ -55,6 +55,8 @@ model business {
   post             post[]
   comment         comment[]
   postlike        postlike[]
+  releaselike      releaselike[]
+  releasecomment   releasecomment[]
   follow_follow_followerBusinessId follow[] @relation("follow_followerBusinessId")
   follow_follow_followingBusinessId follow[] @relation("follow_followingBusinessId")
   notification                     notification[]
@@ -161,22 +163,60 @@ model businessgallery {
 }
 
 model businessrelease {
-  id               String    @id
+  id               String           @id
   businessId       String
   title            String
   slug             String
-  lead             String?   // Resumo/chamada (1-2 frases)
-  body             String    @db.Text
+  lead             String?          // Resumo/chamada (1-2 frases)
+  body             String           @db.Text
   featuredImageUrl String?
-  isPublished      Boolean   @default(true)
-  publishedAt      DateTime? @default(now())
-  createdAt        DateTime  @default(now())
+  isPublished      Boolean          @default(true)
+  publishedAt      DateTime?        @default(now())
+  createdAt        DateTime         @default(now())
   updatedAt        DateTime
-  business         business  @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessRelease_businessId_fkey")
+  likes            Int              @default(0)
+  business         business         @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "BusinessRelease_businessId_fkey")
+  releaselike      releaselike[]
+  releasecomment   releasecomment[]
 
   @@unique([businessId, slug], map: "BusinessRelease_businessId_slug_key")
   @@index([businessId], map: "BusinessRelease_businessId_idx")
   @@index([publishedAt], map: "BusinessRelease_publishedAt_idx")
+}
+
+model releaselike {
+  id         String          @id
+  releaseId  String
+  userId     String?
+  businessId String?
+  release    businessrelease @relation(fields: [releaseId], references: [id], onDelete: Cascade, map: "ReleaseLike_releaseId_fkey")
+  user       user?           @relation(fields: [userId], references: [id], map: "ReleaseLike_userId_fkey")
+  business   business?       @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "ReleaseLike_businessId_fkey")
+
+  @@unique([releaseId, userId], map: "ReleaseLike_releaseId_userId_key")
+  @@unique([releaseId, businessId], map: "ReleaseLike_releaseId_businessId_key")
+  @@index([userId], map: "ReleaseLike_userId_idx")
+  @@index([businessId], map: "ReleaseLike_businessId_idx")
+}
+
+model releasecomment {
+  id        String           @id
+  releaseId String
+  userId    String?
+  businessId String?
+  parentId  String?
+  body      String           @db.Text
+  createdAt DateTime         @default(now())
+  release   businessrelease  @relation(fields: [releaseId], references: [id], onDelete: Cascade, map: "ReleaseComment_releaseId_fkey")
+  user      user?            @relation(fields: [userId], references: [id], map: "ReleaseComment_userId_fkey")
+  business  business?        @relation(fields: [businessId], references: [id], onDelete: Cascade, map: "ReleaseComment_businessId_fkey")
+  parent    releasecomment?  @relation("ReleaseCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   releasecomment[] @relation("ReleaseCommentReplies")
+
+  @@index([releaseId], map: "ReleaseComment_releaseId_idx")
+  @@index([userId], map: "ReleaseComment_userId_idx")
+  @@index([parentId], map: "ReleaseComment_parentId_idx")
+  @@index([businessId], map: "ReleaseComment_businessId_idx")
 }
 
 // Conteúdo gerado pela IA no Bot. Pode ficar pendente (concluir manual) ou agendado (publicar em scheduledAt)
@@ -522,6 +562,8 @@ model user {
   message_message_senderIdTouser   message[]        @relation("message_senderIdTouser")
   order                            order[]
   postlike                         postlike[]
+  releaselike                      releaselike[]
+  releasecomment                   releasecomment[]
   review                           review[]
   session                          session[]
   userrole                         userrole[]
