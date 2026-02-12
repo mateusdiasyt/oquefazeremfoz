@@ -1,19 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useNotification } from '../../../contexts/NotificationContext'
-import { 
-  User, 
-  Mail, 
-  Camera, 
-  Star, 
-  MapPin, 
-  Calendar,
+import {
+  User,
+  Mail,
+  Camera,
+  Star,
+  Heart,
   Edit3,
   Save,
   X,
-  Heart
+  Package,
+  FileText,
+  MessageCircle,
+  Plus,
+  Trash2,
+  ExternalLink,
+  Megaphone,
 } from 'lucide-react'
 
 interface UserReview {
@@ -22,84 +29,145 @@ interface UserReview {
   comment: string
   imageUrl: string | null
   createdAt: string
-  business: {
-    id: string
-    name: string
-    slug: string
-    profileImage: string | null
-    isVerified: boolean
-  }
+  business: { id: string; name: string; slug: string; profileImage: string | null; isVerified: boolean }
 }
 
 interface UserFollow {
   id: string
-  business: {
-    id: string
-    name: string
-    slug: string
-    profileImage: string | null
-    isVerified: boolean
-    category: string
-  }
+  business: { id: string; name: string; slug: string; profileImage: string | null; isVerified: boolean; category: string }
   createdAt: string
 }
 
+interface GuideInfo {
+  id: string
+  name: string
+  slug: string | null
+  profileImage: string | null
+  isVerified: boolean
+  isApproved: boolean
+  followersCount?: number
+  ratingAvg?: number
+  ratingCount?: number
+}
+
+interface GuideProduct {
+  id: string
+  name: string
+  description: string | null
+  priceCents: number
+  currency: string
+  imageUrl: string | null
+  order: number
+  isActive: boolean
+}
+
+interface GuidePost {
+  id: string
+  title: string
+  body?: string
+  imageUrl?: string
+  videoUrl?: string
+  likes: number
+  createdAt: string
+}
+
+interface GuideReviewItem {
+  id: string
+  rating: number
+  comment: string | null
+  imageUrl: string | null
+  createdAt: string
+  user: { id: string; name: string | null; email: string }
+}
 
 export default function PerfilPage() {
+  const router = useRouter()
   const { user, refreshUser } = useAuth()
   const { showNotification } = useNotification()
-  
-  const [reviews, setReviews] = useState<UserReview[]>([])
-  const [follows, setFollows] = useState<UserFollow[]>([])
+
   const [loading, setLoading] = useState(true)
-  const [editingProfile, setEditingProfile] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [editingEmail, setEditingEmail] = useState(false)
-  const [nameValue, setNameValue] = useState(user?.name || '')
-  const [emailValue, setEmailValue] = useState(user?.email || '')
-  const [profileImage, setProfileImage] = useState<string | null>(user?.profileImage || null)
+  const [nameValue, setNameValue] = useState('')
+  const [emailValue, setEmailValue] = useState('')
+  const [profileImage, setProfileImage] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
+
+  // Dados para turista/empresa
+  const [reviews, setReviews] = useState<UserReview[]>([])
+  const [follows, setFollows] = useState<UserFollow[]>([])
+
+  // Dados para guia
+  const [guide, setGuide] = useState<GuideInfo | null>(null)
+  const [products, setProducts] = useState<GuideProduct[]>([])
+  const [posts, setPosts] = useState<GuidePost[]>([])
+  const [guideReviews, setGuideReviews] = useState<GuideReviewItem[]>([])
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [productName, setProductName] = useState('')
+  const [productDescription, setProductDescription] = useState('')
+  const [productPriceCents, setProductPriceCents] = useState('')
+  const [savingProduct, setSavingProduct] = useState(false)
+
+  const isGuide = user?.roles?.includes('GUIDE')
 
   useEffect(() => {
     if (user) {
+      setNameValue(user.name || '')
+      setEmailValue(user.email || '')
+      setProfileImage(user.profileImage || null)
       fetchUserData()
     }
   }, [user])
 
   const fetchUserData = async () => {
+    if (!user) return
     try {
       setLoading(true)
-      
-      // Buscar avaliações do usuário
-      const reviewsResponse = await fetch('/api/user/reviews')
-      
-      if (reviewsResponse.ok) {
-        const reviewsData = await reviewsResponse.json()
-        setReviews(reviewsData.reviews || [])
+      if (isGuide) {
+        const [meRes, productsRes, postsRes, reviewsRes] = await Promise.all([
+          fetch('/api/guide/me'),
+          fetch('/api/guide/products?guideId=placeholder').then((r) => (r.ok ? r : { ok: false })), // will refetch with real id
+          fetch('/api/guide/posts?guideId=placeholder').then((r) => (r.ok ? r : { ok: false })),
+          fetch('/api/guide/reviews?guideId=placeholder').then((r) => (r.ok ? r : { ok: false })),
+        ])
+        const meData = meRes.ok ? await meRes.json() : {}
+        const guideInfo = meData.guide || null
+        setGuide(guideInfo)
+        if (guideInfo?.id) {
+          const [pRes, ptRes, rRes] = await Promise.all([
+            fetch(`/api/guide/products?guideId=${guideInfo.id}`),
+            fetch(`/api/guide/posts?guideId=${guideInfo.id}`),
+            fetch(`/api/guide/reviews?guideId=${guideInfo.id}`),
+          ])
+          if (pRes.ok) {
+            const plist = await pRes.json()
+            setProducts(Array.isArray(plist) ? plist : plist.products || [])
+          }
+          if (ptRes.ok) {
+            const ptData = await ptRes.json()
+            setPosts(ptData.posts || [])
+          }
+          if (rRes.ok) {
+            const rData = await rRes.json()
+            setGuideReviews(rData.reviews || [])
+          }
+        }
       } else {
-        const errorData = await reviewsResponse.json()
-        if (process.env.NODE_ENV === 'development') {
-          console.error('❌ Erro ao buscar avaliações:', errorData)
+        const [reviewsRes, followsRes] = await Promise.all([
+          fetch('/api/user/reviews'),
+          fetch('/api/user/follows'),
+        ])
+        if (reviewsRes.ok) {
+          const d = await reviewsRes.json()
+          setReviews(d.reviews || [])
+        }
+        if (followsRes.ok) {
+          const d = await followsRes.json()
+          setFollows(d.follows || [])
         }
       }
-
-      // Buscar empresas seguidas
-      const followsResponse = await fetch('/api/user/follows')
-      
-      if (followsResponse.ok) {
-        const followsData = await followsResponse.json()
-        setFollows(followsData.follows || [])
-      } else {
-        const errorData = await followsResponse.json()
-        if (process.env.NODE_ENV === 'development') {
-          console.error('❌ Erro ao buscar empresas seguidas:', errorData)
-        }
-      }
-
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Erro ao buscar dados do usuário:', error)
-      }
+    } catch (e) {
+      console.error(e)
       showNotification('Erro ao carregar dados do perfil', 'error')
     } finally {
       setLoading(false)
@@ -107,296 +175,469 @@ export default function PerfilPage() {
   }
 
   const handleProfileImageUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      showNotification('Apenas imagens são permitidas', 'error')
+    if (!file.type.startsWith('image/') || file.size > 5 * 1024 * 1024) {
+      showNotification('Apenas imagens até 5MB', 'error')
       return
     }
-
-    const maxSize = 5 * 1024 * 1024
-    if (file.size > maxSize) {
-      showNotification('Arquivo muito grande. Máximo 5MB', 'error')
-      return
-    }
-
     setUploadingImage(true)
-
     try {
       const formData = new FormData()
       formData.append('image', file)
-
-      const response = await fetch('/api/user/profile-image', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (response.ok) {
-        const data = await response.json()
+      const res = await fetch('/api/user/profile-image', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
         setProfileImage(data.profileImage)
         await refreshUser()
-        showNotification('Foto de perfil atualizada com sucesso!', 'success')
+        showNotification('Foto atualizada!', 'success')
       } else {
-        const err = await response.json().catch(() => ({}))
-        showNotification(err?.message || 'Erro ao atualizar foto de perfil', 'error')
+        const err = await res.json().catch(() => ({}))
+        showNotification(err?.message || 'Erro ao atualizar foto', 'error')
       }
-    } catch (error) {
-      console.error('Erro ao fazer upload da foto:', error)
-      showNotification('Erro ao fazer upload da foto', 'error')
+    } catch {
+      showNotification('Erro ao fazer upload', 'error')
     } finally {
       setUploadingImage(false)
     }
   }
 
   const handleUpdateName = async () => {
-    if (!nameValue.trim()) {
-      showNotification('Nome não pode estar vazio', 'error')
-      return
-    }
-
+    if (!nameValue.trim()) return
     try {
-      const response = await fetch('/api/user/profile', {
+      const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: nameValue.trim() })
+        body: JSON.stringify({ name: nameValue.trim() }),
       })
-
-      if (response.ok) {
-        showNotification('Nome atualizado com sucesso!', 'success')
+      if (res.ok) {
+        showNotification('Nome atualizado!', 'success')
         setEditingName(false)
-      } else {
-        showNotification('Erro ao atualizar nome', 'error')
-      }
-    } catch (error) {
+      } else showNotification('Erro ao atualizar nome', 'error')
+    } catch {
       showNotification('Erro ao atualizar nome', 'error')
     }
   }
 
   const handleUpdateEmail = async () => {
-    if (!emailValue.trim()) {
-      showNotification('Email não pode estar vazio', 'error')
-      return
-    }
-
+    if (!emailValue.trim()) return
     try {
-      const response = await fetch('/api/user/profile', {
+      const res = await fetch('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailValue.trim() })
+        body: JSON.stringify({ email: emailValue.trim() }),
       })
-
-      if (response.ok) {
-        showNotification('Email atualizado com sucesso!', 'success')
+      if (res.ok) {
+        showNotification('Email atualizado!', 'success')
         setEditingEmail(false)
-      } else {
-        showNotification('Erro ao atualizar email', 'error')
-      }
-    } catch (error) {
+      } else showNotification('Erro ao atualizar email', 'error')
+    } catch {
       showNotification('Erro ao atualizar email', 'error')
     }
   }
 
-  const getTimeAgo = (dateString: string) => {
-    const now = new Date()
-    const date = new Date(dateString)
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
-    if (diffInMinutes < 1) return 'agora mesmo'
-    if (diffInMinutes < 60) return `há ${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''}`
-    
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `há ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`
-    
-    const diffInDays = Math.floor(diffInHours / 24)
-    return `há ${diffInDays} dia${diffInDays > 1 ? 's' : ''}`
+  const handleAddProduct = async () => {
+    if (!guide?.id || !productName.trim() || !productPriceCents) {
+      showNotification('Preencha nome e valor do pacote', 'error')
+      return
+    }
+    setSavingProduct(true)
+    try {
+      const res = await fetch('/api/guide/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guideId: guide.id,
+          name: productName.trim(),
+          description: productDescription.trim() || null,
+          priceCents: Math.round(parseFloat(productPriceCents.replace(',', '.')) * 100) || 0,
+        }),
+      })
+      if (res.ok) {
+        const created = await res.json()
+        setProducts((p) => [created, ...p])
+        setProductName('')
+        setProductDescription('')
+        setProductPriceCents('')
+        setShowProductForm(false)
+        showNotification('Pacote cadastrado!', 'success')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        showNotification(err?.message || 'Erro ao cadastrar', 'error')
+      }
+    } catch {
+      showNotification('Erro ao cadastrar pacote', 'error')
+    } finally {
+      setSavingProduct(false)
+    }
   }
 
-  if (loading) {
+  const getTimeAgo = (dateString: string) => {
+    const diff = Date.now() - new Date(dateString).getTime()
+    const min = Math.floor(diff / 60000)
+    if (min < 1) return 'agora mesmo'
+    if (min < 60) return `há ${min} min`
+    const h = Math.floor(min / 60)
+    if (h < 24) return `há ${h}h`
+    return `há ${Math.floor(h / 24)} dias`
+  }
+
+  if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <span className="text-white font-bold text-2xl">O</span>
-          </div>
-          <p className="text-gray-600 text-lg">Carregando perfil...</p>
+          <p className="text-gray-600 mb-4">Faça login para acessar seu perfil.</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="px-5 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
+          >
+            Entrar
+          </button>
         </div>
       </div>
     )
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  // ——— Guia sem perfil cadastrado ———
+  if (isGuide && !guide) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="card p-8 max-w-md text-center">
+          <Package className="w-14 h-14 mx-auto text-violet-500 mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Perfil de guia</h2>
+          <p className="text-gray-600 mb-6">Você está registrado como guia, mas ainda não possui um perfil público. Cadastre-se como guia para criar publicações e pacotes.</p>
+          <Link href="/guias" className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700">
+            Ir para guias
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // ——— Perfil GUIA ———
+  if (isGuide && guide) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+          {/* Header */}
+          <div className="card p-6 sm:p-8 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="relative">
+                {(profileImage || guide.profileImage) ? (
+                  <img
+                    src={profileImage || guide.profileImage || ''}
+                    alt=""
+                    className="w-28 h-28 rounded-2xl border-2 border-gray-100 object-cover shadow-md"
+                  />
+                ) : (
+                  <div className="w-28 h-28 rounded-2xl bg-violet-100 border-2 border-violet-200 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-violet-600">{(guide.name || user.name)?.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
+                <label className="absolute -bottom-1 -right-1 bg-violet-500 text-white p-2 rounded-full cursor-pointer hover:bg-violet-600 shadow-lg">
+                  <Camera size={16} />
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleProfileImageUpload(e.target.files[0])} disabled={uploadingImage} />
+                </label>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-600 mb-1">Guia turístico</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <h1 className="text-2xl font-bold text-gray-900 truncate">{guide.name || user.name || 'Guia'}</h1>
+                  {guide.isVerified && <img src="/icons/verificado.png" alt="Verificado" className="w-5 h-5 flex-shrink-0" />}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                  <span className="flex items-center gap-1.5">
+                    <User size={16} />
+                    {user.name || '—'}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Mail size={16} />
+                    {user.email}
+                  </span>
+                </div>
+                {guide.slug && (
+                  <Link
+                    href={`/guia/${guide.slug}`}
+                    className="inline-flex items-center gap-2 mt-3 text-violet-600 hover:text-violet-700 font-medium text-sm"
+                  >
+                    <ExternalLink size={16} />
+                    Ver perfil público
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Métricas */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div className="card p-5 text-center">
+              <FileText className="w-8 h-8 mx-auto text-violet-500 mb-2" />
+              <p className="text-2xl font-bold text-gray-900">{posts.length}</p>
+              <p className="text-sm text-gray-500">Publicações</p>
+            </div>
+            <div className="card p-5 text-center">
+              <Package className="w-8 h-8 mx-auto text-violet-500 mb-2" />
+              <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+              <p className="text-sm text-gray-500">Pacotes</p>
+            </div>
+            <div className="card p-5 text-center">
+              <Heart className="w-8 h-8 mx-auto text-violet-500 mb-2" />
+              <p className="text-2xl font-bold text-gray-900">{guide.followersCount ?? 0}</p>
+              <p className="text-sm text-gray-500">Seguidores</p>
+            </div>
+            <div className="card p-5 text-center">
+              <Star className="w-8 h-8 mx-auto text-violet-500 mb-2" />
+              <p className="text-2xl font-bold text-gray-900">{guideReviews.length}</p>
+              <p className="text-sm text-gray-500">Avaliações</p>
+            </div>
+          </div>
+
+          {/* Pacotes e preços */}
+          <section className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Package className="w-5 h-5 text-violet-500" />
+              Pacotes e preços
+            </h2>
+            <div className="card p-6">
+              {!showProductForm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowProductForm(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
+                >
+                  <Plus size={18} />
+                  Cadastrar pacote
+                </button>
+              ) : (
+                <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                  <h3 className="font-semibold text-gray-900">Novo pacote</h3>
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Nome do pacote (ex: Passeio Cataratas meio dia)"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
+                  />
+                  <textarea
+                    value={productDescription}
+                    onChange={(e) => setProductDescription(e.target.value)}
+                    placeholder="Descrição (opcional)"
+                    rows={2}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
+                  />
+                  <input
+                    type="text"
+                    value={productPriceCents}
+                    onChange={(e) => setProductPriceCents(e.target.value)}
+                    placeholder="Valor (R$)"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAddProduct}
+                      disabled={savingProduct || !productName.trim() || !productPriceCents}
+                      className="px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700 disabled:opacity-50"
+                    >
+                      {savingProduct ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowProductForm(false); setProductName(''); setProductDescription(''); setProductPriceCents('') }}
+                      className="px-4 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+              {products.length === 0 && !showProductForm && (
+                <p className="text-gray-500 text-sm mt-3">Nenhum pacote cadastrado. Cadastre para exibir no perfil.</p>
+              )}
+              {products.length > 0 && (
+                <ul className="mt-4 space-y-3">
+                  {products.map((prod) => (
+                    <li key={prod.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                      <div>
+                        <p className="font-medium text-gray-900">{prod.name}</p>
+                        {prod.description && <p className="text-sm text-gray-500 line-clamp-1">{prod.description}</p>}
+                      </div>
+                      <p className="font-semibold text-violet-600">{(prod.priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          {/* Minhas publicações */}
+          <section className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-violet-500" />
+              Minhas publicações
+            </h2>
+            <div className="card p-6">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-700"
+                >
+                  <Plus size={18} />
+                  Nova publicação (na página inicial)
+                </Link>
+                {guide.slug && (
+                  <Link
+                    href={`/guia/${guide.slug}`}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 border border-violet-200 text-violet-600 rounded-xl font-medium hover:bg-violet-50"
+                  >
+                    <ExternalLink size={16} />
+                    Publicar no perfil
+                  </Link>
+                )}
+              </div>
+              {posts.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                  <p>Nenhuma publicação ainda.</p>
+                  <p className="text-sm mt-1">Crie posts na página inicial ou no seu perfil público.</p>
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {posts.map((post) => (
+                    <li key={post.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                      <p className="font-semibold text-gray-900">{post.title}</p>
+                      {post.body && <p className="text-sm text-gray-600 line-clamp-2 mt-1">{post.body}</p>}
+                      <p className="text-xs text-gray-400 mt-2">{new Date(post.createdAt).toLocaleString('pt-BR')} · {post.likes} curtidas</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          {/* Avaliações que recebi */}
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5 text-violet-500" />
+              Avaliações que recebi
+            </h2>
+            <div className="card p-6">
+              {guideReviews.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Star className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                  <p>Nenhuma avaliação ainda.</p>
+                  <p className="text-sm mt-1">As avaliações dos turistas aparecerão aqui.</p>
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {guideReviews.map((rev) => (
+                    <li key={rev.id} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star key={s} size={16} className={s <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'} />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500">{rev.user?.name || rev.user?.email || 'Anônimo'}</span>
+                        <span className="text-xs text-gray-400">{getTimeAgo(rev.createdAt)}</span>
+                      </div>
+                      {rev.comment && <p className="text-gray-700 text-sm">{rev.comment}</p>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
+  // ——— Perfil TURISTA / EMPRESA (layout original) ———
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header do Perfil */}
         <div className="card p-8 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            {/* Foto de Perfil */}
             <div className="relative">
               {profileImage ? (
-                <img
-                  src={profileImage}
-                  alt="Foto de perfil"
-                  className="w-32 h-32 rounded-2xl border-4 border-white shadow-strong object-cover"
-                />
+                <img src={profileImage} alt="" className="w-32 h-32 rounded-2xl border-4 border-white shadow-strong object-cover" />
               ) : (
                 <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-strong bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center">
-                  <span className="text-white text-3xl font-bold">
-                    {(user?.name || user?.email)?.charAt(0).toUpperCase()}
-                  </span>
+                  <span className="text-white text-3xl font-bold">{(user?.name || user?.email)?.charAt(0).toUpperCase()}</span>
                 </div>
               )}
-              
-              <label className="absolute -bottom-2 -right-2 bg-pink-500 text-white p-2 rounded-full cursor-pointer hover:bg-pink-600 transition-colors shadow-lg">
+              <label className="absolute -bottom-2 -right-2 bg-pink-500 text-white p-2 rounded-full cursor-pointer hover:bg-pink-600 shadow-lg">
                 <Camera size={16} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => e.target.files?.[0] && handleProfileImageUpload(e.target.files[0])}
-                  disabled={uploadingImage}
-                />
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleProfileImageUpload(e.target.files[0])} disabled={uploadingImage} />
               </label>
             </div>
-
-            {/* Informações do Usuário */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
-                <h1 className="text-3xl font-bold text-gray-800">
-                  {user?.name || 'Usuário'}
-                </h1>
-                <button
-                  onClick={() => setEditingProfile(!editingProfile)}
-                  className="p-2 text-gray-400 hover:text-pink-600 hover:bg-pink-50 rounded-lg transition-colors"
-                >
-                  <Edit3 size={20} />
-                </button>
+                <h1 className="text-3xl font-bold text-gray-800">{user?.name || 'Usuário'}</h1>
               </div>
-
               <div className="space-y-3">
-                {/* Nome */}
                 <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-gray-500" />
-                  {editingProfile && editingName ? (
+                  <User size={20} className="text-gray-500" />
+                  {editingName ? (
                     <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={nameValue}
-                        onChange={(e) => setNameValue(e.target.value)}
-                        className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
-                        placeholder="Seu nome"
-                      />
-                      <button
-                        onClick={handleUpdateName}
-                        className="p-1 text-green-600 hover:bg-green-50 rounded"
-                      >
-                        <Save size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingName(false)
-                          setNameValue(user?.name || '')
-                        }}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                      >
-                        <X size={16} />
-                      </button>
+                      <input value={nameValue} onChange={(e) => setNameValue(e.target.value)} className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-200" placeholder="Seu nome" />
+                      <button onClick={handleUpdateName} className="p-1 text-green-600 hover:bg-green-50 rounded"><Save size={16} /></button>
+                      <button onClick={() => { setEditingName(false); setNameValue(user?.name || '') }} className="p-1 text-red-600 hover:bg-red-50 rounded"><X size={16} /></button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-700">{user?.name || 'Nome não informado'}</span>
-                      {editingProfile && (
-                        <button
-                          onClick={() => setEditingName(true)}
-                          className="p-1 text-gray-400 hover:text-pink-600 rounded"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                      )}
+                      <button onClick={() => setEditingName(true)} className="p-1 text-gray-400 hover:text-pink-600 rounded"><Edit3 size={14} /></button>
                     </div>
                   )}
                 </div>
-
-                {/* Email */}
                 <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-gray-500" />
-                  {editingProfile && editingEmail ? (
+                  <Mail size={20} className="text-gray-500" />
+                  {editingEmail ? (
                     <div className="flex items-center gap-2">
-                      <input
-                        type="email"
-                        value={emailValue}
-                        onChange={(e) => setEmailValue(e.target.value)}
-                        className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
-                        placeholder="Seu email"
-                      />
-                      <button
-                        onClick={handleUpdateEmail}
-                        className="p-1 text-green-600 hover:bg-green-50 rounded"
-                      >
-                        <Save size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingEmail(false)
-                          setEmailValue(user?.email || '')
-                        }}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                      >
-                        <X size={16} />
-                      </button>
+                      <input type="email" value={emailValue} onChange={(e) => setEmailValue(e.target.value)} className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-200" placeholder="Seu email" />
+                      <button onClick={handleUpdateEmail} className="p-1 text-green-600 hover:bg-green-50 rounded"><Save size={16} /></button>
+                      <button onClick={() => { setEditingEmail(false); setEmailValue(user?.email || '') }} className="p-1 text-red-600 hover:bg-red-50 rounded"><X size={16} /></button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-700">{user?.email}</span>
-                      {editingProfile && (
-                        <button
-                          onClick={() => setEditingEmail(true)}
-                          className="p-1 text-gray-400 hover:text-pink-600 rounded"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                      )}
+                      <button onClick={() => setEditingEmail(true)} className="p-1 text-gray-400 hover:text-pink-600 rounded"><Edit3 size={14} /></button>
                     </div>
                   )}
                 </div>
-
-                {/* Data de Cadastro - Removido pois createdAt não está disponível no tipo User */}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Star className="w-6 h-6 text-white" />
-            </div>
+            <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3"><Star className="w-6 h-6 text-white" /></div>
             <h3 className="text-2xl font-bold text-gray-800 mb-1">{reviews.length}</h3>
             <p className="text-gray-600">Avaliações</p>
           </div>
-
           <div className="card p-6 text-center">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3"><Heart className="w-6 h-6 text-white" /></div>
             <h3 className="text-2xl font-bold text-gray-800 mb-1">{follows.length}</h3>
             <p className="text-gray-600">Empresas Seguidas</p>
           </div>
         </div>
 
-
-        {/* Conteúdo das Tabs */}
         <div className="space-y-6">
-          {/* Avaliações */}
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Suas Avaliações</h2>
             {reviews.length === 0 ? (
               <div className="card p-12 text-center">
                 <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Nenhuma avaliação ainda
-                </h3>
-                <p className="text-gray-500">
-                  Comece a avaliar empresas para ver suas avaliações aqui!
-                </p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">Nenhuma avaliação ainda</h3>
+                <p className="text-gray-500">Comece a avaliar empresas para ver suas avaliações aqui!</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -404,55 +645,19 @@ export default function PerfilPage() {
                   <div key={review.id} className="card p-6">
                     <div className="flex items-start gap-4">
                       <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center">
-                        {review.business.profileImage ? (
-                          <img 
-                            src={review.business.profileImage} 
-                            alt={review.business.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold border-2 border-purple-200">
-                            {review.business.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
+                        {review.business.profileImage ? <img src={review.business.profileImage} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold border-2 border-purple-200">{review.business.name.charAt(0).toUpperCase()}</div>}
                       </div>
-                      
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="font-semibold text-gray-800">{review.business.name}</h4>
-                          {review.business.isVerified && (
-                            <div className="flex items-center justify-center w-5 h-5 bg-blue-500 rounded-full">
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                          <span className="text-sm text-gray-500">
-                            {getTimeAgo(review.createdAt)}
-                          </span>
+                          {review.business.isVerified && <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"><svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></div>}
+                          <span className="text-sm text-gray-500">{getTimeAgo(review.createdAt)}</span>
                         </div>
-                        
                         <div className="flex items-center gap-1 mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              size={16}
-                              className={star <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}
-                            />
-                          ))}
+                          {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={16} className={star <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'} />)}
                         </div>
-                        
-                        {review.comment && (
-                          <p className="text-gray-700 mb-3">{review.comment}</p>
-                        )}
-                        
-                        {review.imageUrl && (
-                          <img
-                            src={review.imageUrl}
-                            alt="Avaliação"
-                            className="w-32 h-32 object-cover rounded-xl border border-gray-200"
-                          />
-                        )}
+                        {review.comment && <p className="text-gray-700 mb-3">{review.comment}</p>}
+                        {review.imageUrl && <img src={review.imageUrl} alt="" className="w-32 h-32 object-cover rounded-xl border border-gray-200" />}
                       </div>
                     </div>
                   </div>
@@ -460,19 +665,13 @@ export default function PerfilPage() {
               </div>
             )}
           </div>
-
-          {/* Empresas Seguidas */}
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Empresas que Você Segue</h2>
             {follows.length === 0 ? (
               <div className="card p-12 text-center">
                 <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                  Nenhuma empresa seguida
-                </h3>
-                <p className="text-gray-500">
-                  Comece a seguir empresas para vê-las aqui!
-                </p>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">Nenhuma empresa seguida</h3>
+                <p className="text-gray-500">Comece a seguir empresas para vê-las aqui!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -480,34 +679,15 @@ export default function PerfilPage() {
                   <div key={follow.id} className="card p-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center">
-                        {follow.business.profileImage ? (
-                          <img 
-                            src={follow.business.profileImage} 
-                            alt={follow.business.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold border-2 border-purple-200">
-                            {follow.business.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
+                        {follow.business.profileImage ? <img src={follow.business.profileImage} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold border-2 border-purple-200">{follow.business.name.charAt(0).toUpperCase()}</div>}
                       </div>
-                      
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="font-semibold text-gray-800">{follow.business.name}</h4>
-                          {follow.business.isVerified && (
-                            <div className="flex items-center justify-center w-4 h-4 bg-blue-500 rounded-full">
-                              <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
+                          {follow.business.isVerified && <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center"><svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></div>}
                         </div>
                         <p className="text-sm text-gray-600 mb-1">{follow.business.category}</p>
-                        <p className="text-xs text-gray-500">
-                          Seguindo desde {new Date(follow.createdAt).toLocaleDateString('pt-BR')}
-                        </p>
+                        <p className="text-xs text-gray-500">Seguindo desde {new Date(follow.createdAt).toLocaleDateString('pt-BR')}</p>
                       </div>
                     </div>
                   </div>
@@ -515,7 +695,6 @@ export default function PerfilPage() {
               </div>
             )}
           </div>
-
         </div>
       </div>
     </div>

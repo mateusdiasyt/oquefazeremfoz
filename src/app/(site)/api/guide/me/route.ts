@@ -19,6 +19,9 @@ export async function GET() {
         profileImage: true,
         isVerified: true,
         isApproved: true,
+        followersCount: true,
+        ratingAvg: true,
+        ratingCount: true,
       },
     })
 
