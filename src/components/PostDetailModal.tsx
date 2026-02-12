@@ -16,18 +16,10 @@ interface Post {
   videoUrl: string | null
   likes: number
   createdAt: string
-  business: {
-    id: string
-    name: string
-    isApproved: boolean
-    profileImage: string | null
-    isVerified: boolean
-    slug: string | null
-  }
-  _count?: {
-    comment?: number
-    postlike?: number
-  }
+  business?: { id: string; name: string; isApproved?: boolean; profileImage: string | null; isVerified: boolean; slug: string | null } | null
+  guide?: { id: string; name: string; profileImage: string | null; isVerified: boolean; slug: string | null } | null
+  isGuidePost?: boolean
+  _count?: { comment?: number; postlike?: number }
 }
 
 interface PostDetailModalProps {
@@ -40,6 +32,9 @@ interface PostDetailModalProps {
 export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostDetailModalProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const isGuidePost = !!post.isGuidePost
+  const author = post.guide || post.business
+  const authorPath = isGuidePost ? '/guia' : '/empresa'
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
   const [comments, setComments] = useState<any[]>([])
@@ -56,32 +51,24 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
 
   useEffect(() => {
     if (isOpen) {
-      checkIfLiked()
-      fetchComments()
-      // Buscar todas as empresas do usuário
+      if (!isGuidePost) {
+        checkIfLiked()
+        fetchComments()
+      }
       if (user?.roles?.includes('COMPANY')) {
         fetchUserBusinesses()
       }
-      // Prevenir scroll do body quando modal está aberto
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
     }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isOpen, post.id, user])
+    return () => { document.body.style.overflow = 'unset' }
+  }, [isOpen, post.id, user, isGuidePost])
 
   useEffect(() => {
-    // Definir padrão: se o post é de uma das empresas do usuário, comentar como essa empresa
     if (userBusinesses.length > 0 && post.business?.id) {
       const userOwnsPost = userBusinesses.some(b => b.id === post.business?.id)
-      if (userOwnsPost) {
-        setSelectedCommentIdentity(post.business.id)
-      } else {
-        setSelectedCommentIdentity('user')
-      }
+      setSelectedCommentIdentity(userOwnsPost ? post.business!.id : 'user')
     }
   }, [userBusinesses, post.business?.id])
 
@@ -254,22 +241,22 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200">
-              {post.business.profileImage ? (
+              {author?.profileImage ? (
                 <img
-                  src={post.business.profileImage}
-                  alt={post.business.name}
+                  src={author.profileImage}
+                  alt={author.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-lg border-2 border-purple-200">
-                  {post.business.name.charAt(0).toUpperCase()}
+                  {author?.name?.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">{capitalizeWords(post.business.name)}</h3>
-                {post.business.isVerified && (
+                <h3 className="font-semibold text-gray-900">{author ? capitalizeWords(author.name) : ''}</h3>
+                {author?.isVerified && (
                   <img
                     src="/icons/verificado.png"
                     alt="Verificado"
@@ -348,22 +335,29 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
 
             {/* Actions */}
             <div className="flex items-center gap-6 pt-4 border-t border-gray-200">
-              <button
-                onClick={handleLike}
-                className={`flex items-center gap-2 transition-colors ${
-                  isLiked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'
-                }`}
-              >
-                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                <span className="font-medium">{likesCount}</span>
-              </button>
-              <button
-                onClick={() => setShowComments(!showComments)}
-                className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-medium">{commentsCount}</span>
-              </button>
+              {!isGuidePost ? (
+                <>
+                  <button
+                    onClick={handleLike}
+                    className={`flex items-center gap-2 transition-colors ${isLiked ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
+                  >
+                    <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                    <span className="font-medium">{likesCount}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowComments(!showComments)}
+                    className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span className="font-medium">{commentsCount}</span>
+                  </button>
+                </>
+              ) : (
+                <span className="flex items-center gap-2 text-gray-600">
+                  <Heart className="w-5 h-5" />
+                  <span className="font-medium">{likesCount}</span>
+                </span>
+              )}
               <button
                 onClick={copyPostUrl}
                 className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
@@ -374,8 +368,8 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
             </div>
           </div>
 
-          {/* Comments Section */}
-          {showComments && (
+          {/* Comments Section (apenas para posts de empresa) */}
+          {!isGuidePost && showComments && (
             <div className="border-t border-gray-200 p-6">
               <h3 className="font-semibold text-gray-900 mb-4">Comentários ({commentsCount})</h3>
               

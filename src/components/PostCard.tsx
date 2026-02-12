@@ -10,6 +10,15 @@ import { extractUrlsFromText } from '../utils/urlDetector'
 import { capitalizeWords, getTimeAgo } from '../utils/formatters'
 import PostDetailModal from './PostDetailModal'
 
+interface PostAuthor {
+  id: string
+  name: string
+  profileImage: string | null
+  isVerified: boolean
+  slug: string | null
+  isApproved?: boolean
+}
+
 interface Post {
   id: string
   title: string
@@ -18,30 +27,17 @@ interface Post {
   videoUrl: string | null
   likes: number
   createdAt: string
-  business: {
-    id: string
-    name: string
-    isApproved: boolean
-    profileImage: string | null
-    isVerified: boolean
-    slug: string | null
-  }
-  comments: Array<{
+  business?: PostAuthor | null
+  guide?: PostAuthor | null
+  isGuidePost?: boolean
+  comments?: Array<{
     id: string
     body: string
     createdAt: string
-    user: {
-      id: string
-      name: string | null
-    }
+    user: { id: string; name: string | null }
   }>
-  postLikes: Array<{
-    userId: string
-  }>
-  _count?: {
-    comment?: number
-    postlike?: number
-  }
+  postLikes?: Array<{ userId: string }>
+  _count?: { comment?: number; postlike?: number }
   commentsCount?: number
 }
 
@@ -53,6 +49,10 @@ interface PostCardProps {
 export default function PostCard({ post, onLike }: PostCardProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const isGuidePost = !!post.isGuidePost
+  const author = post.guide || post.business
+  const authorSlug = author?.slug ?? author?.id ?? ''
+  const authorPath = isGuidePost ? '/guia' : '/empresa'
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(post.likes)
   const [showComments, setShowComments] = useState(false)
@@ -73,20 +73,15 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [showPostDetailModal, setShowPostDetailModal] = useState(false)
 
   useEffect(() => {
-    // Verificar se o usuário curtiu o post
-    checkIfLiked()
-    
-    // Buscar todas as empresas do usuário
+    if (!post.isGuidePost) {
+      checkIfLiked()
+    }
     if (user?.roles?.includes('COMPANY')) {
       fetchUserBusinesses()
     }
-    
-    // Pré-carregar comentários em background para reduzir delay ao abrir
-    if (post._count?.comment && post._count.comment > 0) {
+    if (!post.isGuidePost && post._count?.comment && post._count.comment > 0) {
       setTimeout(() => {
-        if (comments.length === 0) {
-          fetchComments()
-        }
+        if (comments.length === 0) fetchComments()
       }, 100)
     }
   }, [user])
@@ -101,7 +96,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         setSelectedCommentIdentity('user')
       }
     }
-  }, [userBusinesses, post.business?.id])
+  }, [userBusinesses, post.business?.id, post.guide?.id])
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -318,26 +313,24 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     // Coletar todas as empresas mencionadas (do post e dos comentários)
     const businessesMap = new Map<string, string | null>()
     
-    // Adicionar empresa do post
-    if (post.business?.name && post.business?.slug) {
-      businessesMap.set(post.business.name.toLowerCase().trim(), post.business.slug)
+    // Adicionar autor do post (empresa ou guia) – caminho completo
+    if (author?.name && author?.slug) {
+      businessesMap.set(author.name.toLowerCase().trim(), `${authorPath}/${author.slug}`)
     }
-    
-    // Adicionar empresas dos comentários
+    // Empresas dos comentários (sempre /empresa/)
     comments.forEach(comment => {
-      if (comment.business?.name) {
+      if (comment.business?.name && comment.business?.slug) {
         const name = comment.business.name.toLowerCase().trim()
-        if (!businessesMap.has(name) && comment.business.slug) {
-          businessesMap.set(name, comment.business.slug)
+        if (!businessesMap.has(name)) {
+          businessesMap.set(name, `/empresa/${comment.business.slug}`)
         }
       }
-      // Adicionar empresas das respostas
       if (comment.replies) {
         comment.replies.forEach((reply: any) => {
-          if (reply.business?.name) {
+          if (reply.business?.name && reply.business?.slug) {
             const name = reply.business.name.toLowerCase().trim()
-            if (!businessesMap.has(name) && reply.business.slug) {
-              businessesMap.set(name, reply.business.slug)
+            if (!businessesMap.has(name)) {
+              businessesMap.set(name, `/empresa/${reply.business.slug}`)
             }
           }
         })
@@ -360,30 +353,25 @@ export default function PostCard({ post, onLike }: PostCardProps) {
       const mentionedName = match[1].trim()
       const mentionedNameLower = mentionedName.toLowerCase()
       
-      // Buscar slug da empresa mencionada
-      let slug: string | null = null
-      
-      // Primeiro, tentar encontrar exato
+      // Buscar caminho do autor mencionado (empresa ou guia)
+      let path: string | null = null
       if (businessesMap.has(mentionedNameLower)) {
-        slug = businessesMap.get(mentionedNameLower) || null
+        path = businessesMap.get(mentionedNameLower) || null
       } else {
-        // Tentar encontrar parcial (caso o nome tenha variações)
-        businessesMap.forEach((businessSlug, businessName) => {
-          if (!slug && (businessName.includes(mentionedNameLower) || mentionedNameLower.includes(businessName))) {
-            slug = businessSlug
+        businessesMap.forEach((p, businessName) => {
+          if (!path && (businessName.includes(mentionedNameLower) || mentionedNameLower.includes(businessName))) {
+            path = p
           }
         })
       }
-      
-      // Criar link se tiver slug, senão apenas texto destacado
-      if (slug) {
+      if (path) {
         parts.push(
           <a
             key={`mention-${keyCounter++}`}
-            href={`/empresa/${slug}`}
+            href={path}
             onClick={(e) => {
               e.stopPropagation()
-              router.push(`/empresa/${slug}`)
+              router.push(path!)
             }}
             className="text-purple-600 hover:text-purple-700 font-medium underline"
           >
@@ -583,40 +571,32 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     })
   }
 
+  if (!author) return null
+
   return (
     <div className="bg-white border-b-2 border-gray-200 md:border md:border-gray-100 md:rounded-3xl md:shadow-sm hover:md:shadow-md transition-all duration-200 p-4 md:p-6 mb-0 md:mb-6 first:border-t-0">
-      {/* Header do post */}
+      {/* Header do post (empresa ou guia) */}
       <div className="flex items-center space-x-3 mb-5">
-        {/* Foto de perfil da empresa */}
         <div className="w-11 h-11 rounded-xl overflow-hidden border border-gray-200">
-          {post.business.profileImage ? (
-            <img
-              src={post.business.profileImage}
-              alt={post.business.name}
-              className="w-full h-full object-cover"
-            />
+          {author.profileImage ? (
+            <img src={author.profileImage} alt={author.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-gray-100 flex items-center justify-center text-purple-600 font-semibold text-base border-2 border-purple-200">
-              {post.business.name.charAt(0).toUpperCase()}
+              {author.name.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-2">
             <a
-              href={post.business.slug ? `/empresa/${post.business.slug}` : `/empresa/${post.business.id}`}
+              href={authorSlug ? `${authorPath}/${authorSlug}` : '#'}
               className="font-semibold text-gray-900 text-base hover:text-purple-600 transition-colors duration-200 cursor-pointer truncate"
               style={{ letterSpacing: '-0.01em' }}
             >
-              {capitalizeWords(post.business.name)}
+              {capitalizeWords(author.name)}
             </a>
-            {post.business.isVerified && (
-              <img 
-                src="/icons/verificado.png" 
-                alt="Verificado" 
-                className="w-5 h-5 object-contain"
-                title="Empresa verificada"
-              />
+            {author.isVerified && (
+              <img src="/icons/verificado.png" alt="Verificado" className="w-5 h-5 object-contain" title="Verificado" />
             )}
           </div>
           <button
@@ -669,6 +649,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
 
       {/* Ações do post */}
       <div className="flex items-center space-x-6 border-t border-gray-100 pt-4">
+        {!isGuidePost ? (
         <button
           onClick={handleLike}
           className={`flex items-center space-x-1.5 transition-all duration-200 ${
@@ -680,7 +661,14 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           </svg>
           <span className="text-sm font-medium">{likesCount}</span>
         </button>
+        ) : (
+          <span className="flex items-center space-x-1.5 text-gray-500">
+            <Heart className="w-5 h-5" />
+            <span className="text-sm font-medium">{likesCount}</span>
+          </span>
+        )}
 
+        {!isGuidePost && (
         <button
           onClick={() => setShowComments(!showComments)}
           className="flex items-center space-x-1.5 text-gray-500 hover:text-purple-600 transition-all duration-200"
@@ -690,6 +678,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           </svg>
           <span className="text-sm font-medium">{commentsCount}</span>
         </button>
+        )}
 
         <button
           onClick={() => {
@@ -708,8 +697,8 @@ export default function PostCard({ post, onLike }: PostCardProps) {
         </button>
       </div>
 
-      {/* Comentários */}
-      {showComments && (
+      {/* Comentários (apenas para posts de empresa) */}
+      {!isGuidePost && showComments && (
         <div className="mt-5 border-t border-gray-100 pt-5">
           {/* Formulário de comentário minimalista */}
           <form onSubmit={handleComment} className="mb-5">
@@ -1130,9 +1119,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           id: post.id,
           title: post.title,
           business: {
-            name: post.business.name,
-            slug: post.business.slug || post.business.id
-          }
+            name: author.name,
+            slug: author.slug || author.id
+          },
+          authorBasePath: isGuidePost ? 'guia' : 'empresa'
         }}
       />
     </div>

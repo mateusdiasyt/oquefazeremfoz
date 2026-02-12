@@ -42,70 +42,108 @@ export async function GET(request: NextRequest) {
         // Garantir que não são posts de guias
         whereClauseWithApproval.guideId = null
       } else {
-        // Se não há empresas aprovadas, retornar array vazio
-        return NextResponse.json({ posts: [] }, { status: 200 })
+        // Sem empresas aprovadas: ainda retornar posts de guias na página 1
+        if (page === 1) {
+          const guidePostsRaw = await prisma.guidepost.findMany({
+            where: { guide: { isApproved: true } },
+            include: {
+              guide: { select: { id: true, name: true, profileImage: true, isVerified: true, slug: true } }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit
+          })
+          const guidePosts = guidePostsRaw.map((gp) => ({
+            id: gp.id,
+            title: gp.title,
+            body: gp.body,
+            imageUrl: gp.imageUrl,
+            videoUrl: gp.videoUrl,
+            likes: gp.likes,
+            createdAt: gp.createdAt.toISOString(),
+            guide: gp.guide,
+            business: null,
+            comments: [],
+            postLikes: [],
+            commentsCount: 0,
+            likesCount: gp.likes,
+            isLiked: false,
+            isGuidePost: true
+          }))
+          return NextResponse.json({ posts: [], guidePosts }, { status: 200 })
+        }
+        return NextResponse.json({ posts: [], guidePosts: [] }, { status: 200 })
       }
     }
 
-    const posts = await prisma.post.findMany({
-      where: whereClauseWithApproval,
-      include: {
-        business: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-            isVerified: true,
-            slug: true,
-            isApproved: true
-          }
-        },
-        guide: {
-          select: {
-            id: true,
-            name: true,
-            profileImage: true,
-            isVerified: true,
-            slug: true,
-            isApproved: true
-          }
-        },
-        postlike: {
-          select: {
-            id: true,
-            userId: true,
-            // businessId e business só estarão disponíveis após a migração
-            // Por enquanto, comentamos para evitar erro
-            // businessId: true,
-            // business: {
-            //   select: {
-            //     id: true,
-            //     name: true,
-            //     profileImage: true,
-            //     isVerified: true
-            //   }
-            // },
-            user: {
-              select: {
-                id: true,
-                name: true
+    const [posts, guidePostsRaw] = await Promise.all([
+      prisma.post.findMany({
+        where: whereClauseWithApproval,
+        include: {
+          business: {
+            select: {
+              id: true,
+              name: true,
+              profileImage: true,
+              isVerified: true,
+              slug: true,
+              isApproved: true
+            }
+          },
+          guide: {
+            select: {
+              id: true,
+              name: true,
+              profileImage: true,
+              isVerified: true,
+              slug: true,
+              isApproved: true
+            }
+          },
+          postlike: {
+            select: {
+              id: true,
+              userId: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true
+                }
               }
+            }
+          },
+          _count: {
+            select: {
+              comment: true,
+              postlike: true
             }
           }
         },
-        _count: {
-          select: {
-            comment: true,
-            postlike: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip,
-      take: limit
-    })
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      // Posts de guias aprovados (apenas primeira página do feed, sem release)
+      page === 1
+        ? prisma.guidepost.findMany({
+            where: {
+              guide: { isApproved: true }
+            },
+            include: {
+              guide: {
+                select: {
+                  id: true,
+                  name: true,
+                  profileImage: true,
+                  isVerified: true,
+                  slug: true
+                }
+              }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: limit
+          })
+        : []
+    ])
 
     // Transformar os dados para incluir contadores e verificar se curtiu
     const transformedPosts = posts.map(post => {
@@ -136,11 +174,30 @@ export async function GET(request: NextRequest) {
         commentsCount: post._count.comment,
         likesCount: post._count.postlike,
         isLiked,
-        businessesLiked: businessesLiked // Empresas que curtiram este post
+        businessesLiked: businessesLiked
       }
     })
 
-    return NextResponse.json({ posts: transformedPosts }, { status: 200 })
+    // Formato para timeline: post de guia (sem comentários/curtir da tabela post)
+    const guidePosts = guidePostsRaw.map((gp) => ({
+      id: gp.id,
+      title: gp.title,
+      body: gp.body,
+      imageUrl: gp.imageUrl,
+      videoUrl: gp.videoUrl,
+      likes: gp.likes,
+      createdAt: gp.createdAt.toISOString(),
+      guide: gp.guide,
+      business: null,
+      comments: [],
+      postLikes: [],
+      commentsCount: 0,
+      likesCount: gp.likes,
+      isLiked: false,
+      isGuidePost: true
+    }))
+
+    return NextResponse.json({ posts: transformedPosts, guidePosts: guidePosts || [] }, { status: 200 })
   } catch (error) {
     console.error('Erro ao buscar posts:', error)
     return NextResponse.json(

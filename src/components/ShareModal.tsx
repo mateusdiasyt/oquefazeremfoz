@@ -13,6 +13,8 @@ interface ShareModalProps {
       name: string
       slug: string
     }
+    /** Base do link do autor: empresa ou guia */
+    authorBasePath?: 'empresa' | 'guia'
   }
   /** Quando informado, usa esta URL em vez de /post/{id} (ex.: release) */
   shareUrl?: string
@@ -22,7 +24,8 @@ export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareMod
   const [copied, setCopied] = useState(false)
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const postUrl = shareUrl ?? (post.id ? `${origin}/post/${post.id}` : '')
-  const businessUrl = `${origin}/empresa/${post.business.slug}`
+  const base = post.authorBasePath === 'guia' ? 'guia' : 'empresa'
+  const businessUrl = `${origin}/${base}/${post.business.slug}`
   const shareText = `Confira de ${post.business.name}: "${post.title}"`
   
   const shareOptions = [

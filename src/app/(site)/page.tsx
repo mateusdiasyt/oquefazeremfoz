@@ -21,26 +21,29 @@ interface Post {
   videoUrl: string | null
   likes: number
   createdAt: string
-  business: {
+  business?: {
     id: string
     name: string
-    isApproved: boolean
+    isApproved?: boolean
     profileImage: string | null
     isVerified: boolean
     slug: string | null
-  }
-  comments: Array<{
+  } | null
+  guide?: {
+    id: string
+    name: string
+    profileImage: string | null
+    isVerified: boolean
+    slug: string | null
+  } | null
+  isGuidePost?: boolean
+  comments?: Array<{
     id: string
     body: string
     createdAt: string
-    user: {
-      id: string
-      name: string | null
-    }
+    user: { id: string; name: string | null }
   }>
-  postLikes: Array<{
-    userId: string
-  }>
+  postLikes?: Array<{ userId: string }>
 }
 
 interface User {
@@ -201,6 +204,7 @@ export default function HomePage() {
   const router = useRouter()
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
+  const [guidePosts, setGuidePosts] = useState<Post[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [weather, setWeather] = useState<Weather | null>(null)
@@ -409,14 +413,12 @@ export default function HomePage() {
       const response = await fetch(`/api/posts?page=${page}&limit=20`)
       if (response.ok) {
         const data = await response.json()
-        
         if (append) {
           setPosts(prev => [...prev, ...(data.posts || [])])
         } else {
           setPosts(data.posts || [])
+          setGuidePosts(data.guidePosts || [])
         }
-        
-        // Verificar se há mais posts
         setHasMorePosts(data.posts && data.posts.length === 20)
         setCurrentPage(page)
       }
@@ -768,6 +770,7 @@ export default function HomePage() {
               type FeedItem = { type: 'post'; date: string; item: Post } | { type: 'release'; date: string; item: ReleaseNewsCardRelease }
               const feedItems: FeedItem[] = [
                 ...posts.map((p) => ({ type: 'post' as const, date: p.createdAt, item: p })),
+                ...guidePosts.map((p) => ({ type: 'post' as const, date: p.createdAt, item: p })),
                 ...releases.map((r) => ({ type: 'release' as const, date: r.publishedAt || r.createdAt, item: r }))
               ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
@@ -779,7 +782,7 @@ export default function HomePage() {
                       Nenhuma publicação ainda
                     </h3>
                     <p className="text-gray-500">
-                      As empresas ainda não compartilharam conteúdo
+                      Empresas e guias ainda não compartilharam conteúdo
                     </p>
                   </div>
                 )
@@ -802,7 +805,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   )}
-                  {!hasMorePosts && posts.length > 0 && (
+                  {!hasMorePosts && (posts.length > 0 || guidePosts.length > 0) && (
                     <div className="text-center py-8">
                       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
