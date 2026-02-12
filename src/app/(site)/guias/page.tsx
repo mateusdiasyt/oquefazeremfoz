@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '../../../contexts/AuthContext'
 import { 
   Search, 
@@ -123,9 +124,15 @@ export default function GuiasPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">
             Guias turísticos
           </h1>
-          <p className="text-slate-600 max-w-xl">
+          <p className="text-slate-600 max-w-xl mb-3">
             Encontre os melhores guias para explorar Foz do Iguaçu
           </p>
+          <Link
+            href="/guias/cadastre-se"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-violet-600 hover:text-violet-700"
+          >
+            É guia? Cadastre-se aqui e apareça para turistas
+          </Link>
         </div>
 
         {/* Filtros e Busca */}

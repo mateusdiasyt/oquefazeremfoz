@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { User, Building2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
+import { User, Building2, Users, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 
 const categories = [
   'Restaurante',
@@ -38,15 +38,32 @@ const empresaExplanation = {
   ]
 }
 
+const guiaExplanation = {
+  title: 'Como funciona para guias',
+  items: [
+    'Crie sua conta e complete seu perfil de guia (foto, especialidades, idiomas, contato).',
+    'Seu perfil aparece na página Guias e na timeline para turistas que buscam experiências.',
+    'Cadastre pacotes com valores e publique posts. Receba contato direto dos visitantes.',
+    'Após análise, você pode receber o selo de guia verificado no OQFOZ.'
+  ]
+}
+
 export default function RegisterPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [accountType, setAccountType] = useState<'TOURIST' | 'COMPANY'>('TOURIST')
+  const [accountType, setAccountType] = useState<'TOURIST' | 'COMPANY' | 'GUIDE'>('TOURIST')
   const [showExplanation, setShowExplanation] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const router = useRouter()
+
+  useEffect(() => {
+    const tipo = searchParams.get('tipo')
+    const ref = searchParams.get('ref')
+    if (tipo === 'guia' || ref === 'lp-guias') setAccountType('GUIDE')
+  }, [searchParams])
 
   const [businessData, setBusinessData] = useState({
     businessName: '',
@@ -108,6 +125,8 @@ export default function RegisterPage() {
         const data = await businessResponse.json().catch(() => ({}))
         const businessName = data?.business?.name || businessData.businessName
         router.push(`/empresa/cadastro-sucesso?nome=${encodeURIComponent(businessName)}`)
+      } else if (accountType === 'GUIDE') {
+        router.push('/perfil?guia=completar')
       } else {
         router.push('/')
       }
@@ -118,7 +137,7 @@ export default function RegisterPage() {
     }
   }
 
-  const explanation = accountType === 'TOURIST' ? turistaExplanation : empresaExplanation
+  const explanation = accountType === 'TOURIST' ? turistaExplanation : accountType === 'GUIDE' ? guiaExplanation : empresaExplanation
 
   return (
     <div className="min-h-screen flex">
@@ -177,7 +196,7 @@ export default function RegisterPage() {
             {/* Tipo de conta – cards interativos */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">Tipo de conta</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
                   type="button"
                   onClick={() => setAccountType('TOURIST')}
@@ -194,6 +213,26 @@ export default function RegisterPage() {
                     <div>
                       <span className="font-bold text-gray-900 block">Sou Turista</span>
                       <span className="text-sm text-gray-500">Busco experiências e serviços</span>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAccountType('GUIDE')}
+                  className={`p-5 rounded-2xl border-2 text-left transition-all duration-200 flex flex-col gap-2 ${
+                    accountType === 'GUIDE'
+                      ? 'border-purple-500 bg-purple-50/80 shadow-md shadow-purple-500/10'
+                      : 'border-gray-200 bg-gray-50/50 hover:border-purple-300 hover:bg-purple-50/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accountType === 'GUIDE' ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-900 block">Sou Guia</span>
+                      <span className="text-sm text-gray-500">Guia de turismo em Foz</span>
                     </div>
                   </div>
                 </button>
@@ -289,7 +328,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Dados da empresa (apenas COMPANY) */}
+            {/* Dados da empresa (apenas COMPANY; GUIDE não precisa aqui, completa no perfil) */}
             {accountType === 'COMPANY' && (
               <div className="space-y-4 pt-4 border-t border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Dados da empresa</h3>
