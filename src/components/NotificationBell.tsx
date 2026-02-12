@@ -181,7 +181,7 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative inline-flex shrink-0" ref={dropdownRef}>
       <button
         onClick={async () => {
           const wasClosed = !isOpen
@@ -195,8 +195,9 @@ export default function NotificationBell() {
             }
           }
         }}
-        className="relative p-2.5 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-600 hover:bg-purple-50/50"
+        className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
         title="Notificações"
+        aria-label="Notificações"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (

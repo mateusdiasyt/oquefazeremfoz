@@ -301,18 +301,17 @@ export default function Header() {
           <div className="flex items-center space-x-3">
             {user ? (
               <>
-                {/* Notificações - ícone + nome (apenas para empresas) */}
+                {/* Notificações – mesmo botão que mensagens e perfil */}
                 {isCompany() && (
-                  <div className="hidden md:flex flex-col items-center gap-0.5 min-w-[4rem]">
+                  <div className="hidden md:flex shrink-0">
                     <NotificationBell />
-                    <span className="text-xs font-medium text-gray-700" style={{ letterSpacing: '-0.01em' }}>Notificações</span>
                   </div>
                 )}
-                
-                {/* Ícone de mensagens (acesso à aba Mensagens) */}
+
+                {/* Ícone de mensagens */}
                 <Link
                   href="/messages"
-                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
+                  className="flex shrink-0 items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
                   title="Mensagens"
                   aria-label="Abrir mensagens"
                 >
