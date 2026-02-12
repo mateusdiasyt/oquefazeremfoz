@@ -77,6 +77,9 @@ export default function FloatingChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const lastMessageCountRef = useRef<number>(0)
   const fetchConversationsAbortControllerRef = useRef<AbortController | null>(null)
+  const prevTotalUnreadRef = useRef<number>(-1)
+
+  const totalUnread = conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -246,6 +249,22 @@ export default function FloatingChat() {
       }
     }
   }, [isOpen, user, fetchConversations])
+
+  // Polling de conversas com o balão FECHADO (para detectar novas mensagens e tocar som / badge)
+  useEffect(() => {
+    if (isOpen || !user) return
+    fetchConversations(false)
+    const interval = setInterval(() => fetchConversations(false), 15000)
+    return () => clearInterval(interval)
+  }, [isOpen, user, fetchConversations])
+
+  // Tocar som quando o total de não lidas AUMENTAR (nova mensagem recebida)
+  useEffect(() => {
+    if (prevTotalUnreadRef.current >= 0 && totalUnread > prevTotalUnreadRef.current) {
+      playMessageSound()
+    }
+    prevTotalUnreadRef.current = totalUnread
+  }, [totalUnread, playMessageSound])
 
   // Polling inteligente - só quando a janela está ativa
   useEffect(() => {
@@ -644,9 +663,14 @@ export default function FloatingChat() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full shadow-lg hover:from-pink-600 hover:to-pink-700 transition-all duration-300 z-50 flex items-center justify-center md:bottom-6 md:right-6 mb-20 md:mb-0"
+          className={`fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full shadow-lg hover:from-pink-600 hover:to-pink-700 transition-all duration-300 z-50 flex items-center justify-center md:bottom-6 md:right-6 mb-20 md:mb-0 relative ${totalUnread > 0 ? 'animate-bounce' : ''}`}
         >
           <MessageCircle size={24} />
+          {totalUnread > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full border-2 border-white">
+              {totalUnread > 99 ? '99+' : totalUnread}
+            </span>
+          )}
         </button>
       )}
 
