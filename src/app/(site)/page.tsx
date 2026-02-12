@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import PostCard from '@/components/PostCard'
@@ -8,10 +8,11 @@ import CreatePost from '@/components/CreatePost'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
 import FloatingChat from '@/components/FloatingChat'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 import FozTVNativePlayer from './foztv/FozTVNativePlayer'
+import FozTVCardPreview from './foztv/FozTVCardPreview'
 
 interface Post {
   id: string
@@ -166,6 +167,27 @@ function getFozTVEmbedUrl(url: string): string {
   return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : t
 }
 
+interface FozTVVideoDetails extends FozTVVideo {
+  userLiked?: boolean
+  description?: string | null
+}
+interface FozTVCommentItem {
+  id: string
+  body: string
+  createdAt: string
+  user: { id: string; name: string; profileImage: string | null } | null
+}
+
+function formatFozTVDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - d.getTime()
+  if (diff < 60000) return 'Agora'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} min atrás`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} h atrás`
+  return d.toLocaleDateString('pt-BR')
+}
+
 interface FeaturedGuide {
   id: string
   name: string
@@ -184,7 +206,14 @@ export default function HomePage() {
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [weather, setWeather] = useState<Weather | null>(null)
   const [foztvVideos, setFoztvVideos] = useState<FozTVVideo[]>([])
+  const [foztvCarouselIndex, setFoztvCarouselIndex] = useState(0)
+  const [foztvHoveredId, setFoztvHoveredId] = useState<string | null>(null)
   const [playingFozTVVideo, setPlayingFozTVVideo] = useState<FozTVVideo | null>(null)
+  const [foztvDetails, setFoztvDetails] = useState<FozTVVideoDetails | null>(null)
+  const [foztvComments, setFoztvComments] = useState<FozTVCommentItem[]>([])
+  const [foztvCommentText, setFoztvCommentText] = useState('')
+  const [foztvSendingComment, setFoztvSendingComment] = useState(false)
+  const [foztvTogglingLike, setFoztvTogglingLike] = useState(false)
   const [featuredGuides, setFeaturedGuides] = useState<FeaturedGuide[]>([])
   const [weatherExpanded, setWeatherExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -238,6 +267,94 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Erro ao buscar vídeos FozTV:', error)
+    }
+  }
+
+  // Carrossel FozTV: rotação automática (1 vídeo por vez)
+  useEffect(() => {
+    if (foztvVideos.length <= 1 || playingFozTVVideo) return
+    const t = setInterval(() => {
+      setFoztvCarouselIndex((i) => (i + 1) % foztvVideos.length)
+    }, 4500)
+    return () => clearInterval(t)
+  }, [foztvVideos.length, playingFozTVVideo])
+
+  // Ao abrir o modal, buscar detalhes e comentários do vídeo
+  useEffect(() => {
+    if (!playingFozTVVideo) {
+      setFoztvDetails(null)
+      setFoztvComments([])
+      setFoztvCommentText('')
+      return
+    }
+    setFoztvDetails({ ...playingFozTVVideo, likeCount: playingFozTVVideo.likeCount ?? 0, userLiked: false })
+    Promise.all([
+      fetch(`/api/public/foztv/${playingFozTVVideo.id}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/public/foztv/${playingFozTVVideo.id}/comments`, { cache: 'no-store' }).then((r) => r.json())
+    ])
+      .then(([detailRes, commentsRes]) => {
+        if (detailRes?.id) setFoztvDetails(detailRes)
+        if (commentsRes?.comments) setFoztvComments(commentsRes.comments)
+      })
+      .catch(() => {})
+  }, [playingFozTVVideo?.id, playingFozTVVideo])
+
+  const handleFozTVClose = useCallback(() => setPlayingFozTVVideo(null), [])
+  useEffect(() => {
+    if (!playingFozTVVideo) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleFozTVClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [playingFozTVVideo, handleFozTVClose])
+
+  const handleFozTVLike = async () => {
+    if (!playingFozTVVideo || !user) return
+    setFoztvTogglingLike(true)
+    try {
+      const res = await fetch(`/api/public/foztv/${playingFozTVVideo.id}/like`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok && foztvDetails) {
+        setFoztvDetails((d) => (d ? { ...d, userLiked: data.liked, likeCount: data.likeCount } : null))
+      }
+    } finally {
+      setFoztvTogglingLike(false)
+    }
+  }
+
+  const handleFozTVShare = async () => {
+    const url = typeof window !== 'undefined' ? `${window.location.origin}/foztv` : ''
+    if (navigator.share && playingFozTVVideo) {
+      try {
+        await navigator.share({
+          title: playingFozTVVideo.title,
+          text: playingFozTVVideo.title,
+          url
+        })
+      } catch {
+        await navigator.clipboard.writeText(url)
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+    }
+  }
+
+  const handleFozTVSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!playingFozTVVideo || !user || !foztvCommentText.trim()) return
+    setFoztvSendingComment(true)
+    try {
+      const res = await fetch(`/api/public/foztv/${playingFozTVVideo.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: foztvCommentText.trim() })
+      })
+      const data = await res.json()
+      if (res.ok && data.comment) {
+        setFoztvComments((c) => [...c, data.comment])
+        setFoztvCommentText('')
+      }
+    } finally {
+      setFoztvSendingComment(false)
     }
   }
 
@@ -785,7 +902,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Carrossel FozTV – últimos 3 vídeos; clique abre player na própria página */}
+            {/* Carrossel FozTV – 1 vídeo por vez, rotação automática; hover = preview; clique = player com like/comentários/compartilhar */}
             <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
               <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
@@ -795,37 +912,62 @@ export default function HomePage() {
               </div>
               <div className="p-2">
                 {foztvVideos.length > 0 ? (
-                  <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory -mx-1 px-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {foztvVideos.map((video) => (
-                      <button
-                        key={video.id}
-                        type="button"
-                        onClick={() => setPlayingFozTVVideo(video)}
-                        className="flex-shrink-0 w-[85%] min-w-[85%] sm:min-w-[75%] sm:w-[75%] rounded-xl overflow-hidden border border-gray-100 hover:border-purple-200 hover:shadow transition-all group text-left snap-center"
-                      >
-                        <div className="relative aspect-video bg-gray-100">
-                          {video.thumbnailUrl ? (
-                            <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <>
+                    <div className="relative rounded-xl overflow-hidden border border-gray-100">
+                      {foztvVideos.map((video, idx) => (
+                        <div
+                          key={video.id}
+                          className={`relative aspect-video bg-gray-100 ${idx !== foztvCarouselIndex ? 'hidden' : ''}`}
+                          onMouseEnter={() => setFoztvHoveredId(video.id)}
+                          onMouseLeave={() => setFoztvHoveredId(null)}
+                        >
+                          {foztvHoveredId === video.id ? (
+                            <FozTVCardPreview
+                              video={{ id: video.id, title: video.title, videoUrl: video.videoUrl, thumbnailUrl: video.thumbnailUrl, likeCount: video.likeCount }}
+                              isHovering
+                              onPlay={() => setPlayingFozTVVideo(video)}
+                            />
                           ) : (
-                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-500">
-                              <Video className="w-8 h-8 text-white/80" />
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setPlayingFozTVVideo(video)}
+                              className="block w-full h-full text-left group"
+                            >
+                              {video.thumbnailUrl ? (
+                                <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-400 to-pink-500">
+                                  <Video className="w-8 h-8 text-white/80" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                                <span className="w-12 h-12 rounded-full bg-purple-600/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Video className="w-6 h-6 text-white ml-0.5" fill="currentColor" />
+                                </span>
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
+                                <p className="text-xs font-semibold text-white line-clamp-2">{video.title}</p>
+                              </div>
+                            </button>
                           )}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
-                            <span className="w-10 h-10 rounded-full bg-purple-600/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Video className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
-                            </span>
-                          </div>
-                          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                            <p className="text-xs font-semibold text-white line-clamp-2">{video.title}</p>
-                          </div>
                         </div>
-                        <div className="py-1.5 px-2 bg-gray-50 group-hover:bg-purple-50/50 transition-colors">
-                          <span className="text-xs font-medium text-purple-600">Assistir →</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-center gap-1.5 mt-2">
+                      {foztvVideos.map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setFoztvCarouselIndex(idx)}
+                          className={`w-2 h-2 rounded-full transition-colors ${idx === foztvCarouselIndex ? 'bg-purple-600' : 'bg-gray-300 hover:bg-gray-400'}`}
+                          aria-label={`Vídeo ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="py-1.5 px-2">
+                      <span className="text-xs font-medium text-purple-600">Assistir →</span>
+                    </div>
+                  </>
                 ) : (
                   <div className="text-center py-6">
                     <Tv className="w-9 h-9 text-gray-300 mx-auto mb-2" />
@@ -836,46 +978,126 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Modal do player FozTV – abre ao clicar em um vídeo do carrossel */}
+            {/* Modal FozTV – player + painel com curtir, comentários, compartilhar (igual à aba FozTV) */}
             {playingFozTVVideo && (
               <div
-                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-y-auto"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Assistir vídeo"
-                onClick={() => setPlayingFozTVVideo(null)}
+                onClick={(e) => e.target === e.currentTarget && handleFozTVClose()}
               >
                 <div
-                  className="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl"
+                  className="relative flex flex-col md:flex-row w-[94vw] max-w-[1600px] max-h-[90vh] my-auto bg-white rounded-xl shadow-2xl overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setPlayingFozTVVideo(null)}
-                    className="absolute top-2 right-2 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors"
-                    aria-label="Fechar"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                  {isYouTubeUrl(playingFozTVVideo.videoUrl) ? (
-                    <iframe
-                      src={getFozTVEmbedUrl(playingFozTVVideo.videoUrl)}
-                      title={playingFozTVVideo.title}
-                      className="absolute inset-0 w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <div className="absolute inset-0">
+                  <div className="relative flex-[1_1_70%] min-w-0 min-h-[200px] aspect-video md:min-h-0 bg-black">
+                    {isYouTubeUrl(playingFozTVVideo.videoUrl) ? (
+                      <iframe
+                        src={getFozTVEmbedUrl(playingFozTVVideo.videoUrl)}
+                        title={playingFozTVVideo.title}
+                        className="absolute inset-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
                       <FozTVNativePlayer
                         src={playingFozTVVideo.videoUrl}
                         title={playingFozTVVideo.title}
-                        onClose={() => setPlayingFozTVVideo(null)}
+                        onClose={handleFozTVClose}
                       />
+                    )}
+                  </div>
+                  <div className="relative flex flex-col w-full md:w-[280px] md:min-w-[280px] md:max-w-[320px] md:border-l border-t md:border-t-0 border-gray-200 max-h-[50vh] md:max-h-none min-h-0">
+                    <button
+                      type="button"
+                      onClick={handleFozTVClose}
+                      className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600"
+                      aria-label="Fechar"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="p-4 pb-2 flex-shrink-0">
+                      <h2 className="text-base font-bold text-gray-900 pr-8 line-clamp-2">{playingFozTVVideo.title}</h2>
+                      {foztvDetails?.description && (
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{foztvDetails.description}</p>
+                      )}
                     </div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                    <p className="text-sm font-semibold text-white line-clamp-2 pr-10">{playingFozTVVideo.title}</p>
+                    <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-100 flex-shrink-0">
+                      {user ? (
+                        <button
+                          type="button"
+                          onClick={handleFozTVLike}
+                          disabled={foztvTogglingLike}
+                          className={`flex flex-col items-center gap-0.5 min-w-[56px] py-1 rounded-lg transition-colors ${foztvDetails?.userLiked ? 'text-purple-600' : 'text-gray-600 hover:bg-gray-100'}`}
+                          title="Curtir"
+                        >
+                          <Heart className={`w-6 h-6 ${foztvDetails?.userLiked ? 'fill-current' : ''}`} />
+                          <span className="text-xs font-medium">{foztvDetails?.likeCount ?? 0}</span>
+                        </button>
+                      ) : (
+                        <div className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-gray-500">
+                          <Heart className="w-6 h-6" />
+                          <span className="text-xs">{foztvDetails?.likeCount ?? 0}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-gray-600">
+                        <MessageCircle className="w-6 h-6" />
+                        <span className="text-xs font-medium">{foztvComments.length}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleFozTVShare}
+                        className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Compartilhar"
+                      >
+                        <Share2 className="w-6 h-6" />
+                        <span className="text-xs font-medium">Compartilhar</span>
+                      </button>
+                    </div>
+                    <div className="flex flex-col flex-1 min-h-0 border-t border-gray-100">
+                      <h3 className="px-4 py-2 text-sm font-semibold text-gray-900 flex-shrink-0">
+                        Comentários {foztvComments.length > 0 && `(${foztvComments.length})`}
+                      </h3>
+                      <ul className="flex-1 overflow-y-auto px-4 py-2 space-y-3 min-h-0">
+                        {foztvComments.length === 0 ? (
+                          <li className="text-sm text-gray-500 py-4">Nenhum comentário ainda.</li>
+                        ) : (
+                          foztvComments.map((c) => (
+                            <li key={c.id} className="text-sm">
+                              <span className="font-medium text-gray-900">{c.user?.name || 'Usuário'}</span>
+                              <span className="text-gray-600"> {c.body}</span>
+                              <span className="text-gray-400 text-xs ml-1 block">{formatFozTVDate(c.createdAt)}</span>
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                      {user ? (
+                        <form onSubmit={handleFozTVSubmitComment} className="p-4 pt-2 flex-shrink-0 border-t border-gray-100">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={foztvCommentText}
+                              onChange={(e) => setFoztvCommentText(e.target.value)}
+                              placeholder="Escreva um comentário..."
+                              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              maxLength={500}
+                            />
+                            <button
+                              type="submit"
+                              disabled={!foztvCommentText.trim() || foztvSendingComment}
+                              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 flex-shrink-0"
+                            >
+                              Enviar
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <p className="px-4 py-3 text-sm text-gray-500 flex-shrink-0 border-t border-gray-100">
+                          Faça login para comentar.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
