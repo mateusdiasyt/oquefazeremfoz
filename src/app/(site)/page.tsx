@@ -7,7 +7,6 @@ import PostCard from '@/components/PostCard'
 import CreatePost from '@/components/CreatePost'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
-import FloatingChat from '@/components/FloatingChat'
 import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
@@ -1173,9 +1172,6 @@ export default function HomePage() {
           </aside>
         </div>
       </section>
-
-      {/* Floating Chat */}
-      <FloatingChat />
 
       {/* Modal de Confirmação para Desseguir */}
       {showUnfollowModal && businessToUnfollow && (

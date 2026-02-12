@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '../../../../contexts/AuthContext'
 import { useNotification } from '../../../../contexts/NotificationContext'
-import { useOpenChat } from '../../../../contexts/OpenChatContext'
 import { capitalizeWords } from '../../../../utils/formatters'
 import {
   Phone,
@@ -114,7 +113,6 @@ export default function GuideProfilePage() {
   const router = useRouter()
   const { user } = useAuth()
   const { showNotification } = useNotification()
-  const { setOpenWithGuideId } = useOpenChat()
 
   const [guide, setGuide] = useState<Guide | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
@@ -641,7 +639,7 @@ export default function GuideProfilePage() {
                   {!isOwner && (
                     user ? (
                       <button
-                        onClick={() => setOpenWithGuideId(guide.id)}
+                        onClick={() => router.push(`/messages?guideId=${guide.id}`)}
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-violet-600 text-white hover:bg-violet-700 transition-all duration-200 shadow-lg shadow-violet-500/25"
                       >
                         <MessageCircle className="w-4 h-4" />

@@ -4,7 +4,6 @@ import { Inter, Poppins, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '../contexts/AuthContext'
 import { NotificationProvider } from '../contexts/NotificationContext'
-import { OpenChatProvider } from '../contexts/OpenChatContext'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -162,9 +161,7 @@ export default function RootLayout({
         />
         <AuthProvider>
           <NotificationProvider>
-            <OpenChatProvider>
-              {children}
-            </OpenChatProvider>
+            {children}
           </NotificationProvider>
         </AuthProvider>
       </body>

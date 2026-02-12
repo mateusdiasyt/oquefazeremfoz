@@ -1,402 +1,428 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../../../contexts/AuthContext'
-import { useNotification } from '../../../contexts/NotificationContext'
-import { Check, CheckCheck } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { MessageCircle, Send, Check, CheckCheck, ChevronLeft } from 'lucide-react'
+import Link from 'next/link'
 
-interface Conversation {
+type Conversation = {
   id: string
-  otherParticipant: {
+  business?: {
     id: string
     name: string
+    slug: string
     profileImage: string | null
     isVerified: boolean
-    slug: string | null
+    userId: string
   } | null
-  lastMessage: {
+  guide?: {
+    id: string
+    name: string
+    slug: string | null
+    profileImage: string | null
+    isVerified: boolean
+    userId: string
+  } | null
+  lastMessage?: {
     id: string
     content: string
-    isRead: boolean
     createdAt: string
-    sender: {
-      id: string
-      name: string
-      profileImage: string | null
-    }
+    isRead: boolean
+    sender: { id: string; name: string; business?: { name: string } }
   } | null
   unreadCount: number
   updatedAt: string
 }
 
-interface Message {
+type Message = {
   id: string
   content: string
   isRead: boolean
   createdAt: string
-  sender: {
-    id: string
-    name: string
-    profileImage: string | null
-    isVerified: boolean
-  }
-  receiver: {
-    id: string
-    name: string
-    profileImage: string | null
-    isVerified: boolean
-  }
+  sender: { id: string; name: string; profileImage?: string | null; isVerified?: boolean }
+  receiver: { id: string; name: string; profileImage?: string | null; isVerified?: boolean }
+}
+
+function getOtherUserId(conv: Conversation): string | null {
+  return conv.guide?.userId ?? conv.business?.userId ?? null
+}
+
+function getDisplayName(conv: Conversation): string {
+  return conv.guide?.name ?? conv.business?.name ?? 'Conversa'
+}
+
+function getProfileImage(conv: Conversation): string | null {
+  return conv.guide?.profileImage ?? conv.business?.profileImage ?? null
+}
+
+function getIsVerified(conv: Conversation): boolean {
+  return conv.guide?.isVerified ?? conv.business?.isVerified ?? false
 }
 
 export default function MessagesPage() {
+  const searchParams = useSearchParams()
   const { user } = useAuth()
-  const { showNotification } = useNotification()
-  
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [openingGuideId, setOpeningGuideId] = useState<string | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const fetchConversations = useCallback(async () => {
+    if (!user) return
     try {
-      const response = await fetch('/api/messages/conversations')
-      if (response.ok) {
-        const data = await response.json()
-        setConversations(data.conversations)
+      const res = await fetch('/api/messages/conversations', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setConversations(data.conversations ?? [])
       }
-    } catch (error) {
-      console.error('Erro ao buscar conversas:', error)
+    } catch {
+      setConversations([])
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user])
 
-  const fetchMessages = useCallback(async (conversationId: string) => {
-    try {
-      const response = await fetch(`/api/messages/${conversationId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(data.messages)
+  const fetchMessages = useCallback(
+    async (conversationId: string) => {
+      if (conversationId.startsWith('temp-')) {
+        setMessages([])
+        return
       }
-    } catch (error) {
-      console.error('Erro ao buscar mensagens:', error)
+      try {
+        const res = await fetch(`/api/messages/${conversationId}`, { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setMessages(data.messages ?? [])
+        }
+      } catch {
+        setMessages([])
+      }
+    },
+    []
+  )
+
+  // Abrir conversa com guia/empresa via query (?guideId= ou ?businessId=)
+  useEffect(() => {
+    if (!user) return
+    const guideId = searchParams.get('guideId')
+    const businessId = searchParams.get('businessId')
+    if (guideId) {
+      setOpeningGuideId(guideId)
+      fetch('/api/messages/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guideId }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const conv = data.conversation
+          if (conv) {
+            setConversations((prev) => {
+              const exists = prev.some((c) => c.id === conv.id)
+              if (exists) return prev.map((c) => (c.id === conv.id ? conv : c))
+              return [conv, ...prev]
+            })
+            setSelectedConversation(conv)
+            fetchMessages(conv.id)
+          }
+        })
+        .finally(() => setOpeningGuideId(null))
+    } else if (businessId) {
+      fetch('/api/messages/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const conv = data.conversation
+          if (conv) {
+            setConversations((prev) => {
+              const exists = prev.some((c) => c.id === conv.id)
+              if (exists) return prev.map((c) => (c.id === conv.id ? conv : c))
+              return [conv, ...prev]
+            })
+            setSelectedConversation(conv)
+            fetchMessages(conv.id)
+          }
+        })
     }
-  }, [])
+  }, [user, searchParams, fetchMessages])
 
   useEffect(() => {
-    if (user) {
-      fetchConversations()
+    fetchConversations()
+  }, [fetchConversations])
+
+  useEffect(() => {
+    if (selectedConversation?.id && !selectedConversation.id.startsWith('temp-')) {
+      fetchMessages(selectedConversation.id)
+      const t = setInterval(() => fetchMessages(selectedConversation.id), 6000)
+      return () => clearInterval(t)
     }
+  }, [selectedConversation?.id, fetchMessages])
+
+  useEffect(() => {
+    if (!user) return
+    const t = setInterval(fetchConversations, 10000)
+    return () => clearInterval(t)
   }, [user, fetchConversations])
 
   useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation.id)
-      // Atualizar lista de conversas após marcar como lidas
-      setTimeout(() => {
-        fetchConversations()
-      }, 500)
-    }
-  }, [selectedConversation, fetchMessages, fetchConversations])
-
-  // Polling para atualizar mensagens e conversas automaticamente
-  useEffect(() => {
-    if (!user) return
-
-    let messagesInterval: NodeJS.Timeout | null = null
-    let conversationsInterval: NodeJS.Timeout | null = null
-
-    const conversationId = selectedConversation?.id
-
-    const startPolling = () => {
-      // Polling de mensagens (se houver conversa selecionada)
-      if (conversationId && !conversationId.startsWith('temp-')) {
-        if (messagesInterval) clearInterval(messagesInterval)
-        messagesInterval = setInterval(() => {
-          fetchMessages(conversationId)
-        }, 3000) // Verificar mensagens a cada 3 segundos
-      }
-
-      // Polling de conversas (sempre ativo)
-      if (conversationsInterval) clearInterval(conversationsInterval)
-      conversationsInterval = setInterval(() => {
-        fetchConversations()
-      }, 5000) // Verificar conversas a cada 5 segundos
-    }
-
-    const stopPolling = () => {
-      if (messagesInterval) {
-        clearInterval(messagesInterval)
-        messagesInterval = null
-      }
-      if (conversationsInterval) {
-        clearInterval(conversationsInterval)
-        conversationsInterval = null
-      }
-    }
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopPolling()
-      } else {
-        startPolling()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    startPolling()
-
-    return () => {
-      stopPolling()
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-    }
-  }, [user, selectedConversation?.id, fetchMessages, fetchConversations])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !user) return
+    const otherUserId = selectedConversation ? getOtherUserId(selectedConversation) : null
+    if (!newMessage.trim() || !otherUserId || !user) return
 
     setSending(true)
     try {
-      const response = await fetch('/api/messages/send', {
+      const res = await fetch('/api/messages/send', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          receiverId: selectedConversation.otherParticipant?.id,
-          content: newMessage.trim()
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiverId: otherUserId, content: newMessage.trim() }),
       })
-
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(prev => [...prev, data.data])
+      if (res.ok) {
+        const data = await res.json()
+        setMessages((prev) => [...prev, data.data])
         setNewMessage('')
-        showNotification('Mensagem enviada!', 'success')
-        
-        // Atualizar lista de conversas
-        fetchConversations()
-      } else {
-        const errorData = await response.json()
-        showNotification(errorData.message, 'error')
+        const wasTemp = selectedConversation?.id.startsWith('temp-')
+        const prevConv = selectedConversation
+        const res2 = await fetch('/api/messages/conversations', { cache: 'no-store' })
+        if (res2.ok) {
+          const data2 = await res2.json()
+          const list = data2.conversations ?? []
+          setConversations(list)
+          if (wasTemp && prevConv) {
+            const real = list.find(
+              (c: Conversation) =>
+                (prevConv.business && c.business?.id === prevConv.business?.id) ||
+                (prevConv.guide && c.guide?.id === prevConv.guide?.id)
+            )
+            if (real) setSelectedConversation(real)
+          }
+        }
       }
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error)
-      showNotification('Erro ao enviar mensagem', 'error')
     } finally {
       setSending(false)
     }
   }
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
+    const d = new Date(dateString)
     const now = new Date()
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-
-    if (diffInHours < 24) {
-      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    } else {
-      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
-    }
+    const diff = (now.getTime() - d.getTime()) / (1000 * 60 * 60)
+    if (diff < 24) return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
-      </div>
-    )
-  }
+  if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-dark-800 rounded-2xl shadow-strong overflow-hidden">
-          <div className="flex h-[600px]">
-            {/* Lista de Conversas */}
-            <div className="w-1/3 border-r border-dark-600">
-              <div className="p-4 border-b border-dark-600">
-                <h1 className="text-xl font-display font-semibold text-dark-100">Mensagens</h1>
-              </div>
-              
-              <div className="overflow-y-auto h-full">
-                {conversations.length === 0 ? (
-                  <div className="p-4 text-center text-dark-400">
-                    <svg className="w-12 h-12 mx-auto mb-4 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <p>Nenhuma conversa encontrada</p>
-                  </div>
-                ) : (
-                  conversations.map((conversation) => (
-                    <div
-                      key={conversation.id}
-                      onClick={() => setSelectedConversation(conversation)}
-                      className={`p-4 border-b border-dark-600 cursor-pointer hover:bg-dark-700 transition-colors ${
-                        selectedConversation?.id === conversation.id ? 'bg-dark-700' : ''
-                      } ${
-                        conversation.unreadCount > 0 ? 'bg-dark-750' : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="relative">
-                          {conversation.otherParticipant?.profileImage ? (
-                            <img
-                              src={conversation.otherParticipant.profileImage}
-                              alt={conversation.otherParticipant.name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-primary-600 flex items-center justify-center">
-                              <span className="text-white font-semibold">
-                                {conversation.otherParticipant?.name?.charAt(0) || 'U'}
-                              </span>
-                            </div>
-                          )}
-                          {conversation.unreadCount > 0 && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                              {conversation.unreadCount}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2">
-                            <h3 className={`truncate ${
-                              conversation.unreadCount > 0 
-                                ? 'font-bold text-dark-100' 
-                                : 'font-semibold text-dark-100'
-                            }`}>
-                              {conversation.otherParticipant?.name || 'Usuário'}
-                            </h3>
-                            {conversation.otherParticipant?.isVerified && (
-                              <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976zM1.5 4.5a3 3 0 013-3h1.372c.86 0 1.61.586 1.819 1.42l1.105 4.423a1.875 1.875 0 01-.694 1.955l-1.293.97c-.135.101-.164.249-.126.352a11.285 11.285 0 006.697 6.697c.103.038.25.009.352-.126l.97-1.293a1.875 1.875 0 011.955-.694l4.423 1.105c.834.209 1.42.959 1.42 1.819V19.5a3 3 0 01-3 3h-2.25C8.552 22.5 1.5 15.448 1.5 6.75V4.5z" clipRule="evenodd" />
-                              </svg>
-                            )}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-8rem)] min-h-[420px]">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+            <Link
+              href="/"
+              className="p-2 -ml-2 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              aria-label="Voltar"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <MessageCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
+            <h1 className="text-lg font-semibold text-gray-900">Mensagens</h1>
+          </div>
+
+          <div className="flex flex-1 min-h-0">
+            {/* Lista de conversas */}
+            <div
+              className={`w-full md:w-80 flex-shrink-0 border-r border-gray-100 flex flex-col ${
+                selectedConversation ? 'hidden md:flex' : ''
+              }`}
+            >
+              {loading ? (
+                <div className="flex-1 flex items-center justify-center p-6">
+                  <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : conversations.length === 0 && !openingGuideId ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                  <MessageCircle className="w-12 h-12 text-gray-300 mb-3" />
+                  <p className="text-sm text-gray-500">Nenhuma conversa</p>
+                  <p className="text-xs text-gray-400 mt-1">Ao clicar em &quot;Enviar mensagem&quot; em um guia ou empresa, a conversa aparece aqui.</p>
+                </div>
+              ) : (
+                <ul className="flex-1 overflow-y-auto">
+                  {(openingGuideId ? [{ id: 'opening', guide: { id: '', name: 'Abrindo...', userId: '', profileImage: null, isVerified: false, slug: null } }] as Conversation[]).concat(conversations).filter((c) => c.id !== 'opening' || openingGuideId).map((conv) => {
+                    if (conv.id === 'opening') {
+                      return (
+                        <li key="opening" className="px-4 py-3 border-b border-gray-100 bg-gray-50 animate-pulse">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gray-200" />
+                            <span className="text-sm text-gray-500">Abrindo conversa...</span>
                           </div>
-                          {conversation.lastMessage && (
-                            <p className={`text-sm truncate ${
-                              conversation.unreadCount > 0 
-                                ? 'font-semibold text-dark-100' 
-                                : 'text-dark-400'
-                            }`}>
-                              {conversation.lastMessage.sender.id === user?.id ? 'Você: ' : ''}
-                              {conversation.lastMessage.content}
-                            </p>
-                          )}
-                          <p className="text-xs text-dark-500">
-                            {conversation.lastMessage && formatTime(conversation.lastMessage.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Área de Chat */}
-            <div className="flex-1 flex flex-col">
-              {selectedConversation ? (
-                <>
-                  {/* Header do Chat */}
-                  <div className="p-4 border-b border-dark-600 bg-dark-700">
-                    <div className="flex items-center space-x-3">
-                      {selectedConversation.otherParticipant?.profileImage ? (
-                        <img
-                          src={selectedConversation.otherParticipant.profileImage}
-                          alt={selectedConversation.otherParticipant.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center">
-                          <span className="text-white font-semibold">
-                            {selectedConversation.otherParticipant?.name?.charAt(0) || 'U'}
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <h2 className="font-semibold text-dark-100">
-                          {selectedConversation.otherParticipant?.name || 'Usuário'}
-                        </h2>
-                        <p className="text-sm text-dark-400">Online</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mensagens */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.sender.id === user?.id ? 'justify-end' : 'justify-start'}`}
+                        </li>
+                      )
+                    }
+                    const isSelected = selectedConversation?.id === conv.id
+                    return (
+                      <li
+                        key={conv.id}
+                        role="button"
+                        onClick={() => setSelectedConversation(conv)}
+                        className={`px-4 py-3 border-b border-gray-100 transition-colors ${
+                          isSelected ? 'bg-purple-50 border-l-2 border-l-purple-500' : 'hover:bg-gray-50'
+                        } ${conv.unreadCount > 0 ? 'bg-purple-50/50' : ''}`}
                       >
-                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                          message.sender.id === user?.id
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-dark-700 text-dark-100'
-                        }`}>
-                          <p className="text-sm">{message.content}</p>
-                          <div className={`flex items-center justify-end gap-1 mt-1 ${
-                            message.sender.id === user?.id ? 'text-primary-100' : 'text-dark-400'
-                          }`}>
-                            <span className="text-xs">
-                              {formatTime(message.createdAt)}
-                            </span>
-                            {message.sender.id === user?.id && (
-                              <div className="flex items-center ml-1">
-                                {message.isRead ? (
-                                  <CheckCheck size={12} className="text-blue-400" />
-                                ) : (
-                                  <Check size={12} className="opacity-60" />
-                                )}
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex-shrink-0">
+                            {getProfileImage(conv) ? (
+                              <img
+                                src={getProfileImage(conv)!}
+                                alt=""
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-medium text-sm">
+                                {getDisplayName(conv).charAt(0).toUpperCase()}
                               </div>
                             )}
+                            {conv.unreadCount > 0 && (
+                              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-purple-600 text-white text-xs font-medium rounded-full">
+                                {conv.unreadCount > 99 ? '99+' : conv.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-sm truncate block ${conv.unreadCount > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-800'}`}>
+                                {getDisplayName(conv)}
+                              </span>
+                              {getIsVerified(conv) && (
+                                <img src="/icons/verificado.png" alt="" className="w-3.5 h-3.5 flex-shrink-0" />
+                              )}
+                            </div>
+                            {conv.lastMessage && (
+                              <p className="text-xs text-gray-500 truncate mt-0.5">
+                                {conv.lastMessage.sender.id === user.id ? 'Você: ' : ''}
+                                {conv.lastMessage.content}
+                              </p>
+                            )}
+                            {conv.lastMessage && (
+                              <span className="text-[11px] text-gray-400">{formatTime(conv.lastMessage.createdAt)}</span>
+                            )}
                           </div>
                         </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+
+            {/* Área do chat */}
+            <div className="flex-1 flex flex-col min-w-0">
+              {selectedConversation ? (
+                <>
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedConversation(null)}
+                      className="md:hidden p-2 -ml-2 rounded-xl text-gray-500 hover:bg-gray-100"
+                      aria-label="Voltar para lista"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    {getProfileImage(selectedConversation) ? (
+                      <img
+                        src={getProfileImage(selectedConversation)!}
+                        alt=""
+                        className="w-9 h-9 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-medium text-sm">
+                        {getDisplayName(selectedConversation).charAt(0).toUpperCase()}
                       </div>
-                    ))}
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-gray-900 truncate block">{getDisplayName(selectedConversation)}</span>
+                        {getIsVerified(selectedConversation) && (
+                          <img src="/icons/verificado.png" alt="" className="w-4 h-4 flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">Conversa</p>
+                    </div>
                   </div>
 
-                  {/* Input de Mensagem */}
-                  <div className="p-4 border-t border-dark-600">
-                    <div className="flex space-x-2">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {selectedConversation.id.startsWith('temp-') ? (
+                      <p className="text-sm text-gray-500 text-center py-4">Envie uma mensagem para iniciar a conversa.</p>
+                    ) : (
+                      messages.map((msg) => {
+                        const isMe = msg.sender.id === user.id
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[85%] px-4 py-2.5 rounded-2xl ${
+                                isMe
+                                  ? 'bg-purple-600 text-white rounded-br-md'
+                                  : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                              }`}
+                            >
+                              <p className="text-sm break-words">{msg.content}</p>
+                              <div className={`flex items-center gap-1.5 mt-1 ${isMe ? 'text-purple-200' : 'text-gray-400'}`}>
+                                <span className="text-[11px]">{formatTime(msg.createdAt)}</span>
+                                {isMe && (msg.isRead ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />)}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  <div className="p-3 border-t border-gray-100 bg-gray-50/50">
+                    <div className="flex gap-2">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                         placeholder="Digite sua mensagem..."
-                        className="flex-1 bg-dark-700 text-dark-100 px-4 py-2 rounded-full border border-dark-600 focus:outline-none focus:border-primary-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         disabled={sending}
                       />
                       <button
+                        type="button"
                         onClick={sendMessage}
                         disabled={!newMessage.trim() || sending}
-                        className="bg-primary-600 text-white px-4 py-2 rounded-full hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="p-2.5 rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        aria-label="Enviar"
                       >
                         {sending ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                          </svg>
+                          <Send className="w-5 h-5" />
                         )}
                       </button>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center text-dark-400">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <p>Selecione uma conversa para começar</p>
-                  </div>
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                  <MessageCircle className="w-14 h-14 text-gray-200 mb-4" />
+                  <p className="text-gray-500 text-sm">Selecione uma conversa ou abra o link &quot;Enviar mensagem&quot; no perfil de um guia ou empresa.</p>
                 </div>
               )}
             </div>
@@ -406,9 +432,3 @@ export default function MessagesPage() {
     </div>
   )
 }
-
-
-
-
-
-
