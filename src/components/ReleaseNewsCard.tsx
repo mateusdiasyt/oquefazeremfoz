@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Globe, Share2 } from 'lucide-react'
+import { Globe } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import ShareModal from './ShareModal'
 import { capitalizeWords, getTimeAgo } from '@/utils/formatters'
+import { useLocale } from '@/contexts/LocaleContext'
+import { getTranslations } from '@/lib/translations'
+import { translateContent } from '@/lib/translateContent'
 
 function stripHtml(html: string): string {
   return (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -58,12 +61,16 @@ interface ReleaseCommentItem {
 export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const releaseHref = `/empresa/${release.business.slug}/release/${release.slug}`
   const companyHref = `/empresa/${release.business.slug}`
   const [displayUrl, setDisplayUrl] = useState(baseUrl ? `${baseUrl.replace(/\/$/, '')}${releaseHref}` : releaseHref)
   const [domain, setDomain] = useState(baseUrl ? (() => { try { return new URL(baseUrl).host } catch { return 'Portal' } })() : 'Portal')
   const [showShareModal, setShowShareModal] = useState(false)
   const [fullReleaseUrl, setFullReleaseUrl] = useState('')
+  const [displayTitle, setDisplayTitle] = useState(release.title)
+  const [displayExcerpt, setDisplayExcerpt] = useState<string | null>(release.lead || null)
 
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(release.likes ?? 0)
@@ -88,6 +95,25 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
   useEffect(() => {
     if (showComments && comments.length === 0) fetchComments()
   }, [showComments])
+
+  useEffect(() => {
+    if (locale === 'pt') {
+      setDisplayTitle(release.title)
+      setDisplayExcerpt(release.lead || stripHtml(release.body).slice(0, 180) + (release.body.length > 180 ? '...' : '') || null)
+      return
+    }
+    let cancelled = false
+    Promise.all([
+      translateContent(release.title, locale),
+      translateContent(release.lead || stripHtml(release.body).slice(0, 180) + (release.body.length > 180 ? '...' : '') || '', locale)
+    ]).then(([title, excerpt]) => {
+      if (!cancelled) {
+        setDisplayTitle(title)
+        setDisplayExcerpt(excerpt || null)
+      }
+    })
+    return () => { cancelled = true }
+  }, [release.id, release.title, release.lead, release.body, locale])
 
   const checkIfLiked = async () => {
     if (!user) return
@@ -162,7 +188,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
     }
   }
 
-  const excerpt = release.lead || stripHtml(release.body).slice(0, 180) + (release.body.length > 180 ? '...' : '')
+  const excerpt = displayExcerpt ?? release.lead ?? stripHtml(release.body).slice(0, 180) + (release.body.length > 180 ? '...' : '')
 
   return (
     <article className="bg-white border-b-2 border-gray-200 md:border md:border-gray-100 md:rounded-3xl md:shadow-sm hover:md:shadow-md transition-all duration-200 overflow-hidden p-4 md:p-6 mb-0 md:mb-6">
@@ -185,9 +211,9 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
             {release.business.isVerified && (
               <img
                 src="/icons/verificado.png"
-                alt="Verificado"
+                alt={t.common.verified}
                 className="w-4 h-4 object-contain"
-                title="Verificado"
+                title={t.common.verified}
               />
             )}
           </div>
@@ -205,7 +231,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
             <div className="relative w-full aspect-[16/10] bg-gray-200">
               <img
                 src={release.featuredImageUrl}
-                alt={release.title}
+                alt={displayTitle}
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center">
@@ -217,7 +243,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
           )}
           <div className="p-4">
             <h3 className="font-bold text-gray-900 text-base leading-snug mb-2" style={{ letterSpacing: '-0.01em' }}>
-              {release.title}
+              {displayTitle}
             </h3>
             {excerpt && (
               <p className="text-sm text-gray-600 leading-relaxed line-clamp-3" style={{ letterSpacing: '-0.01em' }}>
@@ -272,7 +298,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
           </svg>
-          <span className="text-sm font-medium">Compartilhar</span>
+          <span className="text-sm font-medium">{t.common.share}</span>
         </button>
       </div>
 
@@ -285,7 +311,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Escreva um comentário..."
+                  placeholder={t.common.writeComment}
                   rows={2}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                 />
@@ -295,13 +321,13 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
                 disabled={!newComment.trim() || commentLoading}
                 className="px-4 py-3 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {commentLoading ? '...' : 'Enviar'}
+                {commentLoading ? '...' : t.common.send}
               </button>
             </div>
           </form>
           <div className="space-y-4">
             {comments.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum comentário ainda.</p>
+              <p className="text-sm text-gray-500">{t.common.noCommentsYet}</p>
             ) : (
               comments.map((comment) => (
                 <div key={comment.id} className="flex gap-3">
@@ -320,7 +346,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
                       <span className="text-xs font-medium text-gray-900">
                         {comment.business?.name ? capitalizeWords(comment.business.name) : (comment.user?.name || 'Usuário')}
                       </span>
-                      <span className="text-xs text-gray-500">{getTimeAgo(comment.createdAt)}</span>
+                      <span className="text-xs text-gray-500">{getTimeAgo(comment.createdAt, t.time)}</span>
                     </div>
                     {comment.replies && comment.replies.length > 0 && (
                       <div className="ml-4 mt-2 space-y-2 border-l-2 border-gray-200 pl-3">
@@ -328,7 +354,7 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
                           <div key={reply.id}>
                             <p className="text-sm text-gray-700">{reply.body}</p>
                             <span className="text-xs text-gray-500">
-                              {reply.business?.name || reply.user?.name || 'Usuário'} · {getTimeAgo(reply.createdAt)}
+                              {reply.business?.name || reply.user?.name || 'Usuário'} · {getTimeAgo(reply.createdAt, t.time)}
                             </span>
                           </div>
                         ))}

@@ -4,10 +4,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, Heart, Edit3, Trash2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
+import { getTranslations } from '@/lib/translations'
 import UrlPreview from './UrlPreview'
 import ShareModal from './ShareModal'
 import { extractUrlsFromText } from '../utils/urlDetector'
 import { capitalizeWords, getTimeAgo } from '../utils/formatters'
+import { translateContent } from '@/lib/translateContent'
 import PostDetailModal from './PostDetailModal'
 
 interface PostAuthor {
@@ -49,6 +52,8 @@ interface PostCardProps {
 export default function PostCard({ post, onLike }: PostCardProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const isGuidePost = !!post.isGuidePost
   const author = post.guide || post.business
   const authorSlug = author?.slug ?? author?.id ?? ''
@@ -71,6 +76,28 @@ export default function PostCard({ post, onLike }: PostCardProps) {
   const [showCommentIdentityDropdown, setShowCommentIdentityDropdown] = useState(false)
   const commentIdentityDropdownRef = useRef<HTMLDivElement>(null)
   const [showPostDetailModal, setShowPostDetailModal] = useState(false)
+  const [displayTitle, setDisplayTitle] = useState(post.title)
+  const [displayBody, setDisplayBody] = useState<string | null>(post.body)
+
+  useEffect(() => {
+    if (locale === 'pt') {
+      setDisplayTitle(post.title)
+      setDisplayBody(post.body)
+      return
+    }
+    let cancelled = false
+    const bodyExcerpt = post.body ? post.body.slice(0, 400) : ''
+    Promise.all([
+      translateContent(post.title, locale),
+      bodyExcerpt ? translateContent(bodyExcerpt, locale) : Promise.resolve('')
+    ]).then(([title, body]) => {
+      if (!cancelled) {
+        setDisplayTitle(title)
+        setDisplayBody(body ? (post.body && post.body.length > 400 ? body + '...' : body) : post.body)
+      }
+    })
+    return () => { cancelled = true }
+  }, [post.id, post.title, post.body, locale])
 
   useEffect(() => {
     if (user) checkIfLiked()
@@ -550,16 +577,6 @@ export default function PostCard({ post, onLike }: PostCardProps) {
     }
   }, [showComments])
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   if (!author) return null
 
   return (
@@ -585,27 +602,27 @@ export default function PostCard({ post, onLike }: PostCardProps) {
               {capitalizeWords(author.name)}
             </a>
             {author.isVerified && (
-              <img src="/icons/verificado.png" alt="Verificado" className="w-5 h-5 object-contain" title="Verificado" />
+              <img src="/icons/verificado.png" alt={t.common.verified} className="w-5 h-5 object-contain" title={t.common.verified} />
             )}
           </div>
           <button
             onClick={() => setShowPostDetailModal(true)}
             className="text-xs text-gray-500 mt-0.5 hover:text-purple-600 hover:underline transition-colors"
           >
-            {getTimeAgo(post.createdAt)}
+            {getTimeAgo(post.createdAt, t.time)}
           </button>
         </div>
       </div>
 
       {/* Conteúdo do post */}
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3" style={{ letterSpacing: '-0.01em' }}>{post.title}</h2>
-        {post.body && (
+        <h2 className="text-lg font-semibold text-gray-900 mb-3" style={{ letterSpacing: '-0.01em' }}>{displayTitle}</h2>
+        {(displayBody ?? post.body) && (
           <>
             <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm mb-3" style={{ letterSpacing: '-0.01em' }}>
-              {extractUrlsFromText(post.body).cleanText}
+              {extractUrlsFromText(displayBody ?? post.body ?? '').cleanText}
             </p>
-            {extractUrlsFromText(post.body).urls.map((url, index) => (
+            {extractUrlsFromText(displayBody ?? post.body ?? '').urls.map((url, index) => (
               <UrlPreview key={index} url={url} />
             ))}
           </>
@@ -676,7 +693,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
           </svg>
-          <span className="text-sm font-medium">Compartilhar</span>
+          <span className="text-sm font-medium">{t.common.share}</span>
         </button>
       </div>
 
@@ -691,14 +708,14 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                   {replyingTo && (
                     <div className="mb-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
                       <span className="text-sm text-purple-700">
-                        Respondendo a <strong>{replyingTo.userName}</strong>
+                        {t.common.replyingTo} <strong>{replyingTo.userName}</strong>
                       </span>
                       <button
                         type="button"
                         onClick={cancelReply}
                         className="text-purple-600 hover:text-purple-800 text-sm"
                       >
-                        Cancelar
+                        {t.common.cancel}
                       </button>
                     </div>
                   )}
@@ -799,7 +816,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder={replyingTo ? `Responder ${replyingTo.userName}...` : "Adicione um comentário..."}
+                    placeholder={replyingTo ? `${t.common.replyTo} ${replyingTo.userName}...` : t.common.writeComment}
                     className="w-full px-4 py-3 pr-12 border border-gray-200 bg-gray-50 rounded-2xl resize-none focus:ring-2 focus:ring-purple-200 focus:bg-white focus:border-purple-300 transition-all duration-200 text-sm placeholder-gray-400"
                     rows={2}
                     disabled={commentLoading}
@@ -832,7 +849,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <p className="text-gray-500 text-sm" style={{ letterSpacing: '-0.01em' }}>Seja o primeiro a comentar!</p>
+                <p className="text-gray-500 text-sm" style={{ letterSpacing: '-0.01em' }}>{t.common.firstToComment}</p>
               </div>
             ) : (
               comments.map((comment) => {
@@ -866,10 +883,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                           {comment.business?.name || comment.user?.name || comment.user?.email || 'Usuário'}
                         </span>
                         {comment.business?.isVerified && (
-                          <img src="/icons/verificado.png" alt="Verificado" className="w-4 h-4 object-contain" />
+                          <img src="/icons/verificado.png" alt={t.common.verified} className="w-4 h-4 object-contain" />
                         )}
                         <span className="text-xs text-gray-400">
-                          {formatDate(comment.createdAt)}
+                          {getTimeAgo(comment.createdAt, t.time)}
                         </span>
                       </div>
                       {/* Modo de edição ou visualização */}
@@ -921,7 +938,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                               </svg>
-                              <span>Responder</span>
+                              <span>{t.common.reply}</span>
                             </button>
                             {/* Botões de editar/excluir apenas para o dono do comentário (usuário ou empresa) */}
                             {user && ((comment.userId === user.id) || (comment.businessId === user.businessId)) && (
@@ -932,7 +949,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                     className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                                   >
                                     <Edit3 className="w-4 h-4" />
-                                    <span>Editar</span>
+                                    <span>{t.common.edit}</span>
                                   </button>
                                 )}
                                 <button
@@ -940,7 +957,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                   className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  <span>Excluir</span>
+                                  <span>{t.common.delete}</span>
                                 </button>
                               </>
                             )}
@@ -989,10 +1006,10 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                       {reply.business?.name || reply.user?.name || reply.user?.email || 'Usuário'}
                                     </span>
                                     {reply.business?.isVerified && (
-                                      <img src="/icons/verificado.png" alt="Verificado" className="w-3.5 h-3.5 object-contain" />
+                                      <img src="/icons/verificado.png" alt={t.common.verified} className="w-3.5 h-3.5 object-contain" />
                                     )}
                                     <span className="text-xs text-gray-400">
-                                      {formatDate(reply.createdAt)}
+                                      {getTimeAgo(reply.createdAt, t.time)}
                                     </span>
                                   </div>
                                   {/* Modo de edição ou visualização da resposta */}
@@ -1044,7 +1061,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                           </svg>
-                                          <span>Responder</span>
+                                          <span>{t.common.reply}</span>
                                         </button>
                                         {/* Botões de editar/excluir apenas para o dono da resposta (usuário ou empresa) */}
                                         {user && ((reply.userId === user.id) || (reply.businessId === user.businessId)) && (
@@ -1055,7 +1072,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                                 className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-purple-600 transition-colors"
                                               >
                                                 <Edit3 className="w-3.5 h-3.5" />
-                                                <span>Editar</span>
+                                                <span>{t.common.edit}</span>
                                               </button>
                                             )}
                                             <button
@@ -1063,7 +1080,7 @@ export default function PostCard({ post, onLike }: PostCardProps) {
                                               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors"
                                             >
                                               <Trash2 className="w-3.5 h-3.5" />
-                                              <span>Excluir</span>
+                                              <span>{t.common.delete}</span>
                                             </button>
                                           </>
                                         )}

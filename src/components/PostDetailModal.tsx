@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Heart, MessageCircle, Share2, Copy, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
+import { getTranslations } from '@/lib/translations'
 import { getTimeAgo, capitalizeWords } from '../utils/formatters'
 import UrlPreview from './UrlPreview'
 import { extractUrlsFromText } from '../utils/urlDetector'
@@ -32,6 +34,8 @@ interface PostDetailModalProps {
 export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostDetailModalProps) {
   const router = useRouter()
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const isGuidePost = !!post.isGuidePost
   const author = post.guide || post.business
   const authorPath = isGuidePost ? '/guia' : '/empresa'
@@ -259,13 +263,13 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
                 {author?.isVerified && (
                   <img
                     src="/icons/verificado.png"
-                    alt="Verificado"
+                    alt={t.common.verified}
                     className="w-5 h-5 object-contain"
-                    title="Empresa verificada"
+                    title={t.common.verified}
                   />
                 )}
               </div>
-              <p className="text-xs text-gray-500">{getTimeAgo(post.createdAt)}</p>
+              <p className="text-xs text-gray-500">{getTimeAgo(post.createdAt, t.time)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -363,7 +367,7 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
                 className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
               >
                 <Share2 className="w-5 h-5" />
-                <span className="font-medium">Compartilhar</span>
+                <span className="font-medium">{t.common.share}</span>
               </button>
             </div>
           </div>
@@ -371,12 +375,12 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
           {/* Comments Section (apenas para posts de empresa) */}
           {!isGuidePost && showComments && (
             <div className="border-t border-gray-200 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Comentários ({commentsCount})</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">{t.common.comments} ({commentsCount})</h3>
               
               {/* Comments List */}
               <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
                 {comments.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">Nenhum comentário ainda</p>
+                  <p className="text-gray-500 text-center py-8">{t.common.noCommentsYet}</p>
                 ) : (
                   comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3">
@@ -389,7 +393,7 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
                             <span className="font-semibold text-sm text-gray-900">
                               {comment.business?.name ? capitalizeWords(comment.business.name) : (comment.user?.name || 'Usuário')}
                             </span>
-                            <span className="text-xs text-gray-500">{getTimeAgo(comment.createdAt)}</span>
+                            <span className="text-xs text-gray-500">{getTimeAgo(comment.createdAt, t.time)}</span>
                           </div>
                           <p className="text-sm text-gray-700">{comment.body}</p>
                         </div>
@@ -506,7 +510,7 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
                         type="text"
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Adicione um comentário..."
+                        placeholder={t.common.writeComment}
                         className="flex-1 px-4 py-2 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-200 focus:border-purple-300 outline-none text-sm"
                         disabled={commentLoading}
                       />
@@ -515,7 +519,7 @@ export default function PostDetailModal({ post, isOpen, onClose, onLike }: PostD
                         disabled={!newComment.trim() || commentLoading}
                         className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
                       >
-                        {commentLoading ? '...' : 'Enviar'}
+                        {commentLoading ? '...' : t.common.send}
                       </button>
                     </div>
                   </form>

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { X, Share2, MessageCircle, Linkedin, Facebook, Copy, Check } from 'lucide-react'
+import { useLocale } from '@/contexts/LocaleContext'
+import { getTranslations } from '@/lib/translations'
 
 interface ShareModalProps {
   isOpen: boolean
@@ -21,12 +23,14 @@ interface ShareModalProps {
 }
 
 export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareModalProps) {
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [copied, setCopied] = useState(false)
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const postUrl = shareUrl ?? (post.id ? `${origin}/post/${post.id}` : '')
   const base = post.authorBasePath === 'guia' ? 'guia' : 'empresa'
   const businessUrl = `${origin}/${base}/${post.business.slug}`
-  const shareText = `Confira de ${post.business.name}: "${post.title}"`
+  const shareText = locale === 'pt' ? `Confira de ${post.business.name}: "${post.title}"` : locale === 'es' ? `Mira de ${post.business.name}: "${post.title}"` : `Check out from ${post.business.name}: "${post.title}"`
   
   const shareOptions = [
     {
@@ -80,8 +84,8 @@ export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareMod
               <Share2 className="w-5 h-5 text-pink-500" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Compartilhar</h3>
-              <p className="text-sm text-gray-500">Escolha onde compartilhar</p>
+              <h3 className="font-semibold text-gray-900">{t.common.share}</h3>
+              <p className="text-sm text-gray-500">{t.common.chooseWhereToShare}</p>
             </div>
           </div>
           <button
@@ -100,7 +104,7 @@ export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareMod
               {post.title}
             </h4>
             <p className="text-xs text-gray-600">
-              por {post.business.name}
+              {t.common.by} {post.business.name}
             </p>
           </div>
 
@@ -113,7 +117,7 @@ export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareMod
                 className={`w-full flex items-center gap-4 p-4 rounded-xl text-white font-medium transition-all duration-200 hover:scale-105 ${option.color}`}
               >
                 <option.icon size={20} />
-                <span>Compartilhar no {option.name}</span>
+                <span>{t.common.shareOn} {option.name}</span>
               </button>
             ))}
           </div>
@@ -122,7 +126,7 @@ export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareMod
           <div className="mt-6 pt-6 border-t border-gray-100">
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-500 mb-1">Link</p>
+                <p className="text-xs text-gray-500 mb-1">{t.common.link}</p>
                 <p className="text-sm text-gray-800 truncate">{postUrl}</p>
               </div>
               <button
@@ -138,7 +142,7 @@ export default function ShareModal({ isOpen, onClose, post, shareUrl }: ShareMod
             </div>
             {copied && (
               <p className="text-xs text-green-600 mt-2 text-center">
-                Link copiado para a área de transferência!
+                {t.common.linkCopied}
               </p>
             )}
           </div>

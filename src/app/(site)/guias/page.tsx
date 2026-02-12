@@ -14,6 +14,8 @@ import {
   Award
 } from 'lucide-react'
 import { capitalizeWords } from '../../../utils/formatters'
+import { useLocale } from '@/contexts/LocaleContext'
+import { getTranslations } from '@/lib/translations'
 
 // Ícone simplificado do WhatsApp
 const WhatsAppIcon = ({ size = 20, className = "" }) => (
@@ -57,6 +59,8 @@ interface Guide {
 export default function GuiasPage() {
   const router = useRouter()
   const { user } = useAuth()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [guides, setGuides] = useState<Guide[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -122,16 +126,16 @@ export default function GuiasPage() {
         <div className="mb-8 sm:mb-10">
           <p className="text-sm font-semibold uppercase tracking-wider text-violet-600 mb-2">OQFOZ</p>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-2">
-            Guias turísticos
+            {t.guides.pageTitle}
           </h1>
           <p className="text-slate-600 max-w-xl mb-3">
-            Encontre os melhores guias para explorar Foz do Iguaçu
+            {t.guides.pageSubtitle}
           </p>
           <Link
             href="/guias/cadastre-se"
             className="inline-flex items-center gap-2 text-sm font-semibold text-violet-600 hover:text-violet-700"
           >
-            É guia? Cadastre-se aqui e apareça para turistas
+            {t.guides.areYouGuide}
           </Link>
         </div>
 
@@ -142,7 +146,7 @@ export default function GuiasPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Buscar guia por nome..."
+                placeholder={t.guides.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800 placeholder-slate-400"
@@ -154,7 +158,7 @@ export default function GuiasPage() {
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800 bg-white"
               >
-                <option value="">Todas as especialidades</option>
+                <option value="">{t.guides.allSpecialties}</option>
                 {specialties.map((specialty) => (
                   <option key={specialty} value={specialty}>{specialty}</option>
                 ))}
@@ -166,9 +170,9 @@ export default function GuiasPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 text-slate-800 bg-white"
               >
-                <option value="rating">Melhor avaliação</option>
-                <option value="followers">Mais seguidores</option>
-                <option value="newest">Mais recentes</option>
+                <option value="rating">{t.guides.bestRating}</option>
+                <option value="followers">{t.guides.moreFollowers}</option>
+                <option value="newest">{t.guides.newest}</option>
               </select>
             </div>
           </div>
@@ -182,8 +186,8 @@ export default function GuiasPage() {
         ) : guides.length === 0 ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-slate-100">
             <UserCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Nenhum guia encontrado</h3>
-            <p className="text-slate-600">Tente ajustar os filtros de busca</p>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">{t.guides.noGuideFound}</h3>
+            <p className="text-slate-600">{t.guides.adjustFilters}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
@@ -207,7 +211,7 @@ export default function GuiasPage() {
                   )}
                   {guide.isVerified && (
                     <div className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white flex items-center justify-center shadow-md">
-                      <img src="/icons/verificado.png" alt="Verificado" className="w-4 h-4 object-contain" />
+                      <img src="/icons/verificado.png" alt={t.common.verified} className="w-4 h-4 object-contain" />
                     </div>
                   )}
                 </div>
