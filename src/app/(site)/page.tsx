@@ -770,33 +770,20 @@ export default function HomePage() {
             {/* Releases recentes – cards estilo stories (carrossel) */}
             <ReleaseCarousel key={releasesRefreshKey} />
 
-            {/* Filtro da linha do tempo */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="flex items-center gap-1.5 text-sm text-gray-600 font-medium">
-                <ArrowUpDown className="w-4 h-4" />
-                Ordenar:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { value: 'recent' as const, label: 'Mais recentes' },
-                  { value: 'views' as const, label: 'Mais visualizações' },
-                  { value: 'likes' as const, label: 'Mais curtidas' },
-                  { value: 'comments' as const, label: 'Mais comentários' },
-                ].map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setTimelineSortBy(value)}
-                    className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
-                      timelineSortBy === value
-                        ? 'bg-purple-600 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+            {/* Filtro da linha do tempo (dropdown discreto) */}
+            <div className="flex items-center gap-1.5 mb-3">
+              <ArrowUpDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+              <select
+                value={timelineSortBy}
+                onChange={(e) => setTimelineSortBy(e.target.value as typeof timelineSortBy)}
+                className="text-sm text-gray-500 bg-transparent border-0 py-0.5 pl-0 pr-6 focus:ring-0 focus:outline-none cursor-pointer appearance-none hover:text-gray-600 rounded"
+              >
+                <option value="recent">Mais recentes</option>
+                <option value="views">Mais visualizações</option>
+                <option value="likes">Mais curtidas</option>
+                <option value="comments">Mais comentários</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 -ml-4 pointer-events-none flex-shrink-0" />
             </div>
 
             {/* Timeline: posts + releases (releases com card de link) */}
