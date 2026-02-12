@@ -21,6 +21,7 @@ export async function GET() {
         include: {
           business: { select: { id: true, name: true, slug: true } },
           guide: { select: { id: true, name: true, slug: true } },
+          _count: { select: { comment: true } },
         },
       }),
       prisma.pendingrelease.findMany({
