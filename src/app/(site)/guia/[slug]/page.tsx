@@ -618,7 +618,7 @@ export default function GuideProfilePage() {
                   </div>
                 )}
 
-                {/* Ações: Seguir + Enviar mensagem (in-app) + WhatsApp + Ver contato */}
+                {/* Ações: Seguir + Enviar mensagem (in-app) + WhatsApp */}
                 <div className="flex flex-wrap items-center gap-3">
                   {!isOwner && user && (
                     <button
@@ -666,13 +666,6 @@ export default function GuideProfilePage() {
                       WhatsApp
                     </a>
                   )}
-                  <button
-                    onClick={() => setActiveTab('contato')}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all duration-200"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    Ver contato
-                  </button>
                 </div>
               </div>
             </div>
