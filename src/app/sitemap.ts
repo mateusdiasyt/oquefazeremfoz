@@ -1,112 +1,18 @@
 import { MetadataRoute } from 'next'
-import { prisma } from '../lib/db'
+import { buildSitemap } from '@/lib/sitemap'
 
+/**
+ * Sitemap dinâmico em /sitemap.xml (padrão sitemaps.org 0.9).
+ * Gerado a cada requisição a partir do banco; novas empresas, releases e
+ * edições passam a aparecer automaticamente, sem intervenção manual.
+ * Não inclui páginas privadas, admin nem URLs com query.
+ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://oquefazeremfoz.com.br'
-
-  // Buscar todas as empresas aprovadas
-  const businesses = await prisma.business.findMany({
-    where: { isApproved: true },
-    select: { slug: true, updatedAt: true },
-    take: 1000,
-  })
-
-  const businessUrls: MetadataRoute.Sitemap = businesses
-    .filter((b) => b.slug != null)
-    .map((b) => ({
-      url: `${baseUrl}/empresa/${b.slug}`,
-      lastModified: b.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }))
-
-  // Releases/publicações (blogs) de empresas aprovadas – para o Google indexar cada release
-  const releases = await prisma.businessrelease.findMany({
-    where: {
-      isPublished: true,
-      business: { isApproved: true },
-    },
-    select: {
-      slug: true,
-      updatedAt: true,
-      publishedAt: true,
-      business: { select: { slug: true } },
-    },
-    take: 5000,
-  })
-
-  const releaseUrls: MetadataRoute.Sitemap = releases
-    .filter((r) => r.business?.slug)
-    .map((r) => ({
-      url: `${baseUrl}/empresa/${r.business!.slug}/release/${r.slug}`,
-      lastModified: r.updatedAt ?? r.publishedAt ?? new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }))
-
-  // URLs estáticas principais
-  const staticUrls: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/o-que-fazer-em-foz-do-iguacu`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.95,
-    },
-    {
-      url: `${baseUrl}/empresas`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/cupons`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/mapa-turistico`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/selo-verificado`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/cameras-ao-vivo`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/foztv`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/portal`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/guias`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-  ]
-
-  return [...staticUrls, ...businessUrls, ...releaseUrls]
+  const entries = await buildSitemap()
+  return entries.map((e) => ({
+    url: e.url,
+    lastModified: e.lastModified,
+    changeFrequency: e.changeFrequency,
+    priority: e.priority,
+  }))
 }
