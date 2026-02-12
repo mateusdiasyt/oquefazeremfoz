@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, MapPin, Compass, Video, Tv, X, Newspaper } from 'lucide-react'
+import { Home, Search, MapPin, Compass, Video, Tv, X, Newspaper, MessageCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { capitalizeWords } from '../utils/formatters'
 import NotificationBell from './NotificationBell'
@@ -309,6 +309,15 @@ export default function Header() {
                   </div>
                 )}
                 
+                {/* Ícone de mensagens (acesso à aba Mensagens) */}
+                <Link
+                  href="/messages"
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
+                  title="Mensagens"
+                  aria-label="Abrir mensagens"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </Link>
                 {/* Dropdown do usuário */}
               <div 
                 className="relative"
