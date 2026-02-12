@@ -221,9 +221,17 @@ export default function MessagesPage() {
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
   }
 
-  if (!user) return null
+  if (!user) return <></>
 
-  return (
+  const openingItem: Conversation = {
+    id: 'opening',
+    guide: { id: '', name: 'Abrindo...', userId: '', profileImage: null, isVerified: false, slug: null },
+    unreadCount: 0,
+    updatedAt: new Date().toISOString(),
+  }
+  const displayList = openingGuideId ? [openingItem, ...conversations] : conversations
+
+  const content = (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-8rem)] min-h-[420px]">
@@ -259,7 +267,7 @@ export default function MessagesPage() {
                 </div>
               ) : (
                 <ul className="flex-1 overflow-y-auto">
-                  {(openingGuideId ? [{ id: 'opening', guide: { id: '', name: 'Abrindo...', userId: '', profileImage: null, isVerified: false, slug: null } }] as Conversation[]).concat(conversations).filter((c) => c.id !== 'opening' || openingGuideId).map((conv) => {
+                  {displayList.map((conv) => {
                     if (conv.id === 'opening') {
                       return (
                         <li key="opening" className="px-4 py-3 border-b border-gray-100 bg-gray-50 animate-pulse">
@@ -430,5 +438,6 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
-  )
+  );
+  return content;
 }
