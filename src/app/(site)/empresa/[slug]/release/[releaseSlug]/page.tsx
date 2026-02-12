@@ -105,6 +105,7 @@ export default async function ReleaseDetailPage({
     featuredImageUrl: release.featuredImageUrl,
     publishedAt: release.publishedAt?.toISOString() ?? null,
     createdAt: release.createdAt.toISOString(),
+    views: release.views ?? 0,
     business: {
       id: business.id,
       name: business.name,

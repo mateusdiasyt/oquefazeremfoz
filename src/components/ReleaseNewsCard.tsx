@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Globe } from 'lucide-react'
+import { Globe, Eye } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import ShareModal from './ShareModal'
-import { capitalizeWords, getTimeAgo } from '@/utils/formatters'
+import { capitalizeWords, getTimeAgo, formatViewCount } from '@/utils/formatters'
 import { useLocale } from '@/contexts/LocaleContext'
 import { getTranslations } from '@/lib/translations'
 import { translateContent } from '@/lib/translateContent'
@@ -35,6 +35,7 @@ export interface ReleaseNewsCardRelease {
   publishedAt: string | null
   createdAt: string
   likes?: number
+  views?: number
   business: {
     id: string
     name: string
@@ -250,9 +251,17 @@ export default function ReleaseNewsCard({ release, baseUrl }: ReleaseNewsCardPro
                 {excerpt}
               </p>
             )}
-            <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500">
-              <Globe className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{domain || 'Portal'}</span>
+            <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 flex-wrap">
+              {(release.views ?? 0) > 0 && (
+                <span className="flex items-center gap-1">
+                  <Eye className="w-3.5 h-3.5 flex-shrink-0" />
+                  {formatViewCount(release.views ?? 0, locale)} {t.release.views}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Globe className="w-3.5 h-3.5 flex-shrink-0" />
+                {domain || 'Portal'}
+              </span>
             </div>
           </div>
         </div>

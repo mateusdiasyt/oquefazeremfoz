@@ -100,6 +100,7 @@ export const translations = {
     },
     release: {
       backToCompany: 'Voltar para',
+      views: 'visualizações',
     },
   },
   en: {
@@ -201,6 +202,7 @@ export const translations = {
     },
     release: {
       backToCompany: 'Back to',
+      views: 'views',
     },
   },
   es: {
@@ -302,6 +304,7 @@ export const translations = {
     },
     release: {
       backToCompany: 'Volver a',
+      views: 'vistas',
     },
   },
 } as const

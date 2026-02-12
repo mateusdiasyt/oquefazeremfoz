@@ -70,3 +70,25 @@ export function getTimeAgo(dateString: string, timeStrings?: TimeStrings): strin
     minute: '2-digit'
   })
 }
+
+/**
+ * Formata contador de visualizações no estilo YouTube (ex: 1,2 mil, 1,5 mi, 1.2K, 1.5M)
+ * @param count - Número de visualizações
+ * @param locale - 'pt' | 'en' | 'es' para mil/mi ou K/M
+ */
+export function formatViewCount(count: number, locale: 'pt' | 'en' | 'es' = 'pt'): string {
+  if (count < 0) return '0'
+  if (count < 1000) return count.toLocaleString(locale === 'pt' ? 'pt-BR' : locale === 'es' ? 'es-ES' : 'en-US')
+  if (count < 1_000_000) {
+    const n = count / 1000
+    const num = n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)
+    if (locale === 'en') return `${num}K`
+    if (locale === 'es') return `${num.replace('.', ',')} mil`
+    return `${num.replace('.', ',')} mil`
+  }
+  const n = count / 1_000_000
+  const num = n % 1 === 0 ? n.toFixed(0) : n.toFixed(1)
+  if (locale === 'en') return `${num}M`
+  if (locale === 'es') return `${num.replace('.', ',')} M`
+  return `${num.replace('.', ',')} mi`
+}

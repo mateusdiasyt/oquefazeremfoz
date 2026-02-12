@@ -3,8 +3,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import DOMPurify from 'dompurify'
 import Link from 'next/link'
-import { ArrowLeft, Calendar } from 'lucide-react'
-import { capitalizeWords, getTimeAgo } from '@/utils/formatters'
+import { ArrowLeft, Calendar, Eye } from 'lucide-react'
+import { capitalizeWords, getTimeAgo, formatViewCount } from '@/utils/formatters'
 import { useLocale } from '@/contexts/LocaleContext'
 import { getTranslations } from '@/lib/translations'
 import { translateContent } from '@/lib/translateContent'
@@ -18,6 +18,7 @@ export interface Release {
   featuredImageUrl: string | null
   publishedAt: string | null
   createdAt: string
+  views: number
   business: {
     id: string
     name: string
@@ -31,6 +32,19 @@ export default function ReleaseDetailClient({ release }: { release: Release }) {
   const t = getTranslations(locale)
   const [displayTitle, setDisplayTitle] = useState(release.title)
   const [displayLead, setDisplayLead] = useState<string | null>(release.lead)
+  const [views, setViews] = useState(release.views)
+
+  useEffect(() => {
+    fetch('/api/public/release/view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ releaseId: release.id }),
+      credentials: 'include',
+    })
+      .then((res) => res.ok && res.json())
+      .then((data) => data && typeof data.views === 'number' && setViews(data.views))
+      .catch(() => {})
+  }, [release.id])
 
   useEffect(() => {
     if (locale === 'pt') {
@@ -77,9 +91,16 @@ export default function ReleaseDetailClient({ release }: { release: Release }) {
         </Link>
 
         <header className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Calendar className="w-4 h-4" />
-            <time dateTime={displayDate}>{getTimeAgo(displayDate, t.time)}</time>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-500 mb-4">
+            <span className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              <time dateTime={displayDate}>{getTimeAgo(displayDate, t.time)}</time>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <Eye className="w-4 h-4" />
+              {formatViewCount(views, locale)} {t.release.views}
+            </span>
             <span>•</span>
             <span>{capitalizeWords(release.business.name)}</span>
           </div>
