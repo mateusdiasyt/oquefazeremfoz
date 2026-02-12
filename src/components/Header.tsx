@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Compass, Video, Tv, X, Newspaper, MessageCircle, Users } from 'lucide-react'
+import { Home, Search, Compass, Video, Tv, X, Newspaper, MessageCircle, Users, Globe, ChevronDown } from 'lucide-react'
+import { useLocale } from '../contexts/LocaleContext'
+import { getTranslations, type Locale } from '../lib/translations'
 import { useRouter } from 'next/navigation'
 import { capitalizeWords } from '../utils/formatters'
 import { MESSAGES_UPDATED } from '../lib/events'
@@ -30,6 +32,10 @@ export default function Header() {
   const pathname = usePathname()
   const router = useRouter()
   const searchRef = useRef<HTMLDivElement>(null)
+  const { locale, setLocale } = useLocale()
+  const t = getTranslations(locale)
+  const [showLangDropdown, setShowLangDropdown] = useState(false)
+  const langDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchUserBusinesses = async () => {
@@ -122,6 +128,17 @@ export default function Header() {
     return () => window.clearTimeout(timeoutId)
   }, [searchTerm])
 
+  // Fechar dropdown de idioma ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
+        setShowLangDropdown(false)
+      }
+    }
+    if (showLangDropdown) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showLangDropdown])
+
   // Fechar pesquisa ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -191,10 +208,10 @@ export default function Header() {
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
-              title="Início"
+              title={t.nav.home}
             >
               <Home className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Início</span>
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.home}</span>
             </a>
             
             {/* Campo de Pesquisa Expansível */}
@@ -203,10 +220,10 @@ export default function Header() {
                 <button
                   onClick={() => setSearchExpanded(true)}
                   className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 min-w-[4rem]"
-                  title="Pesquisar empresas"
+                  title={t.nav.search}
                 >
                   <Search className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Pesquisar</span>
+                  <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.search}</span>
                 </button>
               ) : (
                 <div className="relative">
@@ -216,7 +233,7 @@ export default function Header() {
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar empresa..."
+                      placeholder={t.searchPlaceholder}
                       className="px-3 py-2 w-64 focus:outline-none text-sm"
                       autoFocus
                       onBlur={() => {
@@ -286,10 +303,10 @@ export default function Header() {
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
-              title="Descubra"
+              title={t.nav.discover}
             >
               <Compass className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Descubra</span>
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.discover}</span>
             </a>
             <a 
               href="/guias" 
@@ -298,10 +315,10 @@ export default function Header() {
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
-              title="Guias"
+              title={t.nav.guides}
             >
               <Users className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Guias</span>
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.guides}</span>
             </a>
             <a 
               href="/cameras-ao-vivo" 
@@ -310,10 +327,10 @@ export default function Header() {
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
-              title="Câmeras ao vivo"
+              title={t.nav.cameras}
             >
               <Video className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Câmeras</span>
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.cameras}</span>
             </a>
             <a 
               href="/foztv" 
@@ -322,10 +339,10 @@ export default function Header() {
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
-              title="FozTV"
+              title={t.nav.foztv}
             >
               <Tv className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>FozTV</span>
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.foztv}</span>
             </a>
             <a 
               href="/portal" 
@@ -334,15 +351,50 @@ export default function Header() {
                   ? 'text-purple-600 bg-purple-50'
                   : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
               }`}
-              title="Portal do Turismo"
+              title={t.nav.portal}
             >
               <Newspaper className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Portal</span>
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.portal}</span>
             </a>
           </nav>
 
           {/* User Menu */}
           <div className="flex items-center space-x-3">
+            {/* Seletor de idioma (PT / EN / ES) */}
+            <div className="relative shrink-0" ref={langDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
+                title={t.language}
+                aria-label={t.language}
+                aria-expanded={showLangDropdown}
+              >
+                <Globe className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm font-medium uppercase hidden sm:inline">{locale}</span>
+                <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${showLangDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showLangDropdown && (
+                <div className="absolute right-0 top-full mt-1 py-1 bg-white rounded-xl shadow-lg border border-gray-100 z-50 min-w-[7rem]">
+                  {(['pt', 'en', 'es'] as Locale[]).map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => {
+                        setLocale(lang)
+                        setShowLangDropdown(false)
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-sm font-medium transition-colors ${
+                        locale === lang ? 'bg-purple-50 text-purple-700' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {lang === 'pt' ? 'Português' : lang === 'en' ? 'English' : 'Español'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {user ? (
               <>
                 {/* Notificações – mesmo botão que mensagens e perfil */}
@@ -356,8 +408,8 @@ export default function Header() {
                 <Link
                   href="/messages"
                   className="relative flex shrink-0 items-center justify-center w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-purple-600 transition-all duration-200"
-                  title="Mensagens"
-                  aria-label="Abrir mensagens"
+                  title={t.messages}
+                  aria-label={t.messages}
                 >
                   <MessageCircle className="w-5 h-5" />
                   {unreadMessagesCount > 0 && (
@@ -386,8 +438,8 @@ export default function Header() {
                 <button
                   className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 p-2 rounded-xl text-gray-700 hover:text-gray-900 transition-all duration-200 border border-gray-200 hover:border-gray-300"
                   style={{ letterSpacing: '-0.01em' }}
-                  title={user.name || user.email || 'Perfil'}
-                  aria-label="Abrir menu do perfil"
+                  title={user.name || user.email || t.profile}
+                  aria-label={t.profile}
                 >
                   <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
                     {user.profileImage ? (
@@ -450,7 +502,7 @@ export default function Header() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
-                          <span>Minhas Empresas</span>
+                          <span>{t.myCompanies}</span>
                         </a>
                         <a
                           href="/empresa/dashboard"
@@ -460,7 +512,7 @@ export default function Header() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
-                          <span>Dashboard</span>
+                          <span>{t.dashboard}</span>
                         </a>
                         <a
                           href="/messages"
@@ -470,7 +522,7 @@ export default function Header() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
-                          <span>Mensagens</span>
+                          <span>{t.messages}</span>
                         </a>
                         <a
                           href="/perfil"
@@ -480,7 +532,7 @@ export default function Header() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
-                          <span>Meu Perfil</span>
+                          <span>{t.myProfile}</span>
                         </a>
                       </>
                     )}
@@ -495,7 +547,7 @@ export default function Header() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        <span>Meu Perfil</span>
+                        <span>{t.myProfile}</span>
                       </a>
                     )}
                     
@@ -531,7 +583,7 @@ export default function Header() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                      <span>Sair</span>
+                      <span>{t.logout}</span>
                     </button>
                     </div>
                   </div>
@@ -545,14 +597,14 @@ export default function Header() {
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50/50 rounded-xl transition-all duration-200"
                   style={{ letterSpacing: '-0.01em' }}
                 >
-                  Entrar
+                  {t.login}
                 </a>
                 <a
                   href="/register"
                   className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl transition-all duration-200 shadow-md shadow-purple-500/20"
                   style={{ letterSpacing: '-0.01em' }}
                 >
-                  Cadastrar
+                  {t.register}
                 </a>
               </div>
             )}

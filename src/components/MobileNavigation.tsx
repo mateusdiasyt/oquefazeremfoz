@@ -3,9 +3,13 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Home, Compass, Users, Video, Tv, Newspaper } from 'lucide-react'
+import { useLocale } from '../contexts/LocaleContext'
+import { getTranslations } from '../lib/translations'
 
 export default function MobileNavigation() {
   const pathname = usePathname()
+  const { locale } = useLocale()
+  const t = getTranslations(locale)
   const [activeTab, setActiveTab] = useState('inicio')
 
   useEffect(() => {
@@ -18,12 +22,12 @@ export default function MobileNavigation() {
   }, [pathname])
 
   const navigationItems = [
-    { id: 'inicio', icon: Home, label: 'Início', href: '/' },
-    { id: 'descubra', icon: Compass, label: 'Descubra', href: '/empresas' },
-    { id: 'guias', icon: Users, label: 'Guias', href: '/guias' },
-    { id: 'cameras', icon: Video, label: 'Câmeras', href: '/cameras-ao-vivo' },
-    { id: 'foztv', icon: Tv, label: 'FozTV', href: '/foztv' },
-    { id: 'portal', icon: Newspaper, label: 'Portal', href: '/portal' },
+    { id: 'inicio', icon: Home, label: t.nav.home, href: '/' },
+    { id: 'descubra', icon: Compass, label: t.nav.discover, href: '/empresas' },
+    { id: 'guias', icon: Users, label: t.nav.guides, href: '/guias' },
+    { id: 'cameras', icon: Video, label: t.nav.cameras, href: '/cameras-ao-vivo' },
+    { id: 'foztv', icon: Tv, label: t.nav.foztv, href: '/foztv' },
+    { id: 'portal', icon: Newspaper, label: t.nav.portal, href: '/portal' },
   ]
 
   return (
