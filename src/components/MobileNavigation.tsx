@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Compass, Video, Tv, Newspaper } from 'lucide-react'
+import { Home, Compass, Users, Video, Tv, Newspaper } from 'lucide-react'
 
 export default function MobileNavigation() {
   const pathname = usePathname()
@@ -11,6 +11,7 @@ export default function MobileNavigation() {
   useEffect(() => {
     if (pathname === '/') setActiveTab('inicio')
     else if (pathname === '/empresas') setActiveTab('descubra')
+    else if (pathname === '/guias') setActiveTab('guias')
     else if (pathname === '/cameras-ao-vivo') setActiveTab('cameras')
     else if (pathname === '/foztv') setActiveTab('foztv')
     else if (pathname === '/portal') setActiveTab('portal')
@@ -19,6 +20,7 @@ export default function MobileNavigation() {
   const navigationItems = [
     { id: 'inicio', icon: Home, label: 'Início', href: '/' },
     { id: 'descubra', icon: Compass, label: 'Descubra', href: '/empresas' },
+    { id: 'guias', icon: Users, label: 'Guias', href: '/guias' },
     { id: 'cameras', icon: Video, label: 'Câmeras', href: '/cameras-ao-vivo' },
     { id: 'foztv', icon: Tv, label: 'FozTV', href: '/foztv' },
     { id: 'portal', icon: Newspaper, label: 'Portal', href: '/portal' },
