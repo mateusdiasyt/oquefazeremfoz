@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  FileDown,
   Utensils,
   Bus,
   Clock,
@@ -189,40 +188,6 @@ export default function PlanejadorDeViagemPage() {
   const onContinuarMesmoAssim = () => {
     setAceitarDiasInsuficientes(true)
     setResultado((r) => (r ? { ...r, avisoDias: null } : null))
-  }
-
-  const downloadPDF = () => {
-    if (!resultado) return
-    const lines: string[] = [
-      'Planejador Inteligente de Viagem — Foz do Iguaçu',
-      '============================================',
-      '',
-      `Dias: ${diasAjustados ?? dias} | Pessoas: ${pessoas} | Tipo: ${tipoViagem} | Transporte: ${transporte}`,
-      '',
-      '--- Roteiro por dia ---',
-    ]
-    resultado.roteiro.forEach((dia) => {
-      lines.push(`\nDia ${dia.dia} (${dia.regiaoPrincipal}) — ${dia.tempoTotalHoras.toFixed(1)}h`)
-      dia.atrativos.forEach((a) => lines.push(`  • ${a.nome}`))
-      dia.observacoes.forEach((o) => lines.push(`  ⓘ ${o}`))
-    })
-    lines.push('')
-    lines.push('--- Custos ---')
-    lines.push(`Ingressos: ${formatBRL(resultado.custos.ingressosCents)}`)
-    lines.push(`Transporte: ${formatBRL(resultado.custos.transporteCents)}`)
-    lines.push(`Alimentação: ${formatBRL(resultado.custos.alimentacaoCents)}`)
-    lines.push(`Total grupo: ${formatBRL(resultado.custos.totalCents)}`)
-    lines.push(`Total por pessoa: ${formatBRL(resultado.custos.totalPorPessoaCents)}`)
-    lines.push('')
-    lines.push('--- Dicas ---')
-    resultado.dicas.forEach((d) => lines.push(`• ${d}`))
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `roteiro-foz-${new Date().toISOString().slice(0, 10)}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   const compartilharWhatsApp = () => {
@@ -534,24 +499,14 @@ export default function PlanejadorDeViagemPage() {
               <section className="space-y-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <h2 className="text-xl font-bold text-gray-900">Resumo da sua viagem</h2>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={compartilharWhatsApp}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] text-white font-medium rounded-xl hover:bg-[#20bd5a] transition-colors shadow-sm"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Compartilhar no WhatsApp
-                    </button>
-                    <button
-                      type="button"
-                      onClick={downloadPDF}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <FileDown className="w-4 h-4" />
-                      Baixar TXT
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={compartilharWhatsApp}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] text-white font-medium rounded-xl hover:bg-[#20bd5a] transition-colors shadow-sm"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar no WhatsApp
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
