@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, isAdmin } from '../../../../../../../lib/auth'
-import { prisma } from '../../../../../../../lib/db'
-import { calcularDistanciaDoAeroporto } from '../../../../../../../lib/distanciaAeroporto'
+import { getCurrentUser, isAdmin } from '../../../../../../../../lib/auth'
+import { prisma } from '../../../../../../../../lib/db'
+import { calcularDistanciaDoAeroporto } from '../../../../../../../../lib/distanciaAeroporto'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 15
