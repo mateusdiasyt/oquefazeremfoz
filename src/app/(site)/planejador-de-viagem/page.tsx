@@ -588,7 +588,7 @@ export default function PlanejadorDeViagemPage() {
                           )}
                           {rotaDia && rotaDia.km > 0 && (
                             <p className="text-xs text-gray-500 mb-2">
-                              Cálculo do combustível: distância × (preço da gasolina <strong>por litro</strong> ÷ consumo em km/L). Ex.: 25 km com R$ 5,90/L e 10 km/L ≈ R$ 14,75.
+                              Cálculo: distância (km) × custo por km (R$). Ex.: 25 km × R$ 5,90/km = R$ 147,50. (Configure no admin.)
                             </p>
                           )}
                           <ul className="space-y-1">

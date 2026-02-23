@@ -27,6 +27,7 @@ export async function GET() {
         moeda: 'BRL',
         precoGasolinaCents: 590,
         consumoKmPorLitro: 10,
+        custoPorKmCents: 0,
       })
     }
     return NextResponse.json(config)
@@ -57,6 +58,7 @@ export async function PUT(request: NextRequest) {
         ...(body.moeda !== undefined && { moeda: String(body.moeda).trim() || 'BRL' }),
         ...(body.precoGasolinaCents !== undefined && { precoGasolinaCents: Number(body.precoGasolinaCents) }),
         ...(body.consumoKmPorLitro !== undefined && { consumoKmPorLitro: Number(body.consumoKmPorLitro) }),
+        ...(body.custoPorKmCents !== undefined && { custoPorKmCents: Math.max(0, Number(body.custoPorKmCents)) }),
       },
       create: {
         id: 'default',
@@ -70,6 +72,7 @@ export async function PUT(request: NextRequest) {
         moeda: String(body.moeda || 'BRL').trim(),
         precoGasolinaCents: Number(body.precoGasolinaCents) ?? 590,
         consumoKmPorLitro: Number(body.consumoKmPorLitro) ?? 10,
+        custoPorKmCents: Math.max(0, Number(body.custoPorKmCents) ?? 0),
         updatedAt: new Date(),
       },
     })

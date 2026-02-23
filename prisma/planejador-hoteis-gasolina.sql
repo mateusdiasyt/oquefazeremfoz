@@ -24,3 +24,5 @@ ALTER TABLE "hotel" ADD COLUMN IF NOT EXISTS "distanciaAeroportoKm" DOUBLE PRECI
 -- Novos campos na config do planejador (gasolina para custo carro próprio)
 ALTER TABLE "planejadorconfig" ADD COLUMN IF NOT EXISTS "precoGasolinaCents" INTEGER NOT NULL DEFAULT 590;
 ALTER TABLE "planejadorconfig" ADD COLUMN IF NOT EXISTS "consumoKmPorLitro" DOUBLE PRECISION NOT NULL DEFAULT 10;
+-- Custo por km (R$ em centavos): se > 0, custo = km × este valor (ex.: 590 = R$ 5,90/km)
+ALTER TABLE "planejadorconfig" ADD COLUMN IF NOT EXISTS "custoPorKmCents" INTEGER NOT NULL DEFAULT 0;

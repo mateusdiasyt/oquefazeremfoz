@@ -22,6 +22,7 @@ export async function GET() {
           moeda: 'BRL',
           precoGasolinaCents: 590,
           consumoKmPorLitro: 10,
+          custoPorKmCents: 0,
         },
         { status: 200 }
       )
@@ -37,6 +38,7 @@ export async function GET() {
       moeda: config.moeda,
       precoGasolinaCents: config.precoGasolinaCents,
       consumoKmPorLitro: config.consumoKmPorLitro,
+      custoPorKmCents: (config as { custoPorKmCents?: number }).custoPorKmCents ?? 0,
     })
   } catch (e) {
     console.error('Erro ao buscar config planejador:', e)

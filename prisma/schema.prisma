@@ -825,7 +825,8 @@ model planejadorconfig {
   multiplicadorCarroProprio  Float    @default(0.3)   // fallback quando não há hotel
   horasMaximasPorDia         Int      @default(8)
   moeda                      String   @default("BRL")
-  precoGasolinaCents          Int      @default(590)   // R$ 5,90/L para custo carro próprio
-  consumoKmPorLitro          Float    @default(10)    // km/L do carro médio
+  precoGasolinaCents          Int      @default(590)   // R$ 5,90/L (usado se custoPorKmCents = 0)
+  consumoKmPorLitro          Float    @default(10)    // km/L (usado se custoPorKmCents = 0)
+  custoPorKmCents            Int      @default(0)    // se > 0: custo = km × este valor (ex.: 590 = R$ 5,90/km)
   updatedAt                  DateTime @updatedAt
 }

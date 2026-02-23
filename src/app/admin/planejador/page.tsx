@@ -45,6 +45,7 @@ interface Config {
   moeda: string
   precoGasolinaCents?: number
   consumoKmPorLitro?: number
+  custoPorKmCents?: number
 }
 
 interface Hotel {
@@ -636,10 +637,26 @@ export default function AdminPlanejadorPage() {
             </div>
           </div>
           <h3 className="font-semibold text-gray-900 mb-4 mt-6">Carro próprio (combustível)</h3>
-          <p className="text-sm text-gray-500 mb-3">Usado no cálculo de custo em gasolina quando o usuário escolhe um hotel e “Carro próprio”. O valor da gasolina é lido daqui.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <p className="text-sm text-gray-500 mb-3">Quando o usuário escolhe hotel e “Carro próprio”, o custo do dia = distância (km) × custo por km. Use a opção que preferir abaixo.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Custo por km (R$) — recomendado</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={formConfig.custoPorKmCents != null && formConfig.custoPorKmCents > 0 ? (formConfig.custoPorKmCents / 100).toFixed(2) : ''}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value)
+                  setFormConfig((c) => ({ ...c, custoPorKmCents: Number.isFinite(v) && v >= 0 ? Math.round(v * 100) : 0 }))
+                }}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                placeholder="5,90"
+              />
+              <p className="text-xs text-gray-500 mt-0.5">Ex.: 5,90 → 25 km × R$ 5,90 = R$ 147,50. Deixe 0 para usar gasolina/L e consumo abaixo.</p>
+            </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Preço da gasolina (R$ por litro)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Preço gasolina (R$/L)</label>
               <input
                 type="number"
                 step="0.01"
@@ -652,10 +669,9 @@ export default function AdminPlanejadorPage() {
                 className="w-full rounded-lg border border-gray-200 px-3 py-2"
                 placeholder="5,90"
               />
-              <p className="text-xs text-gray-500 mt-0.5">Ex.: 5,90 para R$ 5,90/L</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Consumo do carro (km/L)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Consumo (km/L)</label>
               <input
                 type="number"
                 step="0.1"
@@ -665,7 +681,7 @@ export default function AdminPlanejadorPage() {
                 className="w-full rounded-lg border border-gray-200 px-3 py-2"
                 placeholder="10"
               />
-              <p className="text-xs text-gray-500 mt-0.5">Ex.: 10 para 10 km por litro</p>
+              <p className="text-xs text-gray-500 mt-0.5">Usado só se “Custo por km” estiver 0.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">

@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
           moeda: configRow.moeda,
           precoGasolinaCents: (configRow as { precoGasolinaCents?: number }).precoGasolinaCents ?? 590,
           consumoKmPorLitro: (configRow as { consumoKmPorLitro?: number }).consumoKmPorLitro ?? 10,
+          custoPorKmCents: (configRow as { custoPorKmCents?: number }).custoPorKmCents ?? 0,
         }
       : {
           alimentacaoEconomicaCents: 5000,
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
           moeda: 'BRL' as const,
           precoGasolinaCents: 590,
           consumoKmPorLitro: 10,
+          custoPorKmCents: 0,
         }
 
     const atrativos: AtrativoInput[] = atrativosRows.map((a) => ({
@@ -116,7 +118,9 @@ export async function POST(request: NextRequest) {
         if (coord) coordsByAtrativoId.set(row.id, coord)
         await new Promise((r) => setTimeout(r, 300))
       }
-      const custoPorKmCents = config.precoGasolinaCents / config.consumoKmPorLitro
+      const custoPorKmCents = (config as { custoPorKmCents?: number }).custoPorKmCents && (config as { custoPorKmCents?: number }).custoPorKmCents > 0
+        ? (config as { custoPorKmCents: number }).custoPorKmCents
+        : config.precoGasolinaCents / config.consumoKmPorLitro
 
       for (let i = 0; i < roteiro.length; i++) {
         const diaRoteiro = roteiro[i]
