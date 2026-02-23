@@ -799,6 +799,19 @@ model atrativo {
   @@index([regiao], map: "Atrativo_regiao_idx")
 }
 
+// Hotéis para cálculo de rota e combustível (carro próprio): ordem hotel → atrativos
+model hotel {
+  id        String   @id @default(cuid())
+  nome      String   // ex: Mabu
+  endereco  String   // endereço completo para geocoding e rota
+  ativo     Boolean  @default(true)
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativo], map: "Hotel_ativo_idx")
+}
+
 // Configurações gerais do planejador (uma única linha, id = 'default')
 model planejadorconfig {
   id                         String   @id
@@ -807,8 +820,10 @@ model planejadorconfig {
   alimentacaoConfortoCents   Int      @default(20000) // R$ 200/dia
   multiplicadorUber          Float    @default(1)
   multiplicadorTransfer      Float    @default(1.5)
-  multiplicadorCarroProprio  Float    @default(0.3)   // reduzido
+  multiplicadorCarroProprio  Float    @default(0.3)   // fallback quando não há hotel
   horasMaximasPorDia         Int      @default(8)
   moeda                      String   @default("BRL")
+  precoGasolinaCents          Int      @default(590)   // R$ 5,90/L para custo carro próprio
+  consumoKmPorLitro          Float    @default(10)    // km/L do carro médio
   updatedAt                  DateTime @updatedAt
 }

@@ -12,6 +12,7 @@ import {
   X,
   Check,
   Upload,
+  Building2,
 } from 'lucide-react'
 
 interface Atrativo {
@@ -42,6 +43,16 @@ interface Config {
   multiplicadorCarroProprio: number
   horasMaximasPorDia: number
   moeda: string
+  precoGasolinaCents?: number
+  consumoKmPorLitro?: number
+}
+
+interface Hotel {
+  id: string
+  nome: string
+  endereco: string
+  ativo: boolean
+  ordem: number
 }
 
 const REGIOES = ['Cataratas Brasil', 'Argentina', 'Paraguai', 'Itaipu', 'Centro', 'Região Hotéis']
@@ -52,8 +63,9 @@ function formatBRL(cents: number): string {
 }
 
 export default function AdminPlanejadorPage() {
-  const [tab, setTab] = useState<'atrativos' | 'config'>('atrativos')
+  const [tab, setTab] = useState<'atrativos' | 'config' | 'hoteis'>('atrativos')
   const [atrativos, setAtrativos] = useState<Atrativo[]>([])
+  const [hoteis, setHoteis] = useState<Hotel[]>([])
   const [config, setConfig] = useState<Config | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -63,6 +75,9 @@ export default function AdminPlanejadorPage() {
   const [showModalAtrativo, setShowModalAtrativo] = useState(false)
   const [formAtrativo, setFormAtrativo] = useState<Partial<Atrativo>>({})
   const [formConfig, setFormConfig] = useState<Partial<Config>>({})
+  const [modalHotel, setModalHotel] = useState<Hotel | null>(null)
+  const [showModalHotel, setShowModalHotel] = useState(false)
+  const [formHotel, setFormHotel] = useState<Partial<Hotel>>({})
 
   const loadAtrativos = () => {
     fetch('/api/admin/planejador/atrativos', { credentials: 'include' })
@@ -81,10 +96,18 @@ export default function AdminPlanejadorPage() {
       .catch(() => setConfig(null))
   }
 
+  const loadHoteis = () => {
+    fetch('/api/admin/planejador/hoteis', { credentials: 'include' })
+      .then((r) => r.json())
+      .then(setHoteis)
+      .catch(() => setHoteis([]))
+  }
+
   useEffect(() => {
     setLoading(true)
     loadAtrativos()
     loadConfig()
+    loadHoteis()
     setLoading(false)
   }, [])
 
@@ -169,6 +192,62 @@ export default function AdminPlanejadorPage() {
       }
       loadAtrativos()
       closeModalAtrativo()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const openNewHotel = () => {
+    setFormHotel({ nome: '', endereco: '', ativo: true, ordem: hoteis.length })
+    setModalHotel(null)
+    setShowModalHotel(true)
+  }
+
+  const openEditHotel = (h: Hotel) => {
+    setModalHotel(h)
+    setFormHotel({ ...h })
+    setShowModalHotel(true)
+  }
+
+  const closeModalHotel = () => {
+    setModalHotel(null)
+    setFormHotel({})
+    setShowModalHotel(false)
+  }
+
+  const saveHotel = async () => {
+    if (!formHotel.nome?.trim() || !formHotel.endereco?.trim()) return
+    setSaving(true)
+    try {
+      if (modalHotel) {
+        await fetch(`/api/admin/planejador/hoteis/${modalHotel.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(formHotel),
+        })
+      } else {
+        await fetch('/api/admin/planejador/hoteis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(formHotel),
+        })
+      }
+      loadHoteis()
+      closeModalHotel()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const deleteHotel = async (id: string) => {
+    if (!confirm('Excluir este hotel?')) return
+    setSaving(true)
+    try {
+      await fetch(`/api/admin/planejador/hoteis/${id}`, { method: 'DELETE', credentials: 'include' })
+      loadHoteis()
+      closeModalHotel()
     } finally {
       setSaving(false)
     }
@@ -266,6 +345,18 @@ export default function AdminPlanejadorPage() {
         </button>
         <button
           type="button"
+          onClick={() => setTab('hoteis')}
+          className={`px-4 py-2 font-medium rounded-t-lg border-b-2 transition-colors ${
+            tab === 'hoteis'
+              ? 'border-indigo-600 text-indigo-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Building2 className="inline w-4 h-4 mr-2" />
+          Hotéis
+        </button>
+        <button
+          type="button"
           onClick={() => setTab('config')}
           className={`px-4 py-2 font-medium rounded-t-lg border-b-2 transition-colors ${
             tab === 'config'
@@ -346,6 +437,69 @@ export default function AdminPlanejadorPage() {
         </div>
       )}
 
+      {tab === 'hoteis' && (
+        <div>
+          <div className="flex justify-end mb-4">
+            <button
+              type="button"
+              onClick={openNewHotel}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar hotel
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">Hotéis usados no cálculo de rota e combustível (carro próprio). O usuário escolhe onde está hospedado e o roteiro mostra a ordem ideal (ex.: Mabu → Cataratas → Parque das Aves) e o custo em gasolina.</p>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Endereço</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {hoteis.map((h) => (
+                  <tr key={h.id} className="hover:bg-gray-50/50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{h.nome}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={h.endereco}>{h.endereco}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+                          h.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {h.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openEditHotel(h)}
+                        className="p-1.5 text-gray-600 hover:text-indigo-600"
+                        title="Editar"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteHotel(h.id)}
+                        className="p-1.5 text-gray-600 hover:text-red-600 ml-1"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {tab === 'config' && config && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-2xl">
           <h3 className="font-semibold text-gray-900 mb-4">Valores de alimentação (por pessoa/dia, em centavos)</h3>
@@ -408,6 +562,30 @@ export default function AdminPlanejadorPage() {
                 value={formConfig.multiplicadorCarroProprio ?? ''}
                 onChange={(e) => setFormConfig((c) => ({ ...c, multiplicadorCarroProprio: Number(e.target.value) }))}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2"
+              />
+            </div>
+          </div>
+          <h3 className="font-semibold text-gray-900 mb-4 mt-6">Carro próprio (combustível)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Preço gasolina (centavos/L)</label>
+              <input
+                type="number"
+                value={formConfig.precoGasolinaCents ?? ''}
+                onChange={(e) => setFormConfig((c) => ({ ...c, precoGasolinaCents: Number(e.target.value) }))}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                placeholder="590 = R$ 5,90"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Consumo (km/L)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={formConfig.consumoKmPorLitro ?? ''}
+                onChange={(e) => setFormConfig((c) => ({ ...c, consumoKmPorLitro: Number(e.target.value) }))}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                placeholder="10"
               />
             </div>
           </div>
@@ -662,6 +840,73 @@ export default function AdminPlanejadorPage() {
                 type="button"
                 onClick={saveAtrativo}
                 disabled={saving || !formAtrativo.nome?.trim()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Hotel */}
+      {showModalHotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-900">{modalHotel ? 'Editar hotel' : 'Novo hotel'}</h3>
+              <button type="button" onClick={closeModalHotel} className="p-2 text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                <input
+                  type="text"
+                  value={formHotel.nome ?? ''}
+                  onChange={(e) => setFormHotel((f) => ({ ...f, nome: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  placeholder="Ex: Mabu"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Endereço completo</label>
+                <input
+                  type="text"
+                  value={formHotel.endereco ?? ''}
+                  onChange={(e) => setFormHotel((f) => ({ ...f, endereco: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  placeholder="Av. das Cataratas, 2930, Foz do Iguaçu"
+                />
+                <p className="text-xs text-gray-500 mt-0.5">Usado para calcular rota e distância (geocoding).</p>
+              </div>
+              {modalHotel && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="hotelAtivo"
+                    checked={formHotel.ativo ?? true}
+                    onChange={(e) => setFormHotel((f) => ({ ...f, ativo: e.target.checked }))}
+                    className="rounded border-gray-300 text-indigo-600"
+                  />
+                  <label htmlFor="hotelAtivo" className="text-sm text-gray-700">Ativo (aparece no seletor)</label>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 p-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={closeModalHotel}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={saveHotel}
+                disabled={saving || !formHotel.nome?.trim() || !formHotel.endereco?.trim()}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}

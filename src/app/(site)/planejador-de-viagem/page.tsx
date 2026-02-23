@@ -50,6 +50,19 @@ interface Custos {
   totalPorPessoaCents: number
 }
 
+interface Hotel {
+  id: string
+  nome: string
+  endereco: string
+}
+
+interface RotaDia {
+  dia: number
+  km: number
+  custoTransporteCents: number
+  ordemNomes: string[]
+}
+
 type TipoViagem = 'economica' | 'padrao' | 'conforto'
 type Transporte = 'sem_carro' | 'carro_proprio' | 'transfer'
 
@@ -67,11 +80,14 @@ export default function PlanejadorDeViagemPage() {
   const [pessoas, setPessoas] = useState(2)
   const [tipoViagem, setTipoViagem] = useState<TipoViagem>('padrao')
   const [transporte, setTransporte] = useState<Transporte>('sem_carro')
+  const [hoteis, setHoteis] = useState<Hotel[]>([])
+  const [hotelId, setHotelId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [buscaAtrativos, setBuscaAtrativos] = useState('')
   const [calculando, setCalculando] = useState(false)
   const [resultado, setResultado] = useState<{
     roteiro: DiaRoteiro[]
+    rotaPorDia?: RotaDia[]
     custos: Custos
     tempoTotalHoras: number
     moeda: string
@@ -89,6 +105,13 @@ export default function PlanejadorDeViagemPage() {
         setLoadingAtrativos(false)
       })
       .catch(() => setLoadingAtrativos(false))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/planejador/hoteis')
+      .then((r) => r.json())
+      .then(setHoteis)
+      .catch(() => setHoteis([]))
   }, [])
 
   const toggleAtrativo = (id: string) => {
@@ -123,6 +146,7 @@ export default function PlanejadorDeViagemPage() {
         tipoViagem,
         transporte,
         atrativosIds: Array.from(selectedIds),
+        ...(transporte === 'carro_proprio' && hotelId ? { hotelId } : {}),
       }),
     })
       .then((r) => r.json())
@@ -130,6 +154,7 @@ export default function PlanejadorDeViagemPage() {
         if (data.success) {
           setResultado({
             roteiro: data.roteiro,
+            rotaPorDia: data.rotaPorDia,
             custos: data.custos,
             tempoTotalHoras: data.tempoTotalHoras,
             moeda: data.moeda,
@@ -265,6 +290,22 @@ export default function PlanejadorDeViagemPage() {
                     <option value="transfer">Transfer turístico</option>
                   </select>
                 </div>
+                {transporte === 'carro_proprio' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Onde está hospedado?</label>
+                    <select
+                      value={hotelId ?? ''}
+                      onChange={(e) => setHotelId(e.target.value || null)}
+                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Não informado</option>
+                      {hoteis.map((h) => (
+                        <option key={h.id} value={h.id}>{h.nome}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-0.5">Com o hotel, calculamos a ordem ideal do dia e o custo em combustível.</p>
+                  </div>
+                )}
               </div>
 
               <h2 className="text-lg font-semibold text-gray-900 mb-3">Atrativos que deseja visitar</h2>
@@ -472,28 +513,42 @@ export default function PlanejadorDeViagemPage() {
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                   <h3 className="font-semibold text-gray-900 p-6 pb-0">Roteiro por dia</h3>
                   <div className="divide-y divide-gray-100">
-                    {resultado.roteiro.map((dia) => (
-                      <div key={dia.dia} className="p-6">
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                          <span className="font-bold text-purple-700">Dia {dia.dia}</span>
-                          <span className="text-gray-500 text-sm">({dia.regiaoPrincipal})</span>
-                          <span className="text-gray-500 text-sm">
-                            — {dia.tempoTotalHoras.toFixed(1)}h
-                          </span>
+                    {resultado.roteiro.map((dia) => {
+                      const rotaDia = resultado.rotaPorDia?.find((r) => r.dia === dia.dia)
+                      return (
+                        <div key={dia.dia} className="p-6">
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className="font-bold text-purple-700">Dia {dia.dia}</span>
+                            <span className="text-gray-500 text-sm">({dia.regiaoPrincipal})</span>
+                            <span className="text-gray-500 text-sm">
+                              — {dia.tempoTotalHoras.toFixed(1)}h
+                            </span>
+                          </div>
+                          {rotaDia && rotaDia.ordemNomes.length > 0 && (
+                            <p className="text-sm text-gray-700 mb-2">
+                              <span className="font-medium">Rota sugerida:</span>{' '}
+                              {rotaDia.ordemNomes.join(' → ')}
+                              {rotaDia.km > 0 && (
+                                <span className="text-gray-600 ml-1">
+                                  ({rotaDia.km.toFixed(0)} km, ~{formatBRL(rotaDia.custoTransporteCents)} combustível)
+                                </span>
+                              )}
+                            </p>
+                          )}
+                          <ul className="space-y-1">
+                            {dia.atrativos.map((a) => (
+                              <li key={a.id} className="flex items-center gap-2 text-gray-800">
+                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                {a.nome}
+                              </li>
+                            ))}
+                          </ul>
+                          {dia.observacoes.length > 0 && (
+                            <p className="text-sm text-gray-600 mt-2">{dia.observacoes.join(' ')}</p>
+                          )}
                         </div>
-                        <ul className="space-y-1">
-                          {dia.atrativos.map((a) => (
-                            <li key={a.id} className="flex items-center gap-2 text-gray-800">
-                              <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                              {a.nome}
-                            </li>
-                          ))}
-                        </ul>
-                        {dia.observacoes.length > 0 && (
-                          <p className="text-sm text-gray-600 mt-2">{dia.observacoes.join(' ')}</p>
-                        )}
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </section>

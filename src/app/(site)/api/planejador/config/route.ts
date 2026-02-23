@@ -20,6 +20,8 @@ export async function GET() {
           multiplicadorCarroProprio: 0.3,
           horasMaximasPorDia: 8,
           moeda: 'BRL',
+          precoGasolinaCents: 590,
+          consumoKmPorLitro: 10,
         },
         { status: 200 }
       )
@@ -33,6 +35,8 @@ export async function GET() {
       multiplicadorCarroProprio: config.multiplicadorCarroProprio,
       horasMaximasPorDia: config.horasMaximasPorDia,
       moeda: config.moeda,
+      precoGasolinaCents: config.precoGasolinaCents,
+      consumoKmPorLitro: config.consumoKmPorLitro,
     })
   } catch (e) {
     console.error('Erro ao buscar config planejador:', e)

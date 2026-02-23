@@ -25,6 +25,8 @@ export async function GET() {
         multiplicadorCarroProprio: 0.3,
         horasMaximasPorDia: 8,
         moeda: 'BRL',
+        precoGasolinaCents: 590,
+        consumoKmPorLitro: 10,
       })
     }
     return NextResponse.json(config)
@@ -53,6 +55,8 @@ export async function PUT(request: NextRequest) {
         ...(body.multiplicadorCarroProprio !== undefined && { multiplicadorCarroProprio: Number(body.multiplicadorCarroProprio) }),
         ...(body.horasMaximasPorDia !== undefined && { horasMaximasPorDia: Math.max(1, Math.min(12, Number(body.horasMaximasPorDia))) }),
         ...(body.moeda !== undefined && { moeda: String(body.moeda).trim() || 'BRL' }),
+        ...(body.precoGasolinaCents !== undefined && { precoGasolinaCents: Number(body.precoGasolinaCents) }),
+        ...(body.consumoKmPorLitro !== undefined && { consumoKmPorLitro: Number(body.consumoKmPorLitro) }),
       },
       create: {
         id: 'default',
@@ -64,6 +68,8 @@ export async function PUT(request: NextRequest) {
         multiplicadorCarroProprio: Number(body.multiplicadorCarroProprio) ?? 0.3,
         horasMaximasPorDia: Math.min(12, Math.max(1, Number(body.horasMaximasPorDia) ?? 8)),
         moeda: String(body.moeda || 'BRL').trim(),
+        precoGasolinaCents: Number(body.precoGasolinaCents) ?? 590,
+        consumoKmPorLitro: Number(body.consumoKmPorLitro) ?? 10,
         updatedAt: new Date(),
       },
     })
