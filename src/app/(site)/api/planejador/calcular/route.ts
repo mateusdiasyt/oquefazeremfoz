@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       precoCriancaCents: a.precoCriancaCents,
       duracaoMediaHoras: a.duracaoMediaHoras,
       tempoDeslocamentoMedioHoras: a.tempoDeslocamentoMedioHoras,
+      distanciaAeroportoKm: a.distanciaAeroportoKm ?? null,
       regiao: a.regiao,
       nivelCansaco: a.nivelCansaco,
       custoTransporteMedioCents: a.custoTransporteMedioCents,

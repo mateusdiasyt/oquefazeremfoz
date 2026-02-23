@@ -22,6 +22,8 @@ export interface AtrativoInput {
   precoCriancaCents: number
   duracaoMediaHoras: number
   tempoDeslocamentoMedioHoras: number
+  /** Distância do aeroporto (km). Usado para ordenar roteiro: mais perto primeiro (base Avenida das Cataratas). */
+  distanciaAeroportoKm?: number | null
   regiao: string
   nivelCansaco: string
   custoTransporteMedioCents: number
@@ -91,11 +93,17 @@ function agruparPorRegiao(atrativos: AtrativoInput[]): Map<string, AtrativoInput
 }
 
 /**
- * Ordena atrativos: mesma região junta, ordem das regiões definida (proximidade).
+ * Ordena atrativos para o roteiro: primeiro por distância do aeroporto (mais perto primeiro,
+ * base Avenida das Cataratas), depois por região. Assim Itaipu e outros longes ficam para
+ * dias dedicados; atrativos próximos são agrupados no início.
  */
-function ordenarPorRegiao(atrativos: AtrativoInput[]): AtrativoInput[] {
+function ordenarParaRoteiro(atrativos: AtrativoInput[]): AtrativoInput[] {
   const ordemRegiao = new Map<string, number>(REGIOES_ORDEM.map((r, i) => [r, i]))
+  const km = (a: AtrativoInput) => a.distanciaAeroportoKm ?? 999
   return [...atrativos].sort((a, b) => {
+    const da = km(a)
+    const db = km(b)
+    if (da !== db) return da - db
     const ia = ordemRegiao.get(a.regiao) ?? 99
     const ib = ordemRegiao.get(b.regiao) ?? 99
     return ia - ib
@@ -115,7 +123,7 @@ export function roteirizar(
 ): DiaRoteiro[] {
   if (atrativos.length === 0) return []
 
-  const ordenados = ordenarPorRegiao(atrativos)
+  const ordenados = ordenarParaRoteiro(atrativos)
   const resultado: DiaRoteiro[] = []
   let diaAtual = 1
   let horasNoDia = 0
