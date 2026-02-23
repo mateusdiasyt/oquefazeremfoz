@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     const usaHotelCarro = transporte === 'carro_proprio' && hotelRow && hotelId
 
-    if (usaHotelCarro) {
+    if (usaHotelCarro && hotelRow) {
       const hotelCoords = await geocodificar(hotelRow.endereco)
       if (!hotelCoords) {
         return NextResponse.json(
