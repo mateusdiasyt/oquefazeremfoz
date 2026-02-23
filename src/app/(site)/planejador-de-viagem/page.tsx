@@ -238,7 +238,7 @@ export default function PlanejadorDeViagemPage() {
       partes.push(`*Dia ${dia.dia}* (${dia.regiaoPrincipal}) — ${dia.tempoTotalHoras.toFixed(1)}h`)
       if (rotaDia?.ordemNomes?.length) {
         partes.push(`📍 ${rotaDia.ordemNomes.join(' → ')}`)
-        if (rotaDia.km > 0) partes.push(`   ${rotaDia.km.toFixed(0)} km · ~${formatBRL(rotaDia.custoTransporteCents)} combustível`)
+        if (rotaDia.km > 0) partes.push(`   ${rotaDia.km.toFixed(0)} km (ida e volta) · ~${formatBRL(rotaDia.custoTransporteCents)} combustível`)
       }
       dia.atrativos.forEach((a) => partes.push(`  ✓ ${a.nome}`))
       if (dia.observacoes.length) dia.observacoes.forEach((o) => partes.push(`  ℹ️ ${o}`))
@@ -636,7 +636,7 @@ export default function PlanejadorDeViagemPage() {
                                   {rotaDia.km > 0 && (
                                     <div className="mt-1.5 flex items-center gap-1.5 text-gray-500">
                                       <Fuel className="w-3.5 h-3.5" />
-                                      <span>{rotaDia.km.toFixed(0)} km</span>
+                                      <span>{rotaDia.km.toFixed(0)} km (ida e volta)</span>
                                       <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                                       <span>~{formatBRL(rotaDia.custoTransporteCents)} combustível</span>
                                     </div>
