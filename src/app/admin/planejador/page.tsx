@@ -11,6 +11,7 @@ import {
   Loader2,
   X,
   Check,
+  Upload,
 } from 'lucide-react'
 
 interface Atrativo {
@@ -57,6 +58,7 @@ export default function AdminPlanejadorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [calculandoDistancia, setCalculandoDistancia] = useState(false)
+  const [uploadingAtrativo, setUploadingAtrativo] = useState(false)
   const [modalAtrativo, setModalAtrativo] = useState<Atrativo | null>(null)
   const [showModalAtrativo, setShowModalAtrativo] = useState(false)
   const [formAtrativo, setFormAtrativo] = useState<Partial<Atrativo>>({})
@@ -117,6 +119,33 @@ export default function AdminPlanejadorPage() {
     setModalAtrativo(null)
     setFormAtrativo({})
     setShowModalAtrativo(false)
+  }
+
+  const handleImageUploadAtrativo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAtrativo(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/admin/planejador/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.imageUrl) {
+        setFormAtrativo((f) => ({ ...f, imageUrl: data.imageUrl }))
+      } else {
+        alert(data.message || 'Erro ao enviar imagem.')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Erro ao enviar imagem.')
+    } finally {
+      setUploadingAtrativo(false)
+      e.target.value = ''
+    }
   }
 
   const saveAtrativo = async () => {
@@ -444,14 +473,48 @@ export default function AdminPlanejadorPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL da foto (opcional)</label>
-                <input
-                  type="url"
-                  value={formAtrativo.imageUrl ?? ''}
-                  onChange={(e) => setFormAtrativo((f) => ({ ...f, imageUrl: e.target.value || undefined }))}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
-                  placeholder="https://..."
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Foto do atrativo (opcional)</label>
+                <div className="space-y-3">
+                  <label className="block cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUploadAtrativo}
+                      disabled={uploadingAtrativo}
+                      className="hidden"
+                    />
+                    <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg hover:border-emerald-400 hover:bg-emerald-50 transition-colors">
+                      {uploadingAtrativo ? (
+                        <span className="flex items-center text-gray-600">
+                          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                          Enviando...
+                        </span>
+                      ) : (
+                        <span className="flex items-center text-gray-600">
+                          <Upload className="w-5 h-5 mr-2" />
+                          Clique para fazer upload da foto
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                  {formAtrativo.imageUrl && (
+                    <div className="relative">
+                      <img
+                        src={formAtrativo.imageUrl}
+                        alt="Preview"
+                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormAtrativo((f) => ({ ...f, imageUrl: undefined }))}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        aria-label="Remover foto"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Endereço ou nome do lugar (para calcular distância)</label>
