@@ -118,8 +118,9 @@ export async function POST(request: NextRequest) {
         if (coord) coordsByAtrativoId.set(row.id, coord)
         await new Promise((r) => setTimeout(r, 300))
       }
-      const custoPorKmCents = (config as { custoPorKmCents?: number }).custoPorKmCents && (config as { custoPorKmCents?: number }).custoPorKmCents > 0
-        ? (config as { custoPorKmCents: number }).custoPorKmCents
+      const custoPorKmConfig = (config as { custoPorKmCents?: number }).custoPorKmCents
+      const custoPorKmCents = typeof custoPorKmConfig === 'number' && custoPorKmConfig > 0
+        ? custoPorKmConfig
         : config.precoGasolinaCents / config.consumoKmPorLitro
 
       for (let i = 0; i < roteiro.length; i++) {
