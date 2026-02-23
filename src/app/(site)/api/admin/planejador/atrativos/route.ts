@@ -40,10 +40,12 @@ export async function POST(request: NextRequest) {
       data: {
         id,
         nome,
+        imageUrl: body.imageUrl ? String(body.imageUrl).trim() || null : null,
         precoAdultoCents: Number(body.precoAdultoCents) || 0,
         precoCriancaCents: Number(body.precoCriancaCents) || 0,
         duracaoMediaHoras: Number(body.duracaoMediaHoras) || 0,
         tempoDeslocamentoMedioHoras: Number(body.tempoDeslocamentoMedioHoras) || 0,
+        distanciaAeroportoKm: body.distanciaAeroportoKm != null ? Number(body.distanciaAeroportoKm) : null,
         regiao: String(body.regiao || 'Centro').trim(),
         nivelCansaco: ['leve', 'medio', 'intenso'].includes(body.nivelCansaco) ? body.nivelCansaco : 'medio',
         custoTransporteMedioCents: Number(body.custoTransporteMedioCents) || 0,

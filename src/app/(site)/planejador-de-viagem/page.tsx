@@ -14,15 +14,20 @@ import {
   Bus,
   Clock,
   Banknote,
+  Search,
+  MapPinned,
 } from 'lucide-react'
+import Image from 'next/image'
 
 interface Atrativo {
   id: string
   nome: string
+  imageUrl: string | null
   precoAdultoCents: number
   precoCriancaCents: number
   duracaoMediaHoras: number
   tempoDeslocamentoMedioHoras: number
+  distanciaAeroportoKm: number | null
   regiao: string
   nivelCansaco: string
   custoTransporteMedioCents: number
@@ -63,6 +68,7 @@ export default function PlanejadorDeViagemPage() {
   const [tipoViagem, setTipoViagem] = useState<TipoViagem>('padrao')
   const [transporte, setTransporte] = useState<Transporte>('sem_carro')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [buscaAtrativos, setBuscaAtrativos] = useState('')
   const [calculando, setCalculando] = useState(false)
   const [resultado, setResultado] = useState<{
     roteiro: DiaRoteiro[]
@@ -93,6 +99,15 @@ export default function PlanejadorDeViagemPage() {
       return next
     })
   }
+
+  const buscaNorm = buscaAtrativos.trim().toLowerCase()
+  const atrativosFiltrados = buscaNorm
+    ? atrativos.filter(
+        (a) =>
+          a.nome.toLowerCase().includes(buscaNorm) ||
+          a.regiao.toLowerCase().includes(buscaNorm)
+      )
+    : atrativos
 
   const handleCalcular = (diasUsar?: number) => {
     const d = diasUsar ?? dias
@@ -253,23 +268,86 @@ export default function PlanejadorDeViagemPage() {
               </div>
 
               <h2 className="text-lg font-semibold text-gray-900 mb-3">Atrativos que deseja visitar</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-2">
-                {atrativos.map((a) => (
-                  <label
-                    key={a.id}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-purple-50/50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(a.id)}
-                      onChange={() => toggleAtrativo(a.id)}
-                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <span className="text-gray-900 font-medium">{a.nome}</span>
-                    <span className="text-gray-500 text-sm ml-auto">{a.regiao}</span>
-                  </label>
-                ))}
+              <p className="text-sm text-gray-500 mb-3">
+                Os valores são consultados e atualizados periodicamente; podem sofrer alterações. Confirme preços e horários no site oficial de cada atrativo.
+              </p>
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="search"
+                  placeholder="Buscar atrativo ou região..."
+                  value={buscaAtrativos}
+                  onChange={(e) => setBuscaAtrativos(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[420px] overflow-y-auto pr-2">
+                {atrativosFiltrados.map((a) => {
+                  const selected = selectedIds.has(a.id)
+                  const precoMedio = a.precoAdultoCents > 0 ? formatBRL(a.precoAdultoCents) : 'Consulte'
+                  const duracaoTotal = a.duracaoMediaHoras + a.tempoDeslocamentoMedioHoras
+                  return (
+                    <label
+                      key={a.id}
+                      className={`block rounded-xl border-2 overflow-hidden cursor-pointer transition-all ${
+                        selected
+                          ? 'border-purple-500 bg-purple-50/50 shadow-md ring-2 ring-purple-200'
+                          : 'border-gray-100 hover:border-purple-200 hover:bg-gray-50/50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleAtrativo(a.id)}
+                        className="sr-only"
+                      />
+                      <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                        {a.imageUrl ? (
+                          <Image
+                            src={a.imageUrl}
+                            alt={a.nome}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
+                            <MapPin className="w-12 h-12 text-purple-300" />
+                          </div>
+                        )}
+                        {selected && (
+                          <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-semibold text-gray-900 truncate" title={a.nome}>{a.nome}</h3>
+                        <p className="text-sm font-medium text-purple-700 mt-0.5">
+                          Ingresso a partir de {precoMedio}
+                        </p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-xs text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            ~{duracaoTotal.toFixed(1)}h
+                          </span>
+                          {a.distanciaAeroportoKm != null && (
+                            <span className="flex items-center gap-1">
+                              <MapPinned className="w-3.5 h-3.5" />
+                              {a.distanciaAeroportoKm} km do aeroporto
+                            </span>
+                          )}
+                          <span className="text-gray-400">{a.regiao}</span>
+                        </div>
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+              {atrativosFiltrados.length === 0 && (
+                <p className="text-gray-500 text-sm py-4">Nenhum atrativo encontrado para &quot;{buscaAtrativos}&quot;.</p>
+              )}
 
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <button

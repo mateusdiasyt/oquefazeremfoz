@@ -42,10 +42,12 @@ export async function PUT(
       where: { id },
       data: {
         ...(body.nome !== undefined && { nome: String(body.nome).trim() }),
+        ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null }),
         ...(body.precoAdultoCents !== undefined && { precoAdultoCents: Number(body.precoAdultoCents) }),
         ...(body.precoCriancaCents !== undefined && { precoCriancaCents: Number(body.precoCriancaCents) }),
         ...(body.duracaoMediaHoras !== undefined && { duracaoMediaHoras: Number(body.duracaoMediaHoras) }),
         ...(body.tempoDeslocamentoMedioHoras !== undefined && { tempoDeslocamentoMedioHoras: Number(body.tempoDeslocamentoMedioHoras) }),
+        ...(body.distanciaAeroportoKm !== undefined && { distanciaAeroportoKm: body.distanciaAeroportoKm === '' || body.distanciaAeroportoKm == null ? null : Number(body.distanciaAeroportoKm) }),
         ...(body.regiao !== undefined && { regiao: String(body.regiao).trim() }),
         ...(body.nivelCansaco !== undefined && { nivelCansaco: body.nivelCansaco }),
         ...(body.custoTransporteMedioCents !== undefined && { custoTransporteMedioCents: Number(body.custoTransporteMedioCents) }),

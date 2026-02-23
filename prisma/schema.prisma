@@ -779,10 +779,12 @@ model adminsetting {
 model atrativo {
   id                        String   @id
   nome                      String
+  imageUrl                  String?  // Foto do atrativo (URL)
   precoAdultoCents          Int      @default(0)
   precoCriancaCents         Int      @default(0)
   duracaoMediaHoras         Float    @default(0)
   tempoDeslocamentoMedioHoras Float  @default(0)
+  distanciaAeroportoKm      Float?   // Distância em km do aeroporto de Foz
   regiao                    String   // Cataratas Brasil | Argentina | Paraguai | Itaipu | Centro | Região Hotéis
   nivelCansaco              String   @default("medio") // leve | medio | intenso
   custoTransporteMedioCents Int      @default(0)

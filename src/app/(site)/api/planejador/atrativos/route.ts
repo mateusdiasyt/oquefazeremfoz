@@ -14,10 +14,12 @@ export async function GET() {
       atrativos.map((a) => ({
         id: a.id,
         nome: a.nome,
+        imageUrl: a.imageUrl ?? null,
         precoAdultoCents: a.precoAdultoCents,
         precoCriancaCents: a.precoCriancaCents,
         duracaoMediaHoras: a.duracaoMediaHoras,
         tempoDeslocamentoMedioHoras: a.tempoDeslocamentoMedioHoras,
+        distanciaAeroportoKm: a.distanciaAeroportoKm ?? null,
         regiao: a.regiao,
         nivelCansaco: a.nivelCansaco,
         custoTransporteMedioCents: a.custoTransporteMedioCents,

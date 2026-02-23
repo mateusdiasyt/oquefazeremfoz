@@ -16,10 +16,12 @@ import {
 interface Atrativo {
   id: string
   nome: string
+  imageUrl?: string | null
   precoAdultoCents: number
   precoCriancaCents: number
   duracaoMediaHoras: number
   tempoDeslocamentoMedioHoras: number
+  distanciaAeroportoKm?: number | null
   regiao: string
   nivelCansaco: string
   custoTransporteMedioCents: number
@@ -85,10 +87,12 @@ export default function AdminPlanejadorPage() {
   const openNewAtrativo = () => {
     setFormAtrativo({
       nome: '',
+      imageUrl: '',
       precoAdultoCents: 0,
       precoCriancaCents: 0,
       duracaoMediaHoras: 0,
       tempoDeslocamentoMedioHoras: 0,
+      distanciaAeroportoKm: null,
       regiao: 'Centro',
       nivelCansaco: 'medio',
       custoTransporteMedioCents: 0,
@@ -409,6 +413,28 @@ export default function AdminPlanejadorPage() {
                   value={formAtrativo.nome ?? ''}
                   onChange={(e) => setFormAtrativo((f) => ({ ...f, nome: e.target.value }))}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL da foto (opcional)</label>
+                <input
+                  type="url"
+                  value={formAtrativo.imageUrl ?? ''}
+                  onChange={(e) => setFormAtrativo((f) => ({ ...f, imageUrl: e.target.value || undefined }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Distância do aeroporto (km, opcional)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min={0}
+                  value={formAtrativo.distanciaAeroportoKm ?? ''}
+                  onChange={(e) => setFormAtrativo((f) => ({ ...f, distanciaAeroportoKm: e.target.value === '' ? null : Number(e.target.value) }))}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                  placeholder="Ex: 12.5"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
