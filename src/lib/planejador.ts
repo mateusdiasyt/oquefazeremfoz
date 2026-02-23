@@ -124,7 +124,7 @@ export function roteirizar(
 
   for (const a of ordenados) {
     const tempo = tempoTotalAtrativo(a)
-    const regioesPropostas = [...new Set([...regioesNoDia, a.regiao])]
+    const regioesPropostas = Array.from(new Set([...regioesNoDia, a.regiao]))
     const cabeNoDia = horasNoDia + tempo <= horasPorDia
     const compativeis = regioesCompatíveis(regioesPropostas)
 
