@@ -94,7 +94,7 @@ function agruparPorRegiao(atrativos: AtrativoInput[]): Map<string, AtrativoInput
  * Ordena atrativos: mesma região junta, ordem das regiões definida (proximidade).
  */
 function ordenarPorRegiao(atrativos: AtrativoInput[]): AtrativoInput[] {
-  const ordemRegiao = new Map(REGIOES_ORDEM.map((r, i) => [r, i]))
+  const ordemRegiao = new Map<string, number>(REGIOES_ORDEM.map((r, i) => [r, i]))
   return [...atrativos].sort((a, b) => {
     const ia = ordemRegiao.get(a.regiao) ?? 99
     const ib = ordemRegiao.get(b.regiao) ?? 99
