@@ -243,7 +243,7 @@ export default function PlanejadorDeViagemPage() {
               <p className="text-sm text-gray-500 mb-4">
                 Selecione seu hotel para calcular a melhor ordem dos passeios e o custo em combustível (quando for de carro próprio).
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 {hoteis.length === 0 ? (
                   <p className="text-gray-500 text-sm col-span-full">Nenhum hotel cadastrado no momento.</p>
                 ) : (
@@ -267,7 +267,7 @@ export default function PlanejadorDeViagemPage() {
                               alt={h.nome}
                               fill
                               className="object-cover"
-                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                               unoptimized
                             />
                           ) : (
@@ -371,7 +371,7 @@ export default function PlanejadorDeViagemPage() {
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[420px] overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[420px] overflow-y-auto pr-2">
                 {atrativosFiltrados.map((a) => {
                   const selected = selectedIds.has(a.id)
                   const precoMedio = a.precoAdultoCents > 0 ? formatBRL(a.precoAdultoCents) : 'Consulte'
@@ -407,7 +407,7 @@ export default function PlanejadorDeViagemPage() {
                             alt={a.nome}
                             fill
                             className="object-cover"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
                             unoptimized
                           />
                         ) : (
