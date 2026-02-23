@@ -50,6 +50,7 @@ interface Config {
 interface Hotel {
   id: string
   nome: string
+  imageUrl?: string | null
   endereco: string
   ativo: boolean
   ordem: number
@@ -71,6 +72,7 @@ export default function AdminPlanejadorPage() {
   const [saving, setSaving] = useState(false)
   const [calculandoDistancia, setCalculandoDistancia] = useState(false)
   const [uploadingAtrativo, setUploadingAtrativo] = useState(false)
+  const [uploadingHotel, setUploadingHotel] = useState(false)
   const [modalAtrativo, setModalAtrativo] = useState<Atrativo | null>(null)
   const [showModalAtrativo, setShowModalAtrativo] = useState(false)
   const [formAtrativo, setFormAtrativo] = useState<Partial<Atrativo>>({})
@@ -198,7 +200,7 @@ export default function AdminPlanejadorPage() {
   }
 
   const openNewHotel = () => {
-    setFormHotel({ nome: '', endereco: '', ativo: true, ordem: hoteis.length })
+    setFormHotel({ nome: '', imageUrl: '', endereco: '', ativo: true, ordem: hoteis.length })
     setModalHotel(null)
     setShowModalHotel(true)
   }
@@ -250,6 +252,33 @@ export default function AdminPlanejadorPage() {
       closeModalHotel()
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleImageUploadHotel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingHotel(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/admin/planejador/hoteis/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok && data.imageUrl) {
+        setFormHotel((f) => ({ ...f, imageUrl: data.imageUrl }))
+      } else {
+        alert(data.message || 'Erro ao enviar imagem.')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Erro ao enviar imagem.')
+    } finally {
+      setUploadingHotel(false)
+      e.target.value = ''
     }
   }
 
@@ -454,6 +483,7 @@ export default function AdminPlanejadorPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-16">Foto</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Endereço</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
@@ -463,6 +493,15 @@ export default function AdminPlanejadorPage() {
               <tbody className="divide-y divide-gray-100">
                 {hoteis.map((h) => (
                   <tr key={h.id} className="hover:bg-gray-50/50">
+                    <td className="px-4 py-3">
+                      {h.imageUrl ? (
+                        <img src={h.imageUrl} alt={h.nome} className="w-12 h-12 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <Building2 className="w-6 h-6 text-gray-400" />
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{h.nome}</td>
                     <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={h.endereco}>{h.endereco}</td>
                     <td className="px-4 py-3">
@@ -861,6 +900,50 @@ export default function AdminPlanejadorPage() {
               </button>
             </div>
             <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Foto do hotel (opcional)</label>
+                <div className="space-y-3">
+                  <label className="block cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUploadHotel}
+                      disabled={uploadingHotel}
+                      className="hidden"
+                    />
+                    <div className="flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors">
+                      {uploadingHotel ? (
+                        <span className="flex items-center text-gray-600">
+                          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                          Enviando...
+                        </span>
+                      ) : (
+                        <span className="flex items-center text-gray-600">
+                          <Upload className="w-5 h-5 mr-2" />
+                          Clique para fazer upload da foto
+                        </span>
+                      )}
+                    </div>
+                  </label>
+                  {formHotel.imageUrl && (
+                    <div className="relative">
+                      <img
+                        src={formHotel.imageUrl}
+                        alt="Preview"
+                        className="w-full h-40 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormHotel((f) => ({ ...f, imageUrl: undefined }))}
+                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        aria-label="Remover foto"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
                 <input

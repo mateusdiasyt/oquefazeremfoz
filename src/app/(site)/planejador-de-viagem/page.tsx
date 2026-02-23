@@ -16,6 +16,7 @@ import {
   Banknote,
   Search,
   MapPinned,
+  Building2,
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -53,6 +54,7 @@ interface Custos {
 interface Hotel {
   id: string
   nome: string
+  imageUrl?: string | null
   endereco: string
 }
 
@@ -235,6 +237,62 @@ export default function PlanejadorDeViagemPage() {
         ) : (
           <>
             <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-purple-600" />
+                Onde você está hospedado?
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Selecione seu hotel para calcular a melhor ordem dos passeios e o custo em combustível (quando for de carro próprio).
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {hoteis.length === 0 ? (
+                  <p className="text-gray-500 text-sm col-span-full">Nenhum hotel cadastrado no momento.</p>
+                ) : (
+                  hoteis.map((h) => {
+                    const selected = hotelId === h.id
+                    return (
+                      <button
+                        key={h.id}
+                        type="button"
+                        onClick={() => setHotelId(selected ? null : h.id)}
+                        className={`text-left rounded-xl border-2 overflow-hidden transition-all ${
+                          selected
+                            ? 'border-purple-500 bg-purple-50/50 shadow-md ring-2 ring-purple-200'
+                            : 'border-gray-100 hover:border-purple-200 hover:bg-gray-50/50'
+                        }`}
+                      >
+                        <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                          {h.imageUrl ? (
+                            <Image
+                              src={h.imageUrl}
+                              alt={h.nome}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-pink-100">
+                              <Building2 className="w-12 h-12 text-purple-300" />
+                            </div>
+                          )}
+                          {selected && (
+                            <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                              <CheckCircle2 className="w-5 h-5 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-semibold text-gray-900 truncate" title={h.nome}>{h.nome}</h3>
+                        </div>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            </section>
+
+            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Seu perfil da viagem</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div>
@@ -290,25 +348,14 @@ export default function PlanejadorDeViagemPage() {
                     <option value="transfer">Transfer turístico</option>
                   </select>
                 </div>
-                {transporte === 'carro_proprio' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Onde está hospedado?</label>
-                    <select
-                      value={hotelId ?? ''}
-                      onChange={(e) => setHotelId(e.target.value || null)}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    >
-                      <option value="">Não informado</option>
-                      {hoteis.map((h) => (
-                        <option key={h.id} value={h.id}>{h.nome}</option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-0.5">Com o hotel, calculamos a ordem ideal do dia e o custo em combustível.</p>
-                  </div>
-                )}
               </div>
+              {hotelId && transporte === 'carro_proprio' && (
+                <p className="text-sm text-purple-700 mt-2">
+                  Usando o hotel selecionado para calcular rotas e combustível.
+                </p>
+              )}
 
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Atrativos que deseja visitar</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Atrativos que deseja visitar</h2>
               <p className="text-sm text-gray-500 mb-3">
                 Os valores são consultados e atualizados periodicamente; podem sofrer alterações. Confirme preços e horários no site oficial de cada atrativo.
               </p>

@@ -803,6 +803,7 @@ model atrativo {
 model hotel {
   id        String   @id @default(cuid())
   nome      String   // ex: Mabu
+  imageUrl  String?  // foto do hotel
   endereco  String   // endereço completo para geocoding e rota
   ativo     Boolean  @default(true)
   ordem     Int      @default(0)

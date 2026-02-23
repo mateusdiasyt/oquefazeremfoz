@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const hotel = await prisma.hotel.create({
       data: {
         nome,
+        imageUrl: body.imageUrl ? String(body.imageUrl).trim() || null : null,
         endereco,
         ativo: body.ativo !== false,
         ordem,

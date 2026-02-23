@@ -20,6 +20,7 @@ export async function PUT(
       where: { id },
       data: {
         ...(body.nome !== undefined && { nome: String(body.nome).trim() }),
+        ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null }),
         ...(body.endereco !== undefined && { endereco: String(body.endereco).trim() }),
         ...(body.ativo !== undefined && { ativo: Boolean(body.ativo) }),
         ...(body.ordem !== undefined && { ordem: Number(body.ordem) }),

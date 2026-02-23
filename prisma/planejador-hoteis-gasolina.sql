@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS "hotel" (
   "id" TEXT PRIMARY KEY NOT NULL,
   "nome" TEXT NOT NULL,
+  "imageUrl" TEXT,
   "endereco" TEXT NOT NULL,
   "ativo" BOOLEAN NOT NULL DEFAULT true,
   "ordem" INTEGER NOT NULL DEFAULT 0,
@@ -13,6 +14,9 @@ CREATE TABLE IF NOT EXISTS "hotel" (
 );
 
 CREATE INDEX IF NOT EXISTS "Hotel_ativo_idx" ON "hotel"("ativo");
+
+-- Garante coluna de foto se a tabela já existia sem ela
+ALTER TABLE "hotel" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT;
 
 -- Novos campos na config do planejador (gasolina para custo carro próprio)
 ALTER TABLE "planejadorconfig" ADD COLUMN IF NOT EXISTS "precoGasolinaCents" INTEGER NOT NULL DEFAULT 590;
