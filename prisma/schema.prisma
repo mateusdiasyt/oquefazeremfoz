@@ -784,7 +784,8 @@ model atrativo {
   precoCriancaCents         Int      @default(0)
   duracaoMediaHoras         Float    @default(0)
   tempoDeslocamentoMedioHoras Float  @default(0)
-  distanciaAeroportoKm      Float?   // Distância em km do aeroporto de Foz
+  distanciaAeroportoKm      Float?   // Distância em km do aeroporto de Foz (pode ser preenchida automaticamente)
+  endereco                  String?  // Endereço ou nome do lugar para calcular distância (ex: "Parque das Aves, Foz do Iguaçu")
   regiao                    String   // Cataratas Brasil | Argentina | Paraguai | Itaipu | Centro | Região Hotéis
   nivelCansaco              String   @default("medio") // leve | medio | intenso
   custoTransporteMedioCents Int      @default(0)

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS "atrativo" (
   "duracaoMediaHoras" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "tempoDeslocamentoMedioHoras" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "distanciaAeroportoKm" DOUBLE PRECISION,
+  "endereco" TEXT,
   "regiao" TEXT NOT NULL,
   "nivelCansaco" TEXT NOT NULL DEFAULT 'medio',
   "custoTransporteMedioCents" INTEGER NOT NULL DEFAULT 0,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS "atrativo" (
 -- Se a tabela já existir sem as colunas novas, adicione com:
 -- ALTER TABLE "atrativo" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT;
 -- ALTER TABLE "atrativo" ADD COLUMN IF NOT EXISTS "distanciaAeroportoKm" DOUBLE PRECISION;
+-- ALTER TABLE "atrativo" ADD COLUMN IF NOT EXISTS "endereco" TEXT;
 
 CREATE INDEX IF NOT EXISTS "Atrativo_ativo_idx" ON "atrativo"("ativo");
 CREATE INDEX IF NOT EXISTS "Atrativo_regiao_idx" ON "atrativo"("regiao");

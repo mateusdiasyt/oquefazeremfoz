@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         duracaoMediaHoras: Number(body.duracaoMediaHoras) || 0,
         tempoDeslocamentoMedioHoras: Number(body.tempoDeslocamentoMedioHoras) || 0,
         distanciaAeroportoKm: body.distanciaAeroportoKm != null ? Number(body.distanciaAeroportoKm) : null,
+        endereco: body.endereco ? String(body.endereco).trim() || null : null,
         regiao: String(body.regiao || 'Centro').trim(),
         nivelCansaco: ['leve', 'medio', 'intenso'].includes(body.nivelCansaco) ? body.nivelCansaco : 'medio',
         custoTransporteMedioCents: Number(body.custoTransporteMedioCents) || 0,

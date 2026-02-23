@@ -22,6 +22,7 @@ interface Atrativo {
   duracaoMediaHoras: number
   tempoDeslocamentoMedioHoras: number
   distanciaAeroportoKm?: number | null
+  endereco?: string | null
   regiao: string
   nivelCansaco: string
   custoTransporteMedioCents: number
@@ -55,6 +56,7 @@ export default function AdminPlanejadorPage() {
   const [config, setConfig] = useState<Config | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [calculandoDistancia, setCalculandoDistancia] = useState(false)
   const [modalAtrativo, setModalAtrativo] = useState<Atrativo | null>(null)
   const [showModalAtrativo, setShowModalAtrativo] = useState(false)
   const [formAtrativo, setFormAtrativo] = useState<Partial<Atrativo>>({})
@@ -93,6 +95,7 @@ export default function AdminPlanejadorPage() {
       duracaoMediaHoras: 0,
       tempoDeslocamentoMedioHoras: 0,
       distanciaAeroportoKm: null,
+      endereco: '',
       regiao: 'Centro',
       nivelCansaco: 'medio',
       custoTransporteMedioCents: 0,
@@ -154,6 +157,31 @@ export default function AdminPlanejadorPage() {
       closeModalAtrativo()
     } finally {
       setSaving(false)
+    }
+  }
+
+  const calcularDistanciaAeroporto = async () => {
+    if (!modalAtrativo?.id) return
+    setCalculandoDistancia(true)
+    try {
+      const res = await fetch(`/api/admin/planejador/atrativos/${modalAtrativo.id}/calcular-distancia`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          endereco: (formAtrativo.endereco || formAtrativo.nome || '').trim() || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success && data.distanciaAeroportoKm != null) {
+        setFormAtrativo((f) => ({ ...f, distanciaAeroportoKm: data.distanciaAeroportoKm }))
+      } else {
+        alert(data.message || 'Não foi possível calcular a distância.')
+      }
+    } catch {
+      alert('Erro ao calcular distância. Tente novamente.')
+    } finally {
+      setCalculandoDistancia(false)
     }
   }
 
@@ -426,16 +454,40 @@ export default function AdminPlanejadorPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Distância do aeroporto (km, opcional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Endereço ou nome do lugar (para calcular distância)</label>
                 <input
-                  type="number"
-                  step="0.1"
-                  min={0}
-                  value={formAtrativo.distanciaAeroportoKm ?? ''}
-                  onChange={(e) => setFormAtrativo((f) => ({ ...f, distanciaAeroportoKm: e.target.value === '' ? null : Number(e.target.value) }))}
+                  type="text"
+                  value={formAtrativo.endereco ?? ''}
+                  onChange={(e) => setFormAtrativo((f) => ({ ...f, endereco: e.target.value || undefined }))}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2"
-                  placeholder="Ex: 12.5"
+                  placeholder="Ex: Parque das Aves, Rodovia das Cataratas, Foz do Iguaçu"
                 />
+                <p className="text-xs text-gray-500 mt-0.5">Usado para calcular a distância do aeroporto automaticamente (OpenStreetMap + rotas).</p>
+              </div>
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Distância do aeroporto (km)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    value={formAtrativo.distanciaAeroportoKm ?? ''}
+                    onChange={(e) => setFormAtrativo((f) => ({ ...f, distanciaAeroportoKm: e.target.value === '' ? null : Number(e.target.value) }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                    placeholder="Ex: 18"
+                  />
+                </div>
+                {modalAtrativo && (
+                  <button
+                    type="button"
+                    onClick={calcularDistanciaAeroporto}
+                    disabled={calculandoDistancia}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {calculandoDistancia ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                    {calculandoDistancia ? 'Calculando...' : 'Calcular pelo endereço'}
+                  </button>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

@@ -48,6 +48,7 @@ export async function PUT(
         ...(body.duracaoMediaHoras !== undefined && { duracaoMediaHoras: Number(body.duracaoMediaHoras) }),
         ...(body.tempoDeslocamentoMedioHoras !== undefined && { tempoDeslocamentoMedioHoras: Number(body.tempoDeslocamentoMedioHoras) }),
         ...(body.distanciaAeroportoKm !== undefined && { distanciaAeroportoKm: body.distanciaAeroportoKm === '' || body.distanciaAeroportoKm == null ? null : Number(body.distanciaAeroportoKm) }),
+        ...(body.endereco !== undefined && { endereco: body.endereco ? String(body.endereco).trim() : null }),
         ...(body.regiao !== undefined && { regiao: String(body.regiao).trim() }),
         ...(body.nivelCansaco !== undefined && { nivelCansaco: body.nivelCansaco }),
         ...(body.custoTransporteMedioCents !== undefined && { custoTransporteMedioCents: Number(body.custoTransporteMedioCents) }),
