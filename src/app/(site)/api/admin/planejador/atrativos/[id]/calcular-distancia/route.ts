@@ -31,7 +31,10 @@ export async function POST(
     const km = await calcularDistanciaDoAeroporto(endereco)
     if (km == null) {
       return NextResponse.json(
-        { message: 'Não foi possível calcular a distância. Verifique o endereço ou tente novamente.' },
+        {
+          message:
+            'Não foi possível calcular a distância para esse endereço. Preencha o campo "Endereço ou nome do lugar" com um endereço mais completo (ex.: "Rodovia das Cataratas, km 18, Foz do Iguaçu") e tente novamente.',
+        },
         { status: 422 }
       )
     }
