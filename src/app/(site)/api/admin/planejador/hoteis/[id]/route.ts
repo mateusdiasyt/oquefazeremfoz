@@ -23,6 +23,7 @@ export async function PUT(
         ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null }),
         ...(body.endereco !== undefined && { endereco: String(body.endereco).trim() }),
         ...(body.ativo !== undefined && { ativo: Boolean(body.ativo) }),
+        ...(body.distanciaAeroportoKm !== undefined && { distanciaAeroportoKm: body.distanciaAeroportoKm === '' || body.distanciaAeroportoKm == null ? null : Number(body.distanciaAeroportoKm) }),
         ...(body.ordem !== undefined && { ordem: Number(body.ordem) }),
       },
     })

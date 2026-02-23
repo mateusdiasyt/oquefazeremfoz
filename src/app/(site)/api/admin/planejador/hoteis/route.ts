@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
         nome,
         imageUrl: body.imageUrl ? String(body.imageUrl).trim() || null : null,
         endereco,
+        distanciaAeroportoKm: body.distanciaAeroportoKm != null ? Number(body.distanciaAeroportoKm) : null,
         ativo: body.ativo !== false,
         ordem,
       },

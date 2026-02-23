@@ -56,6 +56,7 @@ interface Hotel {
   nome: string
   imageUrl?: string | null
   endereco: string
+  distanciaAeroportoKm?: number | null
 }
 
 interface RotaDia {
@@ -284,6 +285,9 @@ export default function PlanejadorDeViagemPage() {
                         </div>
                         <div className="p-3">
                           <h3 className="font-semibold text-gray-900 truncate" title={h.nome}>{h.nome}</h3>
+                          {h.distanciaAeroportoKm != null && (
+                            <p className="text-xs text-gray-500 mt-0.5">{h.distanciaAeroportoKm} km do aeroporto</p>
+                          )}
                         </div>
                       </button>
                     )
@@ -580,6 +584,11 @@ export default function PlanejadorDeViagemPage() {
                                   ({rotaDia.km.toFixed(0)} km, ~{formatBRL(rotaDia.custoTransporteCents)} combustível)
                                 </span>
                               )}
+                            </p>
+                          )}
+                          {rotaDia && rotaDia.km > 0 && (
+                            <p className="text-xs text-gray-500 mb-2">
+                              Cálculo do combustível: distância × (preço da gasolina <strong>por litro</strong> ÷ consumo em km/L). Ex.: 25 km com R$ 5,90/L e 10 km/L ≈ R$ 14,75.
                             </p>
                           )}
                           <ul className="space-y-1">

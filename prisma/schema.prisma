@@ -801,14 +801,15 @@ model atrativo {
 
 // Hotéis para cálculo de rota e combustível (carro próprio): ordem hotel → atrativos
 model hotel {
-  id        String   @id @default(cuid())
-  nome      String   // ex: Mabu
-  imageUrl  String?  // foto do hotel
-  endereco  String   // endereço completo para geocoding e rota
-  ativo     Boolean  @default(true)
-  ordem     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  nome                 String   // ex: Mabu
+  imageUrl             String?  // foto do hotel
+  endereco             String   // endereço completo para geocoding e rota
+  distanciaAeroportoKm Float?   // distância em km do aeroporto (pode preencher no admin com "Calcular pelo endereço")
+  ativo                Boolean  @default(true)
+  ordem                Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@index([ativo], map: "Hotel_ativo_idx")
 }

@@ -9,7 +9,7 @@ export async function GET() {
     const hoteis = await prisma.hotel.findMany({
       where: { ativo: true },
       orderBy: [{ ordem: 'asc' }, { nome: 'asc' }],
-      select: { id: true, nome: true, imageUrl: true, endereco: true },
+      select: { id: true, nome: true, imageUrl: true, endereco: true, distanciaAeroportoKm: true },
     })
     return NextResponse.json(hoteis)
   } catch (e) {

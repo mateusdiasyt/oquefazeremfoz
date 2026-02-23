@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS "hotel" (
   "nome" TEXT NOT NULL,
   "imageUrl" TEXT,
   "endereco" TEXT NOT NULL,
+  "distanciaAeroportoKm" DOUBLE PRECISION,
   "ativo" BOOLEAN NOT NULL DEFAULT true,
   "ordem" INTEGER NOT NULL DEFAULT 0,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -17,6 +18,8 @@ CREATE INDEX IF NOT EXISTS "Hotel_ativo_idx" ON "hotel"("ativo");
 
 -- Garante coluna de foto se a tabela já existia sem ela
 ALTER TABLE "hotel" ADD COLUMN IF NOT EXISTS "imageUrl" TEXT;
+-- Distância do aeroporto (km) – pode preencher no admin com "Calcular pelo endereço"
+ALTER TABLE "hotel" ADD COLUMN IF NOT EXISTS "distanciaAeroportoKm" DOUBLE PRECISION;
 
 -- Novos campos na config do planejador (gasolina para custo carro próprio)
 ALTER TABLE "planejadorconfig" ADD COLUMN IF NOT EXISTS "precoGasolinaCents" INTEGER NOT NULL DEFAULT 590;

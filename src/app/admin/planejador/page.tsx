@@ -52,6 +52,7 @@ interface Hotel {
   nome: string
   imageUrl?: string | null
   endereco: string
+  distanciaAeroportoKm?: number | null
   ativo: boolean
   ordem: number
 }
@@ -73,6 +74,7 @@ export default function AdminPlanejadorPage() {
   const [calculandoDistancia, setCalculandoDistancia] = useState(false)
   const [uploadingAtrativo, setUploadingAtrativo] = useState(false)
   const [uploadingHotel, setUploadingHotel] = useState(false)
+  const [calculandoDistanciaHotel, setCalculandoDistanciaHotel] = useState(false)
   const [modalAtrativo, setModalAtrativo] = useState<Atrativo | null>(null)
   const [showModalAtrativo, setShowModalAtrativo] = useState(false)
   const [formAtrativo, setFormAtrativo] = useState<Partial<Atrativo>>({})
@@ -200,7 +202,7 @@ export default function AdminPlanejadorPage() {
   }
 
   const openNewHotel = () => {
-    setFormHotel({ nome: '', imageUrl: '', endereco: '', ativo: true, ordem: hoteis.length })
+    setFormHotel({ nome: '', imageUrl: '', endereco: '', distanciaAeroportoKm: null, ativo: true, ordem: hoteis.length })
     setModalHotel(null)
     setShowModalHotel(true)
   }
@@ -252,6 +254,31 @@ export default function AdminPlanejadorPage() {
       closeModalHotel()
     } finally {
       setSaving(false)
+    }
+  }
+
+  const calcularDistanciaHotel = async () => {
+    if (!modalHotel?.id) return
+    setCalculandoDistanciaHotel(true)
+    try {
+      const res = await fetch(`/api/admin/planejador/hoteis/${modalHotel.id}/calcular-distancia`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ endereco: formHotel.endereco?.trim() || undefined }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success && data.distanciaAeroportoKm != null) {
+        setFormHotel((f) => ({ ...f, distanciaAeroportoKm: data.distanciaAeroportoKm }))
+        loadHoteis()
+      } else {
+        alert(data.message || 'Não foi possível calcular a distância.')
+      }
+    } catch (e) {
+      console.error(e)
+      alert('Erro ao calcular distância.')
+    } finally {
+      setCalculandoDistanciaHotel(false)
     }
   }
 
@@ -486,6 +513,7 @@ export default function AdminPlanejadorPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-16">Foto</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Endereço</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">Dist. aeroporto</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Ações</th>
                 </tr>
@@ -504,6 +532,9 @@ export default function AdminPlanejadorPage() {
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{h.nome}</td>
                     <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" title={h.endereco}>{h.endereco}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {h.distanciaAeroportoKm != null ? `${h.distanciaAeroportoKm} km` : '—'}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
@@ -605,27 +636,36 @@ export default function AdminPlanejadorPage() {
             </div>
           </div>
           <h3 className="font-semibold text-gray-900 mb-4 mt-6">Carro próprio (combustível)</h3>
+          <p className="text-sm text-gray-500 mb-3">Usado no cálculo de custo em gasolina quando o usuário escolhe um hotel e “Carro próprio”. O valor da gasolina é lido daqui.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Preço gasolina (centavos/L)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Preço da gasolina (R$ por litro)</label>
               <input
                 type="number"
-                value={formConfig.precoGasolinaCents ?? ''}
-                onChange={(e) => setFormConfig((c) => ({ ...c, precoGasolinaCents: Number(e.target.value) }))}
+                step="0.01"
+                min="0"
+                value={formConfig.precoGasolinaCents != null ? (formConfig.precoGasolinaCents / 100).toFixed(2) : ''}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value)
+                  setFormConfig((c) => ({ ...c, precoGasolinaCents: Number.isFinite(v) ? Math.round(v * 100) : undefined }))
+                }}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2"
-                placeholder="590 = R$ 5,90"
+                placeholder="5,90"
               />
+              <p className="text-xs text-gray-500 mt-0.5">Ex.: 5,90 para R$ 5,90/L</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Consumo (km/L)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Consumo do carro (km/L)</label>
               <input
                 type="number"
                 step="0.1"
+                min="0.1"
                 value={formConfig.consumoKmPorLitro ?? ''}
-                onChange={(e) => setFormConfig((c) => ({ ...c, consumoKmPorLitro: Number(e.target.value) }))}
+                onChange={(e) => setFormConfig((c) => ({ ...c, consumoKmPorLitro: Number(e.target.value) || undefined }))}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2"
                 placeholder="10"
               />
+              <p className="text-xs text-gray-500 mt-0.5">Ex.: 10 para 10 km por litro</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -964,6 +1004,31 @@ export default function AdminPlanejadorPage() {
                   placeholder="Av. das Cataratas, 2930, Foz do Iguaçu"
                 />
                 <p className="text-xs text-gray-500 mt-0.5">Usado para calcular rota e distância (geocoding).</p>
+              </div>
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="flex-1 min-w-[120px]">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Distância do aeroporto (km)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    value={formHotel.distanciaAeroportoKm ?? ''}
+                    onChange={(e) => setFormHotel((f) => ({ ...f, distanciaAeroportoKm: e.target.value === '' ? null : Number(e.target.value) }))}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2"
+                    placeholder="Ex: 18"
+                  />
+                </div>
+                {modalHotel && (
+                  <button
+                    type="button"
+                    onClick={calcularDistanciaHotel}
+                    disabled={calculandoDistanciaHotel}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {calculandoDistanciaHotel ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                    {calculandoDistanciaHotel ? 'Calculando...' : 'Calcular pelo endereço'}
+                  </button>
+                )}
               </div>
               {modalHotel && (
                 <div className="flex items-center gap-2">
