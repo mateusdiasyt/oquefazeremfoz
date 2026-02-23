@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { Home, Compass, Users, Video, Tv, Newspaper, Route } from 'lucide-react'
+import { Home, Compass, Users, Newspaper, Route } from 'lucide-react'
 import { useLocale } from '../contexts/LocaleContext'
 import { getTranslations } from '../lib/translations'
 
@@ -16,8 +16,6 @@ export default function MobileNavigation() {
     if (pathname === '/') setActiveTab('inicio')
     else if (pathname === '/empresas') setActiveTab('descubra')
     else if (pathname === '/guias') setActiveTab('guias')
-    else if (pathname === '/cameras-ao-vivo') setActiveTab('cameras')
-    else if (pathname === '/foztv') setActiveTab('foztv')
     else if (pathname === '/portal') setActiveTab('portal')
     else if (pathname === '/planejador-de-viagem') setActiveTab('planejador')
   }, [pathname])
@@ -26,8 +24,6 @@ export default function MobileNavigation() {
     { id: 'inicio', icon: Home, label: t.nav.home, href: '/' },
     { id: 'descubra', icon: Compass, label: t.nav.discover, href: '/empresas' },
     { id: 'guias', icon: Users, label: t.nav.guides, href: '/guias' },
-    { id: 'cameras', icon: Video, label: t.nav.cameras, href: '/cameras-ao-vivo' },
-    { id: 'foztv', icon: Tv, label: t.nav.foztv, href: '/foztv' },
     { id: 'portal', icon: Newspaper, label: t.nav.portal, href: '/portal' },
     { id: 'planejador', icon: Route, label: 'Planejador', href: '/planejador-de-viagem' },
   ]
