@@ -110,6 +110,14 @@ export async function POST(request: NextRequest) {
     const naoCabeNosDias = tempoTotalHoras > capacidadeTotal
 
     let roteiro = roteirizar(atrativos, dias, config.horasMaximasPorDia)
+    // Cataratas sempre primeiro em cada dia (lado Brasil ou Argentina)
+    roteiro = roteiro.map((dia) => ({
+      ...dia,
+      atrativos: [
+        ...dia.atrativos.filter((a) => /cataratas/i.test(a.nome)),
+        ...dia.atrativos.filter((a) => !/cataratas/i.test(a.nome)),
+      ],
+    }))
     let transporteCents = 0
     let rotaPorDia: Array<{ dia: number; km: number; custoTransporteCents: number; ordemNomes: string[] }> = []
 
@@ -137,11 +145,16 @@ export async function POST(request: NextRequest) {
 
       for (let i = 0; i < roteiro.length; i++) {
         const diaRoteiro = roteiro[i]
-        const ordenados = ordenarAtrativosPorDistanciaDoHotel(
+        const porDistancia = ordenarAtrativosPorDistanciaDoHotel(
           diaRoteiro.atrativos,
           hotelCoords,
           (a) => coordsByAtrativoId.get(a.id) ?? null
         )
+        // Cataratas sempre primeiro no dia (lado Brasil ou Argentina)
+        const ordenados = [
+          ...porDistancia.filter((a) => /cataratas/i.test(a.nome)),
+          ...porDistancia.filter((a) => !/cataratas/i.test(a.nome)),
+        ]
         const waypoints: Coord[] = [hotelCoords]
         for (const a of ordenados) {
           const c = coordsByAtrativoId.get(a.id)
