@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Compass, Video, Tv, X, Newspaper, MessageCircle, Users, Globe, ChevronDown } from 'lucide-react'
+import { Home, Search, Compass, Video, Tv, X, Newspaper, MessageCircle, Users, Globe, ChevronDown, Route } from 'lucide-react'
 import { useLocale } from '../contexts/LocaleContext'
 import { getTranslations, type Locale } from '../lib/translations'
 import { useRouter } from 'next/navigation'
@@ -355,6 +355,18 @@ export default function Header() {
             >
               <Newspaper className="w-5 h-5 flex-shrink-0" />
               <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>{t.nav.portal}</span>
+            </a>
+            <a 
+              href="/planejador-de-viagem" 
+              className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-all duration-200 min-w-[4rem] ${
+                pathname === '/planejador-de-viagem'
+                  ? 'text-purple-600 bg-purple-50'
+                  : 'text-gray-700 hover:text-purple-600 hover:bg-purple-50/50'
+              }`}
+              title="Planejador de Viagem"
+            >
+              <Route className="w-5 h-5 flex-shrink-0" />
+              <span className="text-xs font-medium" style={{ letterSpacing: '-0.01em' }}>Planejador</span>
             </a>
           </nav>
 

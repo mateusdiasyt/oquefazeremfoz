@@ -20,13 +20,15 @@ import {
   ExternalLink,
   Tv,
   Search,
-  Sparkles
+  Sparkles,
+  Route
 } from 'lucide-react'
 
 const menuItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/empresas', label: 'Gerenciar Empresas', icon: Building2 },
   { href: '/admin/guias', label: 'Gerenciar Guias', icon: MapPin },
+  { href: '/admin/planejador', label: 'Planejador de Viagem', icon: Route },
   { href: '/admin/foztv', label: 'FozTV', icon: Tv },
   { href: '/admin/conteudo', label: 'Gerenciar Conteúdo', icon: FileText },
   { href: '/admin/bot-ia', label: 'Bot Criador de Conteúdo', icon: Sparkles },

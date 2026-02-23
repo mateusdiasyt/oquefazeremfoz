@@ -772,3 +772,40 @@ model adminsetting {
   key   String @unique(map: "AdminSetting_key_key")
   value String @db.Text
 }
+
+// --- Planejador Inteligente de Viagem (Foz do Iguaçu) ---
+
+// Atrativo turístico: preços e tempos gerenciados pelo admin (sem scraping)
+model atrativo {
+  id                        String   @id
+  nome                      String
+  precoAdultoCents          Int      @default(0)
+  precoCriancaCents         Int      @default(0)
+  duracaoMediaHoras         Float    @default(0)
+  tempoDeslocamentoMedioHoras Float  @default(0)
+  regiao                    String   // Cataratas Brasil | Argentina | Paraguai | Itaipu | Centro | Região Hotéis
+  nivelCansaco              String   @default("medio") // leve | medio | intenso
+  custoTransporteMedioCents Int      @default(0)
+  exigeDocumento            Boolean  @default(false)
+  ativo                     Boolean  @default(true)
+  ordem                     Int      @default(0)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([ativo], map: "Atrativo_ativo_idx")
+  @@index([regiao], map: "Atrativo_regiao_idx")
+}
+
+// Configurações gerais do planejador (uma única linha, id = 'default')
+model planejadorconfig {
+  id                         String   @id
+  alimentacaoEconomicaCents  Int      @default(5000)   // R$ 50/dia
+  alimentacaoPadraoCents     Int      @default(12000) // R$ 120/dia
+  alimentacaoConfortoCents   Int      @default(20000) // R$ 200/dia
+  multiplicadorUber          Float    @default(1)
+  multiplicadorTransfer      Float    @default(1.5)
+  multiplicadorCarroProprio  Float    @default(0.3)   // reduzido
+  horasMaximasPorDia         Int      @default(8)
+  moeda                      String   @default("BRL")
+  updatedAt                  DateTime @updatedAt
+}

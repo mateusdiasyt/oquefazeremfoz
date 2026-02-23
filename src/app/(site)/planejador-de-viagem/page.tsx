@@ -1,0 +1,421 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import {
+  MapPin,
+  Users,
+  Car,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  FileDown,
+  Utensils,
+  Bus,
+  Clock,
+  Banknote,
+} from 'lucide-react'
+
+interface Atrativo {
+  id: string
+  nome: string
+  precoAdultoCents: number
+  precoCriancaCents: number
+  duracaoMediaHoras: number
+  tempoDeslocamentoMedioHoras: number
+  regiao: string
+  nivelCansaco: string
+  custoTransporteMedioCents: number
+  exigeDocumento: boolean
+}
+
+interface DiaRoteiro {
+  dia: number
+  atrativos: Atrativo[]
+  tempoTotalHoras: number
+  regiaoPrincipal: string
+  observacoes: string[]
+}
+
+interface Custos {
+  ingressosCents: number
+  transporteCents: number
+  alimentacaoCents: number
+  totalCents: number
+  totalPorPessoaCents: number
+}
+
+type TipoViagem = 'economica' | 'padrao' | 'conforto'
+type Transporte = 'sem_carro' | 'carro_proprio' | 'transfer'
+
+function formatBRL(cents: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(cents / 100)
+}
+
+export default function PlanejadorDeViagemPage() {
+  const [atrativos, setAtrativos] = useState<Atrativo[]>([])
+  const [loadingAtrativos, setLoadingAtrativos] = useState(true)
+  const [dias, setDias] = useState(3)
+  const [pessoas, setPessoas] = useState(2)
+  const [tipoViagem, setTipoViagem] = useState<TipoViagem>('padrao')
+  const [transporte, setTransporte] = useState<Transporte>('sem_carro')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [calculando, setCalculando] = useState(false)
+  const [resultado, setResultado] = useState<{
+    roteiro: DiaRoteiro[]
+    custos: Custos
+    tempoTotalHoras: number
+    moeda: string
+    avisoDias: { tempoTotalHoras: number; diasRecomendados: number; mensagem: string } | null
+    dicas: string[]
+  } | null>(null)
+  const [aceitarDiasInsuficientes, setAceitarDiasInsuficientes] = useState(false)
+  const [diasAjustados, setDiasAjustados] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch('/api/planejador/atrativos')
+      .then((r) => r.json())
+      .then((list: Atrativo[]) => {
+        setAtrativos(list)
+        setLoadingAtrativos(false)
+      })
+      .catch(() => setLoadingAtrativos(false))
+  }, [])
+
+  const toggleAtrativo = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleCalcular = (diasUsar?: number) => {
+    const d = diasUsar ?? dias
+    if (selectedIds.size === 0) return
+    setCalculando(true)
+    setResultado(null)
+    fetch('/api/planejador/calcular', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dias: d,
+        pessoas,
+        tipoViagem,
+        transporte,
+        atrativosIds: Array.from(selectedIds),
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setResultado({
+            roteiro: data.roteiro,
+            custos: data.custos,
+            tempoTotalHoras: data.tempoTotalHoras,
+            moeda: data.moeda,
+            avisoDias: data.avisoDias,
+            dicas: data.dicas || [],
+          })
+          if (data.avisoDias && diasUsar != null) {
+            setDiasAjustados(diasUsar)
+          }
+        }
+      })
+      .finally(() => setCalculando(false))
+  }
+
+  const onAjustarDias = () => {
+    if (!resultado?.avisoDias) return
+    const novoDias = resultado.avisoDias.diasRecomendados
+    setDias(novoDias)
+    setAceitarDiasInsuficientes(false)
+    setDiasAjustados(novoDias)
+    setResultado(null)
+    handleCalcular(novoDias)
+  }
+
+  const onContinuarMesmoAssim = () => {
+    setAceitarDiasInsuficientes(true)
+    setResultado((r) => (r ? { ...r, avisoDias: null } : null))
+  }
+
+  const downloadPDF = () => {
+    if (!resultado) return
+    const lines: string[] = [
+      'Planejador Inteligente de Viagem — Foz do Iguaçu',
+      '============================================',
+      '',
+      `Dias: ${diasAjustados ?? dias} | Pessoas: ${pessoas} | Tipo: ${tipoViagem} | Transporte: ${transporte}`,
+      '',
+      '--- Roteiro por dia ---',
+    ]
+    resultado.roteiro.forEach((dia) => {
+      lines.push(`\nDia ${dia.dia} (${dia.regiaoPrincipal}) — ${dia.tempoTotalHoras.toFixed(1)}h`)
+      dia.atrativos.forEach((a) => lines.push(`  • ${a.nome}`))
+      dia.observacoes.forEach((o) => lines.push(`  ⓘ ${o}`))
+    })
+    lines.push('')
+    lines.push('--- Custos ---')
+    lines.push(`Ingressos: ${formatBRL(resultado.custos.ingressosCents)}`)
+    lines.push(`Transporte: ${formatBRL(resultado.custos.transporteCents)}`)
+    lines.push(`Alimentação: ${formatBRL(resultado.custos.alimentacaoCents)}`)
+    lines.push(`Total grupo: ${formatBRL(resultado.custos.totalCents)}`)
+    lines.push(`Total por pessoa: ${formatBRL(resultado.custos.totalPorPessoaCents)}`)
+    lines.push('')
+    lines.push('--- Dicas ---')
+    resultado.dicas.forEach((d) => lines.push(`• ${d}`))
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `roteiro-foz-${new Date().toISOString().slice(0, 10)}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-50/80 to-white">
+      <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-2">
+          Planeje sua viagem para Foz do Iguaçu em segundos
+        </h1>
+        <p className="text-gray-600 text-center mb-8">
+          Selecione os atrativos, número de dias e pessoas e receba um roteiro otimizado com custos.
+        </p>
+
+        {loadingAtrativos ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          </div>
+        ) : (
+          <>
+            <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seu perfil da viagem</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Calendar className="inline w-4 h-4 mr-1" /> Número de dias
+                  </label>
+                  <select
+                    value={dias}
+                    onChange={(e) => setDias(Number(e.target.value))}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                      <option key={n} value={n}>{n} {n === 1 ? 'dia' : 'dias'}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Users className="inline w-4 h-4 mr-1" /> Número de pessoas
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={pessoas}
+                    onChange={(e) => setPessoas(Number(e.target.value) || 1)}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de viagem</label>
+                  <select
+                    value={tipoViagem}
+                    onChange={(e) => setTipoViagem(e.target.value as TipoViagem)}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="economica">Econômica</option>
+                    <option value="padrao">Padrão</option>
+                    <option value="conforto">Conforto</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <Car className="inline w-4 h-4 mr-1" /> Transporte
+                  </label>
+                  <select
+                    value={transporte}
+                    onChange={(e) => setTransporte(e.target.value as Transporte)}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    <option value="sem_carro">Sem carro (Uber/ônibus)</option>
+                    <option value="carro_proprio">Carro próprio</option>
+                    <option value="transfer">Transfer turístico</option>
+                  </select>
+                </div>
+              </div>
+
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Atrativos que deseja visitar</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-2">
+                {atrativos.map((a) => (
+                  <label
+                    key={a.id}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-purple-50/50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(a.id)}
+                      onChange={() => toggleAtrativo(a.id)}
+                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <span className="text-gray-900 font-medium">{a.nome}</span>
+                    <span className="text-gray-500 text-sm ml-auto">{a.regiao}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleCalcular()}
+                  disabled={selectedIds.size === 0 || calculando}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {calculando ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <MapPin className="w-5 h-5" />
+                  )}
+                  Calcular meu roteiro
+                </button>
+                {selectedIds.size === 0 && (
+                  <p className="text-sm text-gray-500 self-center">Selecione pelo menos um atrativo.</p>
+                )}
+              </div>
+            </section>
+
+            {resultado?.avisoDias && !aceitarDiasInsuficientes && (
+              <section className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-amber-900">Atenção: dias insuficientes</h3>
+                    <p className="text-amber-800 mt-1">{resultado.avisoDias.mensagem}</p>
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={onAjustarDias}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white font-medium rounded-xl hover:bg-amber-700"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        Ajustar automaticamente para {resultado.avisoDias.diasRecomendados} dias
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onContinuarMesmoAssim}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-amber-600 text-amber-800 font-medium rounded-xl hover:bg-amber-100"
+                      >
+                        Continuar mesmo assim
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {resultado && (!resultado.avisoDias || aceitarDiasInsuficientes) && (
+              <section className="space-y-8">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <h2 className="text-xl font-bold text-gray-900">Resumo da sua viagem</h2>
+                  <button
+                    type="button"
+                    onClick={downloadPDF}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-700 font-medium rounded-xl hover:bg-purple-50"
+                  >
+                    <FileDown className="w-4 h-4" />
+                    Baixar roteiro (TXT)
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Banknote className="w-5 h-5 text-purple-600" />
+                      Custos
+                    </h3>
+                    <ul className="space-y-2 text-gray-700">
+                      <li className="flex justify-between">
+                        <span>Ingressos / entradas</span>
+                        <span className="font-medium">{formatBRL(resultado.custos.ingressosCents)}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="flex items-center gap-1"><Bus className="w-4 h-4" /> Transporte</span>
+                        <span className="font-medium">{formatBRL(resultado.custos.transporteCents)}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span className="flex items-center gap-1"><Utensils className="w-4 h-4" /> Alimentação</span>
+                        <span className="font-medium">{formatBRL(resultado.custos.alimentacaoCents)}</span>
+                      </li>
+                      <li className="flex justify-between pt-2 border-t border-gray-200">
+                        <span>Total do grupo</span>
+                        <span className="font-bold text-purple-700">{formatBRL(resultado.custos.totalCents)}</span>
+                      </li>
+                      <li className="flex justify-between">
+                        <span>Total por pessoa</span>
+                        <span className="font-semibold">{formatBRL(resultado.custos.totalPorPessoaCents)}</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-purple-600" />
+                      Informações
+                    </h3>
+                    <p className="text-gray-700">
+                      Tempo total estimado: <strong>{resultado.tempoTotalHoras.toFixed(1)} horas</strong> de passeios.
+                    </p>
+                    {resultado.dicas.length > 0 && (
+                      <ul className="mt-4 space-y-1 text-sm text-gray-600">
+                        {resultado.dicas.map((d, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                            {d}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <h3 className="font-semibold text-gray-900 p-6 pb-0">Roteiro por dia</h3>
+                  <div className="divide-y divide-gray-100">
+                    {resultado.roteiro.map((dia) => (
+                      <div key={dia.dia} className="p-6">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <span className="font-bold text-purple-700">Dia {dia.dia}</span>
+                          <span className="text-gray-500 text-sm">({dia.regiaoPrincipal})</span>
+                          <span className="text-gray-500 text-sm">
+                            — {dia.tempoTotalHoras.toFixed(1)}h
+                          </span>
+                        </div>
+                        <ul className="space-y-1">
+                          {dia.atrativos.map((a) => (
+                            <li key={a.id} className="flex items-center gap-2 text-gray-800">
+                              <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              {a.nome}
+                            </li>
+                          ))}
+                        </ul>
+                        {dia.observacoes.length > 0 && (
+                          <p className="text-sm text-gray-600 mt-2">{dia.observacoes.join(' ')}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
