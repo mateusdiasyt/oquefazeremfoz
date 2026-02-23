@@ -42,13 +42,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const [atrativosRows, configRow, hotelRow] = await Promise.all([
-      prisma.atrativo.findMany({
-        where: { id: { in: atrativosIds }, ativo: true },
-      }),
-      prisma.planejadorconfig.findUnique({ where: { id: 'default' } }),
-      hotelId ? prisma.hotel.findUnique({ where: { id: hotelId } }) : Promise.resolve(null),
-    ])
+    const atrativosRows = await prisma.atrativo.findMany({
+      where: { id: { in: atrativosIds }, ativo: true },
+    })
+
+    let configRow: { alimentacaoEconomicaCents: number; alimentacaoPadraoCents: number; alimentacaoConfortoCents: number; multiplicadorUber: number; multiplicadorTransfer: number; multiplicadorCarroProprio: number; horasMaximasPorDia: number; moeda: string; precoGasolinaCents?: number; consumoKmPorLitro?: number; custoPorKmCents?: number } | null = null
+    try {
+      configRow = await prisma.planejadorconfig.findUnique({ where: { id: 'default' } })
+    } catch (_) {
+      // Colunas novas podem não existir no DB ainda; usa defaults
+    }
+
+    let hotelRow: { id: string; nome: string; endereco: string } | null = null
+    if (hotelId) {
+      try {
+        hotelRow = await prisma.hotel.findUnique({ where: { id: hotelId }, select: { id: true, nome: true, endereco: true } })
+      } catch (_) {
+        // Tabela hotel pode não existir ainda
+      }
+    }
 
     const config = configRow
       ? {
@@ -60,9 +72,9 @@ export async function POST(request: NextRequest) {
           multiplicadorCarroProprio: configRow.multiplicadorCarroProprio,
           horasMaximasPorDia: configRow.horasMaximasPorDia,
           moeda: configRow.moeda,
-          precoGasolinaCents: (configRow as { precoGasolinaCents?: number }).precoGasolinaCents ?? 590,
-          consumoKmPorLitro: (configRow as { consumoKmPorLitro?: number }).consumoKmPorLitro ?? 10,
-          custoPorKmCents: (configRow as { custoPorKmCents?: number }).custoPorKmCents ?? 0,
+          precoGasolinaCents: configRow.precoGasolinaCents ?? 590,
+          consumoKmPorLitro: configRow.consumoKmPorLitro ?? 10,
+          custoPorKmCents: configRow.custoPorKmCents ?? 0,
         }
       : {
           alimentacaoEconomicaCents: 5000,
