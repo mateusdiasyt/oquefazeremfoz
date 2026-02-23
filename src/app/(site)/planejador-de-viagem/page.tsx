@@ -286,6 +286,15 @@ export default function PlanejadorDeViagemPage() {
                   const selected = selectedIds.has(a.id)
                   const precoMedio = a.precoAdultoCents > 0 ? formatBRL(a.precoAdultoCents) : 'Consulte'
                   const duracaoTotal = a.duracaoMediaHoras + a.tempoDeslocamentoMedioHoras
+                  const horas = Math.floor(duracaoTotal)
+                  const mins = Math.round((duracaoTotal - horas) * 60)
+                  const duracaoTexto = horas > 0 && mins > 0
+                    ? `${horas}h ${mins}min`
+                    : horas > 0
+                      ? `${horas}h`
+                      : mins > 0
+                        ? `${mins}min`
+                        : `${duracaoTotal.toFixed(1)}h`
                   return (
                     <label
                       key={a.id}
@@ -327,19 +336,17 @@ export default function PlanejadorDeViagemPage() {
                         <p className="text-sm font-medium text-purple-700 mt-0.5">
                           Ingresso a partir de {precoMedio}
                         </p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-xs text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            ~{duracaoTotal.toFixed(1)}h
-                          </span>
-                          {a.distanciaAeroportoKm != null && (
-                            <span className="flex items-center gap-1">
-                              <MapPinned className="w-3.5 h-3.5" />
-                              {a.distanciaAeroportoKm} km do aeroporto
-                            </span>
-                          )}
-                          <span className="text-gray-400">{a.regiao}</span>
-                        </div>
+                        <ul className="mt-2 space-y-1 text-xs text-gray-600">
+                          <li className="flex items-center gap-2">
+                            <Clock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                            <span><strong className="text-gray-700">Duração do passeio:</strong> ~{duracaoTexto} (visita + deslocamento)</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <MapPinned className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                            <span><strong className="text-gray-700">Distância do aeroporto:</strong> {a.distanciaAeroportoKm != null ? `${a.distanciaAeroportoKm} km` : '—'}</span>
+                          </li>
+                          <li className="text-gray-400">{a.regiao}</li>
+                        </ul>
                       </div>
                     </label>
                   )
