@@ -17,6 +17,10 @@ import {
   Search,
   MapPinned,
   Building2,
+  Share2,
+  Route,
+  Fuel,
+  ChevronRight,
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -219,6 +223,35 @@ export default function PlanejadorDeViagemPage() {
     a.download = `roteiro-foz-${new Date().toISOString().slice(0, 10)}.txt`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const compartilharWhatsApp = () => {
+    if (!resultado) return
+    const d = diasAjustados ?? dias
+    const partes: string[] = [
+      '🗺️ *Roteiro Foz do Iguaçu*',
+      `${d} ${d === 1 ? 'dia' : 'dias'} · ${pessoas} ${pessoas === 1 ? 'pessoa' : 'pessoas'}`,
+      '',
+    ]
+    resultado.roteiro.forEach((dia) => {
+      const rotaDia = resultado.rotaPorDia?.find((r) => r.dia === dia.dia)
+      partes.push(`*Dia ${dia.dia}* (${dia.regiaoPrincipal}) — ${dia.tempoTotalHoras.toFixed(1)}h`)
+      if (rotaDia?.ordemNomes?.length) {
+        partes.push(`📍 ${rotaDia.ordemNomes.join(' → ')}`)
+        if (rotaDia.km > 0) partes.push(`   ${rotaDia.km.toFixed(0)} km · ~${formatBRL(rotaDia.custoTransporteCents)} combustível`)
+      }
+      dia.atrativos.forEach((a) => partes.push(`  ✓ ${a.nome}`))
+      if (dia.observacoes.length) dia.observacoes.forEach((o) => partes.push(`  ℹ️ ${o}`))
+      partes.push('')
+    })
+    partes.push('*Custos*')
+    partes.push(`Ingressos: ${formatBRL(resultado.custos.ingressosCents)}`)
+    partes.push(`Transporte: ${formatBRL(resultado.custos.transporteCents)}`)
+    partes.push(`Alimentação: ${formatBRL(resultado.custos.alimentacaoCents)}`)
+    partes.push(`Total: ${formatBRL(resultado.custos.totalCents)} (${formatBRL(resultado.custos.totalPorPessoaCents)}/pessoa)`)
+    const text = partes.join('\n')
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -501,14 +534,24 @@ export default function PlanejadorDeViagemPage() {
               <section className="space-y-8">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <h2 className="text-xl font-bold text-gray-900">Resumo da sua viagem</h2>
-                  <button
-                    type="button"
-                    onClick={downloadPDF}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-purple-600 text-purple-700 font-medium rounded-xl hover:bg-purple-50"
-                  >
-                    <FileDown className="w-4 h-4" />
-                    Baixar roteiro (TXT)
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={compartilharWhatsApp}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#25D366] text-white font-medium rounded-xl hover:bg-[#20bd5a] transition-colors shadow-sm"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Compartilhar no WhatsApp
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadPDF}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                      <FileDown className="w-4 h-4" />
+                      Baixar TXT
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -562,46 +605,59 @@ export default function PlanejadorDeViagemPage() {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <h3 className="font-semibold text-gray-900 p-6 pb-0">Roteiro por dia</h3>
-                  <div className="divide-y divide-gray-100">
+                  <div className="px-6 py-5 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Route className="w-5 h-5 text-purple-500" />
+                      Roteiro por dia
+                    </h3>
+                  </div>
+                  <div className="divide-y divide-gray-50">
                     {resultado.roteiro.map((dia) => {
                       const rotaDia = resultado.rotaPorDia?.find((r) => r.dia === dia.dia)
                       return (
                         <div key={dia.dia} className="p-6">
-                          <div className="flex flex-wrap items-center gap-2 mb-3">
-                            <span className="font-bold text-purple-700">Dia {dia.dia}</span>
-                            <span className="text-gray-500 text-sm">({dia.regiaoPrincipal})</span>
-                            <span className="text-gray-500 text-sm">
-                              — {dia.tempoTotalHoras.toFixed(1)}h
-                            </span>
-                          </div>
-                          {rotaDia && rotaDia.ordemNomes.length > 0 && (
-                            <p className="text-sm text-gray-700 mb-2">
-                              <span className="font-medium">Rota sugerida:</span>{' '}
-                              {rotaDia.ordemNomes.join(' → ')}
-                              {rotaDia.km > 0 && (
-                                <span className="text-gray-600 ml-1">
-                                  ({rotaDia.km.toFixed(0)} km, ~{formatBRL(rotaDia.custoTransporteCents)} combustível)
-                                </span>
+                          <div className="flex items-start gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                              <Calendar className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 flex-1 space-y-3">
+                              <div className="flex flex-wrap items-baseline gap-2">
+                                <span className="font-semibold text-gray-900">Dia {dia.dia}</span>
+                                <span className="text-sm text-gray-500">{dia.regiaoPrincipal}</span>
+                                <span className="text-sm text-gray-400">· {dia.tempoTotalHoras.toFixed(1)}h</span>
+                              </div>
+                              {rotaDia && rotaDia.ordemNomes.length > 0 && (
+                                <div className="rounded-lg bg-gray-50/80 px-3 py-2 text-sm">
+                                  <div className="flex flex-wrap items-center gap-1.5 text-gray-700">
+                                    <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
+                                    <span className="font-medium text-gray-600">Rota:</span>
+                                    <span className="text-gray-700">{rotaDia.ordemNomes.join(' → ')}</span>
+                                  </div>
+                                  {rotaDia.km > 0 && (
+                                    <div className="mt-1.5 flex items-center gap-1.5 text-gray-500">
+                                      <Fuel className="w-3.5 h-3.5" />
+                                      <span>{rotaDia.km.toFixed(0)} km</span>
+                                      <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                                      <span>~{formatBRL(rotaDia.custoTransporteCents)} combustível</span>
+                                    </div>
+                                  )}
+                                </div>
                               )}
-                            </p>
-                          )}
-                          {rotaDia && rotaDia.km > 0 && (
-                            <p className="text-xs text-gray-500 mb-2">
-                              Cálculo: distância (km) × custo por km (R$). Ex.: 25 km × R$ 5,90/km = R$ 147,50. (Configure no admin.)
-                            </p>
-                          )}
-                          <ul className="space-y-1">
-                            {dia.atrativos.map((a) => (
-                              <li key={a.id} className="flex items-center gap-2 text-gray-800">
-                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                {a.nome}
-                              </li>
-                            ))}
-                          </ul>
-                          {dia.observacoes.length > 0 && (
-                            <p className="text-sm text-gray-600 mt-2">{dia.observacoes.join(' ')}</p>
-                          )}
+                              <ul className="space-y-1.5">
+                                {dia.atrativos.map((a) => (
+                                  <li key={a.id} className="flex items-center gap-2 text-gray-800">
+                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-100">
+                                      <CheckCircle2 className="w-3 h-3 text-green-600" />
+                                    </span>
+                                    {a.nome}
+                                  </li>
+                                ))}
+                              </ul>
+                              {dia.observacoes.length > 0 && (
+                                <p className="text-xs text-gray-500 pt-0.5">{dia.observacoes.join(' ')}</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )
                     })}
