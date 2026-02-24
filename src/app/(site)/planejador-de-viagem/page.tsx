@@ -20,6 +20,7 @@ import {
   Route,
   Fuel,
   ChevronRight,
+  Info,
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -225,9 +226,25 @@ export default function PlanejadorDeViagemPage() {
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-2">
           Planeje sua viagem para Foz do Iguaçu em segundos
         </h1>
-        <p className="text-gray-600 text-center mb-8">
+        <p className="text-gray-600 text-center mb-6">
           Selecione os atrativos, número de dias e pessoas e receba um roteiro otimizado com custos.
         </p>
+
+        <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-blue-100 bg-blue-50/80 px-4 py-3.5 text-center shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <Info className="w-5 h-5 text-blue-600" strokeWidth={2} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Não vendemos ingressos
+              </p>
+              <p className="text-sm text-blue-800/90 mt-0.5">
+                Os valores exibidos são apenas referência e foram obtidos nos sites oficiais dos atrativos. A compra deve ser feita diretamente nos canais oficiais de cada atração.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {loadingAtrativos ? (
           <div className="flex justify-center py-12">
