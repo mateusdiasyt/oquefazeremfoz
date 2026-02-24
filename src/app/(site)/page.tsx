@@ -8,7 +8,7 @@ import CreatePost from '@/components/CreatePost'
 import CreatePostGuide from '@/components/CreatePostGuide'
 import ReleaseCarousel from '@/components/ReleaseCarousel'
 import ReleaseNewsCard, { type ReleaseNewsCardRelease } from '@/components/ReleaseNewsCard'
-import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass, Eye, ArrowUpDown } from 'lucide-react'
+import { Search, MapPin, Star, Heart, MessageCircle, Users, Gift, Sun, CheckCircle, Copy, Check, BookOpen, BadgeCheck, Video, Newspaper, Tv, ChevronDown, ChevronUp, X, Share2, Compass, Eye, ArrowUpDown, Route } from 'lucide-react'
 import Link from 'next/link'
 import { capitalizeWords } from '@/utils/formatters'
 import { useLocale } from '@/contexts/LocaleContext'
@@ -931,6 +931,29 @@ export default function HomePage() {
                   </Link>
                 </div>
               )}
+            </div>
+
+            {/* Planejador de Viagem */}
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  <Route className="w-3.5 h-3.5 text-white" />
+                </div>
+                <h4 className="text-sm font-semibold text-gray-900 truncate">Planejador de Viagem</h4>
+              </div>
+              <div className="p-3 space-y-2">
+                <p className="text-xs text-gray-700 leading-snug">
+                  Roteiro, dias e custos estimados em segundos.
+                </p>
+                <p className="text-[11px] text-gray-500 leading-snug">
+                  Não vendemos ingressos — os valores são apenas referência, obtidos nos sites oficiais dos atrativos.
+                </p>
+              </div>
+              <div className="px-3 py-2 border-t border-gray-100">
+                <Link href="/planejador-de-viagem" className="text-xs font-medium text-purple-600 hover:text-purple-700">
+                  Planejar minha viagem →
+                </Link>
+              </div>
             </div>
 
             {/* Cupons do Dia */}
